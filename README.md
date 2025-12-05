@@ -35,7 +35,7 @@ Employee and HR portal for managing the onboarding process using microservices a
 
 ## Project Structure
 hr-onboarding-system/  
-├── backend/              # All microservices  
+├── all-services/         # All microservices  
 ├── frontend/             # React application  
 ├── config-repo/          # Spring Cloud Config files  
 └── docs/                 # Documentation  
