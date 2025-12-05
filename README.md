@@ -34,11 +34,11 @@ Employee and HR portal for managing the onboarding process using microservices a
 - Jacoco (code coverage)
 
 ## Project Structure
-hr-onboarding-system/
-├── backend/              # All microservices
-├── frontend/             # React application
-├── config-repo/          # Spring Cloud Config files
-└── docs/                 # Documentation
+hr-onboarding-system/  
+├── backend/              # All microservices  
+├── frontend/             # React application  
+├── config-repo/          # Spring Cloud Config files  
+└── docs/                 # Documentation  
 
 ## Getting Started
 
