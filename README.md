@@ -4,10 +4,10 @@ Employee and HR portal for managing the onboarding process using microservices a
 
 ## Team Members
 - [Tengyang Zhang] - Team Lead
-- [Wang, Dongdong] - Software Developer
-- [Minghao Guo] - Software Developer
-- [Yanyan Jiang] - Software Developer
-- [Wu, Shili] - Software Developer
+- [Wang, Dongdong] - Backend Developer
+- [Minghao Guo] - Backend Developer
+- [Yanyan Jiang] - Backend Developer
+- [Wu, Shili] - Frontend Developer
 
 ## Tech Stack
 
