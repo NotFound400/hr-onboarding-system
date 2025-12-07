@@ -1,6 +1,7 @@
 package org.example.employeeservice.service;
 
 
+import org.example.employeeservice.exception.UpdateUserException;
 import org.example.employeeservice.model.Employee;
 import org.example.employeeservice.repository.EmployeeRepository;
 import org.springframework.stereotype.Service;
@@ -26,6 +27,13 @@ public class EmployeeService {
     }
 
     public Employee saveEmployee(Employee employee) {
+        return employeeRepository.save(employee);
+    }
+
+    public Employee updateEmployee(Employee employee) {
+        if (employee.getId() == null) {
+            throw new UpdateUserException("Employee id is required");
+        }
         return employeeRepository.save(employee);
     }
 
