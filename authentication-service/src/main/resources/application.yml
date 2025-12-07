@@ -1,0 +1,39 @@
+server:
+  port: 8081
+
+spring:
+  application:
+    name: authentication-service
+  datasource:
+    url: jdbc:mysql://hr-onboarding-mysql-dev.cjmeo8yi2a1k.us-east-2.rds.amazonaws.com:3306/hronboarding
+    username: admin
+    password: HRonboarding2025
+    driver-class-name: com.mysql.cj.jdbc.Driver
+  jpa:
+    hibernate:
+      ddl-auto: none
+      naming:
+        physical-strategy: org.hibernate.boot.model.naming.PhysicalNamingStrategyStandardImpl
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+
+springdoc:
+  api-docs:
+    path: /api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+
+security:
+  jwt:
+    secret: HrOnboardingJwtSecretKey_2025_MustBeAtLeast32Characters
+    expiration-ms: 3600000
+
+registration:
+  token:
+    expiration-hours: 3
+
+eureka:
+  client:
+    enabled: false
