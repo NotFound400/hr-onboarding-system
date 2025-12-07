@@ -36,10 +36,16 @@ public class EmployeeController {
         return ResponseEntity.ok(saved);
     }
 
+    @PutMapping("/employee")
+    public ResponseEntity<Employee> updateEmployee(@RequestBody Employee employee)  {
+        Employee saved = employeeService.updateEmployee(employee);
+        return ResponseEntity.ok(saved);
+    }
+
 
     @DeleteMapping("/employee/{id}")
     public ResponseEntity<Void> deleteEmployee(@PathVariable String id) {
         employeeService.deleteEmployee(id);
-        return ResponseEntity.noContent().build();
+        return ResponseEntity.ok().build();
     }
 }
