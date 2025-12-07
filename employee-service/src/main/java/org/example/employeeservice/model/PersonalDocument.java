@@ -4,6 +4,7 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.time.LocalDateTime;
 import java.util.Date;
 import java.util.UUID;
 
@@ -15,6 +16,6 @@ public class PersonalDocument {
     private String Path;
     private String Title;
     private String Comment;
-    private Date CreateDate;
+    private LocalDateTime CreateDate;
 
 }
