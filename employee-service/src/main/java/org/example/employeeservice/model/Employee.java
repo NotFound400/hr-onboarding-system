@@ -6,6 +6,7 @@ import lombok.NoArgsConstructor;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -26,11 +27,11 @@ public class Employee {
     private String alternatePhone;
     private String gender;
     private String SSN;
-    private Date DOB;
-    private Date startDate;
-    private Date endDate;
+    private LocalDateTime DOB;
+    private LocalDateTime startDate;
+    private LocalDateTime endDate;
     private String DriverLicense;
-    private Date DriverLicenseExpiration;
+    private LocalDateTime DriverLicenseExpiration;
     private Long houseID;
     private List<Contact> contact;
     private List<Address> address;
