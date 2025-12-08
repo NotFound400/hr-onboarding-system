@@ -30,8 +30,8 @@ public class Employee {
     private LocalDateTime DOB;
     private LocalDateTime startDate;
     private LocalDateTime endDate;
-    private String DriverLicense;
-    private LocalDateTime DriverLicenseExpiration;
+    private String driverLicense;
+    private LocalDateTime driverLicenseExpiration;
     private Long houseID;
     private List<Contact> contact;
     private List<Address> address;

@@ -13,9 +13,9 @@ import java.util.UUID;
 @NoArgsConstructor
 public class PersonalDocument {
     private String id = UUID.randomUUID().toString();
-    private String Path;
-    private String Title;
-    private String Comment;
-    private LocalDateTime CreateDate;
+    private String path;
+    private String title;
+    private String comment;
+    private LocalDateTime createDate;
 
 }
