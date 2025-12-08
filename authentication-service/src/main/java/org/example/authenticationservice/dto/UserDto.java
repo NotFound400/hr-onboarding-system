@@ -6,10 +6,7 @@ import java.util.List;
 @Data
 public class UserDto {
 
-    /**
-     * User ID as String (frontend requires string type for all IDs)
-     */
-    private String id;
+    private Long id;
 
     private String username;
 

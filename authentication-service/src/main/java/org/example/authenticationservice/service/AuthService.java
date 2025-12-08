@@ -252,11 +252,11 @@ public class AuthService {
     }
 
     /**
-     * Map User entity to UserDto with String ID and date fields.
+     * Map User entity to UserDto with ID and date fields.
      */
     private UserDto mapToUserDto(User user, List<String> roleNames) {
         UserDto dto = new UserDto();
-        dto.setId(String.valueOf(user.getId())); // Convert Long to String
+        dto.setId(user.getId());
         dto.setUsername(user.getUsername());
         dto.setEmail(user.getEmail());
         dto.setPassword(""); // Never expose password
@@ -275,11 +275,11 @@ public class AuthService {
     }
 
     /**
-     * Map RegistrationToken entity to DTO with String IDs.
+     * Map RegistrationToken entity to DTO with IDs.
      */
     private RegistrationTokenDto mapToRegistrationTokenDto(RegistrationToken token) {
         RegistrationTokenDto dto = new RegistrationTokenDto();
-        dto.setId(String.valueOf(token.getId())); // Convert Long to String
+        dto.setId(token.getId());
         dto.setToken(token.getToken());
         dto.setEmail(token.getEmail());
         dto.setExpirationDate(token.getExpirationDate());
@@ -288,7 +288,7 @@ public class AuthService {
         dto.setCreatedByUserId(creatorId);
         dto.setCreateBy(creatorId); // Alias for frontend compatibility
 
-        // Set createDate if available (you may need to add this field to entity)
+        // Set createDate if available
         dto.setCreateDate(LocalDateTime.now().format(ISO_FORMATTER));
 
         return dto;

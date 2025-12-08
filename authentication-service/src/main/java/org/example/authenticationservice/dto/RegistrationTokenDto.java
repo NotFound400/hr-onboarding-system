@@ -6,10 +6,7 @@ import java.time.LocalDateTime;
 @Data
 public class RegistrationTokenDto {
 
-    /**
-     * Token ID as String (frontend requires string type)
-     */
-    private String id;
+    private Long id;
 
     /**
      * Token string
