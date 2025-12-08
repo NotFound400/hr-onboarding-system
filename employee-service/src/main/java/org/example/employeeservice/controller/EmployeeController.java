@@ -14,7 +14,7 @@ import java.util.List;
 import java.util.Optional;
 
 @RestController
-@RequestMapping("/api")
+@RequestMapping()
 public class EmployeeController {
 
     private final EmployeeService employeeService;
@@ -35,28 +35,29 @@ public class EmployeeController {
         return ResponseEntity.ok(employeeService.getAllEmployeesPage(pageable));
     }
 
-    @GetMapping("/employee/{id}")
+    @GetMapping("/employees/{id}")
     public ResponseEntity<Employee> getEmployee(@PathVariable String id) {
         return employeeService.getEmployeeById(id)
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
     }
 
-    @GetMapping("employee/user/{userID}")
+    @GetMapping("employees/user/{userID}")
     public ResponseEntity<?> getEmployeeByUserID(@PathVariable Long userID) {
         Optional<Employee> employee = employeeService.getEmployeeByUserID(userID);
         return employee.isPresent() ? ResponseEntity.ok(employee.get())
                 : ResponseEntity.notFound().build();
     }
 
-    @PostMapping("/employee")
+    @PostMapping("/employees")
     public ResponseEntity<Employee> saveEmployee(@RequestBody Employee employee) {
         Employee saved = employeeService.saveEmployee(employee);
         return ResponseEntity.ok(saved);
     }
 
-    @PutMapping("/employee")
-    public ResponseEntity<Employee> updateEmployee(@RequestBody Employee employee)  {
+    @PutMapping("/employees/{id}")
+    public ResponseEntity<Employee> updateEmployee(@RequestBody Employee employee, @PathVariable String id)  {
+        employee.setId(id);
         Employee saved = employeeService.updateEmployee(employee);
         return ResponseEntity.ok(saved);
     }
@@ -66,8 +67,7 @@ public class EmployeeController {
         return ResponseEntity.ok(employeeService.searchEmployeesByName(name));
     }
 
-
-    @DeleteMapping("/employee/{id}")
+    @DeleteMapping("/employees/{id}")
     public ResponseEntity<Void> deleteEmployee(@PathVariable String id) {
         employeeService.deleteEmployee(id);
         return ResponseEntity.ok().build();
