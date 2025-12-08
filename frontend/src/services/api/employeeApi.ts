@@ -22,8 +22,8 @@ import type {
 
 // ==================== Mock Data ====================
 const MOCK_EMPLOYEE: Employee = {
-  id: 'emp-001',
-  userId: '1',
+  id: 1,
+  userId: 1,
   firstName: 'John',
   lastName: 'Doe',
   middleName: 'Michael',
@@ -38,7 +38,7 @@ const MOCK_EMPLOYEE: Employee = {
   endDate: '',
   driverLicense: 'DL123456',
   driverLicenseExpiration: '2026-01-15',
-  houseId: 'house-001',
+  houseId: 1,
   contacts: [
     {
       type: 'Reference' as ContactType,
@@ -76,7 +76,7 @@ const MOCK_EMPLOYEE: Employee = {
   ],
   personalDocuments: [
     {
-      id: 'doc-001',
+      id: 1,
       path: 's3://bucket/documents/driver-license.pdf',
       title: 'Driver License',
       comment: 'Valid until 2026',
@@ -89,7 +89,7 @@ const MOCK_EMPLOYEE_LIST: Employee[] = [
   MOCK_EMPLOYEE,
   {
     ...MOCK_EMPLOYEE,
-    id: 'emp-002',
+    id: 2,
     firstName: 'Alice',
     lastName: 'Johnson',
     email: 'alice.johnson@example.com',
@@ -151,7 +151,7 @@ export const createEmployee = async (data: CreateEmployeeRequest): Promise<Emplo
     return {
       ...MOCK_EMPLOYEE,
       ...data,
-      id: `emp-${Date.now()}`,
+      id: Date.now(),
     };
   }
   
@@ -206,7 +206,7 @@ export const uploadPersonalDocument = async (
   if (isMockMode()) {
     await delay(1000);
     return {
-      id: `doc-${Date.now()}`,
+      id: Date.now(),
       path: `s3://bucket/documents/${file.name}`,
       title,
       comment: comment || '',
@@ -302,7 +302,7 @@ export interface OnboardingFormData {
  */
 export const mapOnboardingFormToEmployeeRequest = (
   formData: OnboardingFormData,
-  userId: string
+  userId: number
 ): CreateEmployeeRequest => {
   // 构建 contacts 数组
   const contacts: Contact[] = [

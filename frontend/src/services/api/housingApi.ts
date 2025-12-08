@@ -21,7 +21,7 @@ import type { FacilityReportComment } from '@/types/housing';
 
 // ==================== Mock Data ====================
 const MOCK_LANDLORD: Landlord = {
-  id: 'landlord-001',
+  id: 1,
   firstName: 'Robert',
   lastName: 'Williams',
   email: 'robert.williams@example.com',
@@ -29,16 +29,16 @@ const MOCK_LANDLORD: Landlord = {
 };
 
 const MOCK_FACILITY: Facility = {
-  id: 'facility-001',
-  houseId: 'house-001',
+  id: 1,
+  houseId: 1,
   type: 'Bed',
   description: 'Queen size bed',
   quantity: 2,
 };
 
 const MOCK_HOUSE: House = {
-  id: 'house-001',
-  landlordId: 'landlord-001',
+  id: 1,
+  landlordId: 1,
   address: '123 Maple Street, New York, NY 10001',
   maxOccupant: 4,
 };
@@ -49,15 +49,15 @@ const MOCK_HOUSE_DETAIL: HouseDetail = {
   facilities: [
     MOCK_FACILITY,
     {
-      id: 'facility-002',
-      houseId: 'house-001',
+      id: 2,
+      houseId: 1,
       type: 'Mattress',
       description: 'Memory foam mattress',
       quantity: 2,
     },
     {
-      id: 'facility-003',
-      houseId: 'house-001',
+      id: 3,
+      houseId: 1,
       type: 'Table',
       description: 'Dining table',
       quantity: 1,
@@ -66,9 +66,9 @@ const MOCK_HOUSE_DETAIL: HouseDetail = {
 };
 
 const MOCK_FACILITY_REPORT: FacilityReport = {
-  id: 'report-001',
-  facilityId: 'facility-001',
-  employeeId: 'emp-001',
+  id: 1,
+  facilityId: 1,
+  employeeId: 1,
   title: 'Broken bed frame',
   description: 'The bed frame has a broken slat that needs replacement',
   createDate: '2024-01-01T00:00:00Z',
@@ -76,9 +76,9 @@ const MOCK_FACILITY_REPORT: FacilityReport = {
 };
 
 const MOCK_FACILITY_REPORT_COMMENT: FacilityReportComment = {
-  id: 'comment-001',
-  facilityReportId: 'report-001',
-  employeeId: 'emp-001',
+  id: 1,
+  facilityReportId: 1,
+  employeeId: 1,
   comment: 'The issue is getting worse, please fix ASAP',
   createDate: '2024-01-02T00:00:00Z',
   lastModificationDate: '2024-01-02T00:00:00Z',
@@ -130,7 +130,7 @@ export const createHouse = async (data: Omit<House, 'id'>): Promise<House> => {
     await delay(500);
     return {
       ...data,
-      id: `house-${Date.now()}`,
+      id: Date.now(),
     };
   }
   
@@ -209,7 +209,7 @@ export const createLandlord = async (data: Omit<Landlord, 'id'>): Promise<Landlo
     await delay(500);
     return {
       ...data,
-      id: `landlord-${Date.now()}`,
+      id: Date.now(),
     };
   }
   
@@ -242,7 +242,7 @@ export const createFacility = async (data: Omit<Facility, 'id'>): Promise<Facili
     await delay(500);
     return {
       ...data,
-      id: `facility-${Date.now()}`,
+      id: Date.now(),
     };
   }
   
@@ -354,7 +354,7 @@ export const createFacilityReport = async (
   if (isMockMode()) {
     await delay(500);
     return {
-      id: `report-${Date.now()}`,
+      id: Date.now(),
       facilityId: data.facilityId,
       employeeId: data.employeeId,
       title: data.title,
