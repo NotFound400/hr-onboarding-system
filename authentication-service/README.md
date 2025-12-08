@@ -42,7 +42,7 @@ POST /api/auth/login
         "token": "eyJ...",
         "tokenType": "Bearer",
         "user": {
-            "id": "1",
+            "id": 1,
             "username": "hr_admin",
             "email": "hr@example.com",
             "roles": ["Employee", "HR"]
