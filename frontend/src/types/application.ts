@@ -9,9 +9,9 @@ import { ApplicationStatus, ApplicationType } from './enums';
 /** 申请工作流表 */
 export interface ApplicationWorkFlow {
   /** Primary Key */
-  id: string;
+  id: number;
   /** 员工 ID (Foreign Key -> Employee.ID) */
-  employeeId: string;
+  employeeId: number;
   /** 创建时间 */
   createDate: string;
   /** 最后修改时间 */
@@ -27,7 +27,7 @@ export interface ApplicationWorkFlow {
 /** 数字文档 (系统要求的文档模板配置表) */
 export interface DigitalDocument {
   /** Primary Key */
-  id: string;
+  id: number;
   /** 文档类型 (e.g., 'I-983', 'I-20') */
   type: string;
   /** 是否必需 */
@@ -42,14 +42,14 @@ export interface DigitalDocument {
 
 /** 创建申请请求 */
 export interface CreateApplicationRequest {
-  employeeId: string;
+  employeeId: number;
   type: ApplicationType;
   comment?: string;
 }
 
 /** 更新申请状态请求 */
 export interface UpdateApplicationStatusRequest {
-  id: string;
+  id: number;
   status: ApplicationStatus;
   comment?: string;
 }

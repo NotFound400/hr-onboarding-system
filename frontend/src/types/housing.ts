@@ -9,7 +9,7 @@ import { FacilityReportStatus } from './enums';
 /** 房东表 */
 export interface Landlord {
   /** Primary Key */
-  id: string;
+  id: number;
   /** 名 */
   firstName: string;
   /** 姓 */
@@ -23,9 +23,9 @@ export interface Landlord {
 /** 房屋表 */
 export interface House {
   /** Primary Key */
-  id: string;
+  id: number;
   /** 房东 ID (Foreign Key -> Landlord.ID) */
-  landlordId: string;
+  landlordId: number;
   /** 地址 */
   address: string;
   /** 最大入住人数 */
@@ -35,9 +35,9 @@ export interface House {
 /** 设施表 */
 export interface Facility {
   /** Primary Key */
-  id: string;
+  id: number;
   /** 房屋 ID (Foreign Key -> House.ID) */
-  houseId: string;
+  houseId: number;
   /** 设施类型 (e.g., 'Bed', 'Mattress', 'Table') */
   type: string;
   /** 描述 */
@@ -49,11 +49,11 @@ export interface Facility {
 /** 设施报修评论 */
 export interface FacilityReportComment {
   /** Primary Key */
-  id: string;
+  id: number;
   /** 报修 ID (Foreign Key -> FacilityReport.ID) */
-  facilityReportId: string;
+  facilityReportId: number;
   /** 员工 ID (Foreign Key -> Employee.ID) */
-  employeeId: string;
+  employeeId: number;
   /** 评论内容 */
   comment: string;
   /** 创建时间 */
@@ -65,11 +65,11 @@ export interface FacilityReportComment {
 /** 设施报修工单 */
 export interface FacilityReport {
   /** Primary Key */
-  id: string;
+  id: number;
   /** 设施 ID (Foreign Key -> Facility.ID) */
-  facilityId: string;
+  facilityId: number;
   /** 员工 ID (Foreign Key -> Employee.ID) */
-  employeeId: string;
+  employeeId: number;
   /** 标题 */
   title: string;
   /** 描述 */
@@ -82,22 +82,22 @@ export interface FacilityReport {
 
 /** 创建报修工单请求 */
 export interface CreateFacilityReportRequest {
-  facilityId: string;
-  employeeId: string;
+  facilityId: number;
+  employeeId: number;
   title: string;
   description: string;
 }
 
 /** 更新报修状态请求 */
 export interface UpdateFacilityReportRequest {
-  id: string;
+  id: number;
   status: FacilityReportStatus;
 }
 
 /** 添加报修评论请求 */
 export interface AddFacilityReportCommentRequest {
-  facilityReportId: string;
-  employeeId: string;
+  facilityReportId: number;
+  employeeId: number;
   comment: string;
 }
 

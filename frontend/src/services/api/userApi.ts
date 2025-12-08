@@ -17,7 +17,7 @@ import type {
 const MOCK_LOGIN_RESPONSE: LoginResponse = {
   token: 'mock-jwt-token-12345',
   user: {
-    id: '1',
+    id: 1,
     username: 'john.doe',
     email: 'john.doe@example.com',
     password: '', // 不返回密码
@@ -28,7 +28,7 @@ const MOCK_LOGIN_RESPONSE: LoginResponse = {
 };
 
 const MOCK_USER_PROFILE: User = {
-  id: '1',
+  id: 1,
   username: 'john.doe',
   email: 'john.doe@example.com',
   password: '',
@@ -37,7 +37,7 @@ const MOCK_USER_PROFILE: User = {
 };
 
 const MOCK_REGISTRATION_TOKEN: RegistrationToken = {
-  id: '1',
+  id: 1,
   token: 'mock-token-abc123',
   email: 'newuser@example.com',
   expirationDate: '2025-12-31T23:59:59Z',

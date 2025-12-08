@@ -52,7 +52,7 @@ export interface VisaStatus {
 /** 个人文档 */
 export interface PersonalDocument {
   /** 文档 ID */
-  id: string;
+  id: number;
   /** S3 URL 路径 */
   path: string;
   /** 文档标题 (e.g., 'Driver License', 'OPT Receipt') */
@@ -65,10 +65,10 @@ export interface PersonalDocument {
 
 /** 员工实体 (MongoDB Document) */
 export interface Employee {
-  /** ObjectId (String) */
-  id: string;
+  /** ObjectId (Number) */
+  id: number;
   /** 用户 ID (Ref -> Auth.User.ID) */
-  userId: string;
+  userId: number;
   /** 名 */
   firstName: string;
   /** 姓 */
@@ -98,7 +98,7 @@ export interface Employee {
   /** 驾照过期日期 */
   driverLicenseExpiration: string;
   /** 房屋 ID (Ref -> HousingService.House.ID) */
-  houseId: string;
+  houseId: number;
   /** 联系人列表 (包含 Reference 和 Emergency，通过 type 区分) */
   contacts: Contact[];
   /** 地址列表 (包含 Primary 和 Secondary) */
@@ -111,7 +111,7 @@ export interface Employee {
 
 /** 创建员工请求 (用于 Onboarding 表单提交) */
 export interface CreateEmployeeRequest {
-  userId: string;
+  userId: number;
   firstName: string;
   lastName: string;
   middleName?: string;
@@ -132,5 +132,5 @@ export interface CreateEmployeeRequest {
 
 /** 更新员工请求 */
 export interface UpdateEmployeeRequest extends Partial<CreateEmployeeRequest> {
-  id: string;
+  id: number;
 }

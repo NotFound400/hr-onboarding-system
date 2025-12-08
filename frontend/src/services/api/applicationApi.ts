@@ -17,8 +17,8 @@ import type {
 
 // ==================== Mock Data ====================
 const MOCK_APPLICATION: ApplicationWorkFlow = {
-  id: 'app-001',
-  employeeId: 'emp-001',
+  id: 1,
+  employeeId: 1,
   createDate: '2024-01-01T00:00:00Z',
   lastModificationDate: '2024-01-01T00:00:00Z',
   status: 'Pending' as ApplicationStatus,
@@ -36,16 +36,16 @@ const MOCK_APPLICATION_LIST: ApplicationDetail[] = [
   MOCK_APPLICATION_DETAIL,
   {
     ...MOCK_APPLICATION_DETAIL,
-    id: 'app-002',
-    employeeId: 'emp-002',
+    id: 2,
+    employeeId: 2,
     employeeName: 'Alice Johnson',
     employeeEmail: 'alice.johnson@example.com',
     status: 'Approved' as ApplicationStatus,
   },
   {
     ...MOCK_APPLICATION_DETAIL,
-    id: 'app-003',
-    employeeId: 'emp-003',
+    id: 3,
+    employeeId: 3,
     employeeName: 'Bob Smith',
     employeeEmail: 'bob.smith@example.com',
     status: 'Rejected' as ApplicationStatus,
@@ -54,7 +54,7 @@ const MOCK_APPLICATION_LIST: ApplicationDetail[] = [
 ];
 
 const MOCK_DIGITAL_DOCUMENT: DigitalDocument = {
-  id: 'doc-001',
+  id: 1,
   type: 'I-983',
   isRequired: true,
   path: 's3://bucket/templates/i-983-template.pdf',
@@ -65,7 +65,7 @@ const MOCK_DIGITAL_DOCUMENT: DigitalDocument = {
 const MOCK_DIGITAL_DOCUMENTS: DigitalDocument[] = [
   MOCK_DIGITAL_DOCUMENT,
   {
-    id: 'doc-002',
+    id: 2,
     type: 'I-20',
     isRequired: true,
     path: 's3://bucket/templates/i-20-template.pdf',
@@ -146,7 +146,7 @@ export const createApplication = async (
   if (isMockMode()) {
     await delay(500);
     return {
-      id: `app-${Date.now()}`,
+      id: Date.now(),
       employeeId: data.employeeId,
       createDate: new Date().toISOString(),
       lastModificationDate: new Date().toISOString(),

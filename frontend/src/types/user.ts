@@ -8,7 +8,7 @@ import { RoleType } from './enums';
 /** 用户表 */
 export interface User {
   /** Primary Key */
-  id: string;
+  id: number;
   /** 用户名 (唯一) */
   username: string;
   /** 邮箱 (唯一) */
@@ -24,7 +24,7 @@ export interface User {
 /** 角色表 */
 export interface Role {
   /** Primary Key */
-  id: string;
+  id: number;
   /** 角色名称 (e.g., 'HR', 'Employee') */
   roleName: RoleType;
   /** 角色描述 */
@@ -38,11 +38,11 @@ export interface Role {
 /** 用户角色映射表 */
 export interface UserRole {
   /** Primary Key */
-  id: string;
+  id: number;
   /** 用户 ID (Foreign Key -> User.ID) */
-  userId: string;
+  userId: number;
   /** 角色 ID (Foreign Key -> Role.ID) */
-  roleId: string;
+  roleId: number;
   /** 激活标志 */
   activeFlag: boolean;
   /** 创建时间 */
@@ -54,7 +54,7 @@ export interface UserRole {
 /** 注册 Token 表 */
 export interface RegistrationToken {
   /** Primary Key */
-  id: string;
+  id: number;
   /** Token 字符串 (唯一) */
   token: string;
   /** 目标邮箱 */

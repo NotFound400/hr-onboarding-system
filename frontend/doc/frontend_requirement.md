@@ -304,184 +304,131 @@ SubmitResult	返回	/login
 拒绝 → 员工登录进入 /onboarding/form 并展示拒绝原因
 
 6. 完整项目目录结构（含全部子目录）
-src/
-  app/
-    App.tsx
-    AntdAppProvider.tsx
-    routes/
-      EmployeeRoutes.tsx
-      HrRoutes.tsx
-      PublicRoutes.tsx
-    layout/
-      EmployeeLayout.tsx
-      HrLayout.tsx
-      AuthLayout.tsx
-
-  config/
-    auth.ts
-    routes.ts
-    constants.ts
-    theme.ts
-
-  hooks/
-    useAuth.ts
-    useUserRole.ts
-    useModal.ts
-    usePagination.ts
-
-  store/
-    index.ts
-    hooks.ts
-    slices/
-      authSlice.ts
-      userSlice.ts
-      onboardingSlice.ts
-      visaSlice.ts
-      housingSlice.ts
-      facilityIssueSlice.ts
-      hrSlice.ts
-
-  services/
-    api/
-      authApi.ts
-      userApi.ts
-      onboardingApi.ts
-      visaApi.ts
-      housingApi.ts
-      facilityIssueApi.ts
-      hrApi.ts
-      houseApi.ts
-
-  components/
-    common/
-      AppButton/
-      AppInput/
-      AppSelect/
-      AppDatePicker/
-      AppModal/
-      AppTable/
-      AppForm/
-      AppCard/
-      AppPagination/
-    layout/
-      TopNav/
-        EmployeeTopNav.tsx
-        HrTopNav.tsx
-      PageHeader/
-        PageHeader.tsx
-    document/
-      DocumentList.tsx
-      DocumentPreviewModal.tsx
-      DocumentUploadItem.tsx
-    form/
-      FormSection.tsx
-      EditableField.tsx
-      ReadonlyField.tsx
-
-  features/
-    auth/
-      pages/
-        LoginPage.tsx
-      components/
-        LoginForm.tsx
-
-    onboarding/
-      pages/
-        RegistrationPage.tsx
-        OnboardingFormPage.tsx
-        OnboardingDocsPage.tsx
-        OnboardingSubmitResultPage.tsx
-      components/
-        OnboardingForm.tsx
-        OnboardingDocsList.tsx
-        OnboardingDocItem.tsx
-
-    employee/
-      pages/
-        EmployeeHomePage.tsx
-        PersonalInfoPage.tsx
-        VisaStatusPage.tsx
-        HousingPage.tsx
-        HouseDetailPage.tsx
-        FacilityIssuePage.tsx
-      components/
-        personal-info/
-          PersonalInfoSummary.tsx
-          PersonalInfoNameSection.tsx
-          PersonalInfoAddressSection.tsx
-          PersonalInfoContactSection.tsx
-          PersonalInfoEmploymentSection.tsx
-          PersonalInfoDocumentsSection.tsx
-        visa/
-          EmployeeVisaSteps.tsx
-          VisaStepUploadCard.tsx
-          EmployeeVisaDocsList.tsx
-        housing/
-          HousingCard.tsx
-          RoommateList.tsx
-        facility-issue/
-          FacilityIssueForm.tsx
-          FacilityIssueTable.tsx
-          FacilityIssueComments.tsx
-          FacilityIssueCommentEditor.tsx
-
-    hr/
-      pages/
-        HrHomePage.tsx
-        EmployeeProfilePage.tsx
-        VisaManagementPage.tsx
-        HireTokenPage.tsx
-        HireApplicationListPage.tsx
-        HireApplicationDetailPage.tsx
-        HouseManagementPage.tsx
-        HouseDetailManagementPage.tsx
-      components/
-        home/
-          ApplicationTrackingTable.tsx
-        employee-profile/
-          EmployeeProfileSearchBar.tsx
-          EmployeeProfileNavigator.tsx
-          EmployeeProfileSummary.tsx
-        visa/
-          VisaStatusTable.tsx
-          VisaStatusRow.tsx
-          StemOptApplicationActions.tsx
-        hire/
-          RegistrationTokenForm.tsx
-          ApplicationListTable.tsx
-          ApplicationFormReadonly.tsx
-          ApplicationDocsReview.tsx
-          ApplicationDecisionBar.tsx
-        house/
-          HouseListTable.tsx
-          HouseBasicInfoCard.tsx
-          HouseFacilityInfoCard.tsx
-          HouseEmployeeList.tsx
-          HouseFacilityReportTable.tsx
-          HouseFacilityReportDetailModal.tsx
-          HouseFacilityReportComments.tsx
-
-  types/
-    auth.ts
-    user.ts
-    onboarding.ts
-    visa.ts
-    housing.ts
-    facilityIssue.ts
-    hr.ts
-    house.ts
-    document.ts
-
-  utils/
-    formatDate.ts
-    maskSSN.ts
-    sortByCreatedTime.ts
-    validators.ts
-    roleGuard.ts
-
-  styles/
-    global.css
-    antd-theme.less
+Project Root/
+  ├── ai_rules.md                 <-- [NEW] AI 生成规范、API 契约、Mock 策略
+  ├── db_design.md                <-- [NEW] 数据库结构定义 (MongoDB/MySQL)
+  ├── frontend_requirement.md     <-- [UPDATED] 前端业务逻辑与校验规则
+  ├── .env.development            <-- [NEW] 环境变量 (VITE_USE_MOCK=true)
+  ├── package.json
+  ├── tsconfig.json
+  ├── vite.config.ts
+  └── src/
+      ├── app/
+      │   ├── App.tsx
+      │   ├── AntdAppProvider.tsx     <-- AntD ConfigProvider 全局配置
+      │   ├── routes/
+      │   │   ├── AuthGuard.tsx       <-- [NEW] 路由权限守卫
+      │   │   ├── PublicRoutes.tsx
+      │   │   ├── EmployeeRoutes.tsx
+      │   │   └── HrRoutes.tsx
+      │   └── layout/
+      │       ├── MainLayout.tsx      <-- 统一布局 (内部根据 Role 切换 Nav)
+      │       └── AuthLayout.tsx
+      │
+      ├── config/
+      │   ├── constants.ts
+      │   └── theme.ts
+      │
+      ├── hooks/
+      │   ├── useAuth.ts
+      │   ├── useAppDispatch.ts       <-- [NEW] Redux Toolkit 官方推荐 Hook
+      │   └── useAppSelector.ts       <-- [NEW] Redux Toolkit 官方推荐 Hook
+      │
+      ├── store/
+      │   ├── index.ts
+      │   └── slices/
+      │       ├── authSlice.ts
+      │       ├── userSlice.ts
+      │       ├── onboardingSlice.ts
+      │       ├── visaSlice.ts
+      │       ├── housingSlice.ts
+      │       └── hrSlice.ts
+      │
+      ├── services/
+      │   └── api/
+      │       ├── axiosClient.ts      <-- [CORE] 包含拦截器：处理 ApiResponse 解包 & 错误提示
+      │       ├── authApi.ts
+      │       ├── employeeApi.ts      <-- 对应 EmployeeService (Mongo)
+      │       ├── applicationApi.ts   <-- 对应 Application Workflow (SQL)
+      │       ├── housingApi.ts       <-- 对应 HousingService (SQL)
+      │       └── facilityApi.ts
+      │
+      ├── types/
+      │   ├── index.ts
+      │   ├── response.ts             <-- [NEW] 定义 ApiResponse<T> 统一外壳
+      │   ├── request.ts              <-- [NEW] 定义 Request DTOs (如 OnboardingSubmitDTO)
+      │   ├── user.ts
+      │   ├── employee.ts             <-- 对应 DB Design 中的 Employee (含 nested types)
+      │   ├── application.ts          <-- 对应 DB Design 中的 Workflow & Status Enum
+      │   ├── housing.ts
+      │   └── document.ts
+      │
+      ├── utils/
+      │   ├── mockUtils.ts            <-- [NEW] 存放 delay 函数、Mock 开关检测工具
+      │   ├── validators.ts           <-- 表单校验逻辑
+      │   └── formatDate.ts
+      │
+      ├── components/
+      │   ├── common/                 <-- 基础组件二次封装
+      │   │   ├── AppButton/
+      │   │   ├── AppInput/
+      │   │   ├── AppSelect/
+      │   │   ├── AppTable/
+      │   │   ├── AppModal/
+      │   │   └── AppCard/
+      │   ├── document/
+      │   │   ├── DocumentList.tsx    <-- [REQ] 需包含显式的“下载”按钮
+      │   │   └── DocumentPreviewModal.tsx
+      │   └── form/
+      │       ├── FormSection.tsx
+      │       └── EditableField.tsx
+      │
+      ├── features/                   <-- 业务模块 (Feature-First 结构)
+      │   ├── auth/
+      │   │   ├── pages/
+      │   │   │   └── LoginPage.tsx
+      │   │   └── components/
+      │   │       └── LoginForm.tsx
+      │   ├── onboarding/
+      │   │   ├── pages/
+      │   │   │   ├── RegistrationPage.tsx
+      │   │   │   ├── OnboardingFormPage.tsx
+      │   │   │   ├── OnboardingDocsPage.tsx
+      │   │   │   └── OnboardingSubmitResultPage.tsx
+      │   │   └── components/
+      │   │       ├── OnboardingForm.tsx      <-- [CORE] 负责将表单平铺数据转为 API 嵌套数据
+      │   │       └── OnboardingDocsList.tsx
+      │   ├── employee/
+      │   │   ├── pages/
+      │   │   │   ├── EmployeeHomePage.tsx
+      │   │   │   ├── PersonalInfoPage.tsx
+      │   │   │   ├── VisaStatusPage.tsx
+      │   │   │   ├── HousingPage.tsx
+      │   │   │   ├── HouseDetailPage.tsx
+      │   │   │   └── FacilityIssuePage.tsx
+      │   │   └── components/
+      │   │       ├── personal-info/
+      │   │       ├── visa/
+      │   │       ├── housing/
+      │   │       └── facility-issue/
+      │   └── hr/
+      │       ├── pages/
+      │   │       ├── HrHomePage.tsx
+      │   │       ├── EmployeeProfilePage.tsx
+      │   │       ├── VisaManagementPage.tsx
+      │   │       ├── HireTokenPage.tsx
+      │   │       ├── HireApplicationListPage.tsx
+      │   │       ├── HireApplicationDetailPage.tsx
+      │   │       └── HouseManagementPage.tsx
+      │       └── components/
+      │           ├── home/
+      │           ├── employee-profile/
+      │           ├── visa/
+      │           ├── hire/
+      │           └── house/
+      │
+      └── styles/
+          └── global.css
 
 7. 命名规范
 
