@@ -4,23 +4,18 @@
  */
 
 import { configureStore } from '@reduxjs/toolkit';
-
-// TODO: 在 Phase 3 中添加具体的 slice reducers
-// import authReducer from './slices/authSlice';
-// import employeeReducer from './slices/employeeSlice';
-// import applicationReducer from './slices/applicationSlice';
+import authReducer from './slices/authSlice';
+import onboardingReducer from './slices/onboardingSlice';
+import hrReducer from './slices/hrSlice';
 
 /**
  * Redux Store
- * 预留空的 reducers，后续添加具体的 slice
  */
 export const store = configureStore({
   reducer: {
-    // 预留位置 - 待添加具体的 reducers
-    // auth: authReducer,
-    // employee: employeeReducer,
-    // application: applicationReducer,
-    // housing: housingReducer,
+    auth: authReducer,
+    onboarding: onboardingReducer,
+    hr: hrReducer,
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({

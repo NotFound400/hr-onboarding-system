@@ -5,12 +5,17 @@
 
 import { ContactType, AddressType, VisaStatusType, Gender } from './enums';
 
+// Re-export request types
+export type { CreateEmployeeRequest, UpdateEmployeeRequest } from './request';
+
 /** 联系人 (包含 Reference 和 Emergency Contact) */
 export interface Contact {
   /** 联系人类型 */
   type: ContactType;
-  /** 姓名 */
-  name: string;
+  /** 名 */
+  firstName: string;
+  /** 姓 */
+  lastName: string;
   /** 电话 */
   phone: string;
   /** 邮箱 */
@@ -65,10 +70,10 @@ export interface PersonalDocument {
 
 /** 员工实体 (MongoDB Document) */
 export interface Employee {
-  /** ObjectId (Number) */
-  id: number;
+  /** ObjectId (String) */
+  id: string;
   /** 用户 ID (Ref -> Auth.User.ID) */
-  userId: number;
+  userID: number;
   /** 名 */
   firstName: string;
   /** 姓 */
@@ -86,9 +91,9 @@ export interface Employee {
   /** 性别 */
   gender: Gender;
   /** 社会安全号 */
-  ssn: string;
+  SSN: string;
   /** 出生日期 */
-  dob: string;
+  DOB: string;
   /** 入职日期 */
   startDate: string;
   /** 离职日期 */
@@ -98,39 +103,13 @@ export interface Employee {
   /** 驾照过期日期 */
   driverLicenseExpiration: string;
   /** 房屋 ID (Ref -> HousingService.House.ID) */
-  houseId: number;
+  houseID: number;
   /** 联系人列表 (包含 Reference 和 Emergency，通过 type 区分) */
-  contacts: Contact[];
+  contact: Contact[];
   /** 地址列表 (包含 Primary 和 Secondary) */
-  addresses: Address[];
+  address: Address[];
   /** 签证状态列表 */
-  visaStatuses: VisaStatus[];
+  visaStatus: VisaStatus[];
   /** 个人文档列表 */
-  personalDocuments: PersonalDocument[];
-}
-
-/** 创建员工请求 (用于 Onboarding 表单提交) */
-export interface CreateEmployeeRequest {
-  userId: number;
-  firstName: string;
-  lastName: string;
-  middleName?: string;
-  preferredName?: string;
-  email: string;
-  cellPhone: string;
-  alternatePhone?: string;
-  gender: Gender;
-  ssn: string;
-  dob: string;
-  startDate: string;
-  driverLicense: string;
-  driverLicenseExpiration: string;
-  contacts: Contact[];
-  addresses: Address[];
-  visaStatuses: VisaStatus[];
-}
-
-/** 更新员工请求 */
-export interface UpdateEmployeeRequest extends Partial<CreateEmployeeRequest> {
-  id: number;
+  personalDocument: PersonalDocument[];
 }

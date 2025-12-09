@@ -54,7 +54,7 @@ export type AddressType = typeof AddressType[keyof typeof AddressType];
 /** 设施报修状态 */
 export const FacilityReportStatus = {
   OPEN: 'Open',
-  IN_PROGRESS: 'In Progress',
+  IN_PROGRESS: 'InProgress',
   CLOSED: 'Closed'
 } as const;
 export type FacilityReportStatus = typeof FacilityReportStatus[keyof typeof FacilityReportStatus];

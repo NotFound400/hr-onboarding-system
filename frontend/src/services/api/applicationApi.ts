@@ -4,7 +4,7 @@
  */
 
 import axiosClient from './axiosClient';
-import { isMockMode, delay } from '@/utils/mockUtils';
+import { isMockMode, delay } from '../../utils/mockUtils';
 import type { 
   ApplicationWorkFlow,
   ApplicationDetail,
@@ -12,67 +12,183 @@ import type {
   UpdateApplicationStatusRequest,
   DigitalDocument,
   ApplicationStatus,
-  ApplicationType
-} from '@/types';
+  ApplicationType,
+  ApiResponse
+} from '../../types';
 
 // ==================== Mock Data ====================
-const MOCK_APPLICATION: ApplicationWorkFlow = {
-  id: 1,
-  employeeId: 1,
-  createDate: '2024-01-01T00:00:00Z',
-  lastModificationDate: '2024-01-01T00:00:00Z',
-  status: 'Pending' as ApplicationStatus,
-  comment: '',
-  type: 'Onboarding' as ApplicationType,
-};
-
-const MOCK_APPLICATION_DETAIL: ApplicationDetail = {
-  ...MOCK_APPLICATION,
-  employeeName: 'John Doe',
-  employeeEmail: 'john.doe@example.com',
-};
-
-const MOCK_APPLICATION_LIST: ApplicationDetail[] = [
-  MOCK_APPLICATION_DETAIL,
-  {
-    ...MOCK_APPLICATION_DETAIL,
-    id: 2,
-    employeeId: 2,
-    employeeName: 'Alice Johnson',
-    employeeEmail: 'alice.johnson@example.com',
-    status: 'Approved' as ApplicationStatus,
+const MOCK_APPLICATION: ApiResponse<ApplicationWorkFlow> = {
+  success: true,
+  message: 'Application retrieved successfully',
+  data: {
+    id: 1,
+    employeeId: '1',
+    createDate: '2024-01-01T00:00:00Z',
+    lastModificationDate: '2024-01-01T00:00:00Z',
+    status: 'Pending' as ApplicationStatus,
+    comment: '',
+    type: 'Onboarding' as ApplicationType,
   },
-  {
-    ...MOCK_APPLICATION_DETAIL,
-    id: 3,
-    employeeId: 3,
-    employeeName: 'Bob Smith',
-    employeeEmail: 'bob.smith@example.com',
-    status: 'Rejected' as ApplicationStatus,
-    comment: 'Incomplete documentation',
-  },
-];
-
-const MOCK_DIGITAL_DOCUMENT: DigitalDocument = {
-  id: 1,
-  type: 'I-983',
-  isRequired: true,
-  path: 's3://bucket/templates/i-983-template.pdf',
-  description: 'Training Plan for STEM OPT Students',
-  title: 'I-983 Form',
 };
 
-const MOCK_DIGITAL_DOCUMENTS: DigitalDocument[] = [
-  MOCK_DIGITAL_DOCUMENT,
-  {
-    id: 2,
-    type: 'I-20',
+const MOCK_APPLICATION_DETAIL: ApiResponse<ApplicationDetail> = {
+  success: true,
+  message: 'Application detail retrieved successfully',
+  data: {
+    ...MOCK_APPLICATION.data!,
+    employeeName: 'John Doe',
+    employeeEmail: 'john.doe@example.com',
+  },
+};
+
+const MOCK_APPLICATION_LIST: ApiResponse<ApplicationDetail[]> = {
+  success: true,
+  message: 'Application list retrieved successfully',
+  data: [
+    // Onboarding Applications
+    MOCK_APPLICATION_DETAIL.data!,
+    {
+      ...MOCK_APPLICATION_DETAIL.data!,
+      id: 2,
+      employeeId: '2',
+      employeeName: 'Alice Johnson',
+      employeeEmail: 'alice.johnson@example.com',
+      status: 'Approved' as ApplicationStatus,
+      createDate: '2024-01-05T10:30:00Z',
+      lastModificationDate: '2024-01-06T14:20:00Z',
+    },
+    {
+      id: 100,
+      employeeId: '507f1f77bcf86cd799439100',
+      employeeName: 'Alice Wang',
+      employeeEmail: 'alice.wang@example.com',
+      type: 'Onboarding' as ApplicationType,
+      status: 'Approved' as ApplicationStatus,
+      comment: 'All documents verified and approved',
+      createDate: '2024-02-05T09:00:00Z',
+      lastModificationDate: '2024-02-10T14:30:00Z',
+    },
+    {
+      ...MOCK_APPLICATION_DETAIL.data!,
+      id: 3,
+      employeeId: '3',
+      employeeName: 'Bob Smith',
+      employeeEmail: 'bob.smith@example.com',
+      status: 'Rejected' as ApplicationStatus,
+      comment: 'Incomplete documentation',
+      createDate: '2024-01-08T09:15:00Z',
+      lastModificationDate: '2024-01-09T16:45:00Z',
+    },
+    
+    // OPT Applications (for Visa Management Page)
+    {
+      id: 4,
+      employeeId: '4',
+      employeeName: 'Chen Wei',
+      employeeEmail: 'chen.wei@example.com',
+      type: 'OPT' as ApplicationType,
+      status: 'Pending' as ApplicationStatus,
+      comment: '',
+      createDate: '2024-02-01T08:00:00Z',
+      lastModificationDate: '2024-02-01T08:00:00Z',
+    },
+    {
+      id: 5,
+      employeeId: '5',
+      employeeName: 'Maria Garcia',
+      employeeEmail: 'maria.garcia@example.com',
+      type: 'OPT' as ApplicationType,
+      status: 'Pending' as ApplicationStatus,
+      comment: '',
+      createDate: '2024-02-03T11:30:00Z',
+      lastModificationDate: '2024-02-03T11:30:00Z',
+    },
+    {
+      id: 6,
+      employeeId: '6',
+      employeeName: 'Raj Patel',
+      employeeEmail: 'raj.patel@example.com',
+      type: 'OPT' as ApplicationType,
+      status: 'Approved' as ApplicationStatus,
+      comment: 'All documents verified. OPT EAD card approved.',
+      createDate: '2024-01-15T09:00:00Z',
+      lastModificationDate: '2024-01-20T15:30:00Z',
+    },
+    {
+      id: 7,
+      employeeId: '7',
+      employeeName: 'Sarah Kim',
+      employeeEmail: 'sarah.kim@example.com',
+      type: 'OPT' as ApplicationType,
+      status: 'Rejected' as ApplicationStatus,
+      comment: 'I-20 expired. Please renew your student status first.',
+      createDate: '2024-01-22T10:15:00Z',
+      lastModificationDate: '2024-01-25T14:00:00Z',
+    },
+    {
+      id: 8,
+      employeeId: '8',
+      employeeName: 'Mohamed Ali',
+      employeeEmail: 'mohamed.ali@example.com',
+      type: 'OPT' as ApplicationType,
+      status: 'Pending' as ApplicationStatus,
+      comment: '',
+      createDate: '2024-02-05T13:45:00Z',
+      lastModificationDate: '2024-02-05T13:45:00Z',
+    },
+    {
+      id: 9,
+      employeeId: '9',
+      employeeName: 'Emily Chen',
+      employeeEmail: 'emily.chen@example.com',
+      type: 'OPT' as ApplicationType,
+      status: 'Approved' as ApplicationStatus,
+      comment: 'STEM OPT extension approved for 24 months.',
+      createDate: '2024-01-10T08:30:00Z',
+      lastModificationDate: '2024-01-18T16:20:00Z',
+    },
+    {
+      id: 10,
+      employeeId: '10',
+      employeeName: 'David Lee',
+      employeeEmail: 'david.lee@example.com',
+      type: 'OPT' as ApplicationType,
+      status: 'Pending' as ApplicationStatus,
+      comment: '',
+      createDate: '2024-02-07T14:00:00Z',
+      lastModificationDate: '2024-02-07T14:00:00Z',
+    },
+  ],
+};
+
+const MOCK_DIGITAL_DOCUMENT: ApiResponse<DigitalDocument> = {
+  success: true,
+  message: 'Digital document retrieved successfully',
+  data: {
+    id: 1,
+    type: 'I-983',
     isRequired: true,
-    path: 's3://bucket/templates/i-20-template.pdf',
-    description: 'Certificate of Eligibility for Nonimmigrant Student Status',
-    title: 'I-20 Form',
+    path: 's3://bucket/templates/i-983-template.pdf',
+    description: 'Training Plan for STEM OPT Students',
+    title: 'I-983 Form',
   },
-];
+};
+
+const MOCK_DIGITAL_DOCUMENTS: ApiResponse<DigitalDocument[]> = {
+  success: true,
+  message: 'Digital documents retrieved successfully',
+  data: [
+    MOCK_DIGITAL_DOCUMENT.data!,
+    {
+      id: 2,
+      type: 'I-20',
+      isRequired: true,
+      path: 's3://bucket/templates/i-20-template.pdf',
+      description: 'Certificate of Eligibility for Nonimmigrant Student Status',
+      title: 'I-20 Form',
+    },
+  ],
+};
 
 // ==================== API Functions ==
 
@@ -83,7 +199,7 @@ const MOCK_DIGITAL_DOCUMENTS: DigitalDocument[] = [
 export const getAllApplications = async (): Promise<ApplicationDetail[]> => {
   if (isMockMode()) {
     await delay(500);
-    return MOCK_APPLICATION_LIST;
+    return MOCK_APPLICATION_LIST.data!;
   }
   
   return axiosClient.get('/applications') as Promise<ApplicationDetail[]>;
@@ -99,7 +215,7 @@ export const getApplicationsByStatus = async (
 ): Promise<ApplicationDetail[]> => {
   if (isMockMode()) {
     await delay(500);
-    return MOCK_APPLICATION_LIST.filter(app => app.status === status);
+    return MOCK_APPLICATION_LIST.data!.filter(app => app.status === status);
   }
   
   return axiosClient.get(`/applications?status=${status}`) as Promise<ApplicationDetail[]>;
@@ -110,10 +226,10 @@ export const getApplicationsByStatus = async (
  * @param id 申请 ID
  * @returns Promise<ApplicationDetail>
  */
-export const getApplicationById = async (id: string): Promise<ApplicationDetail> => {
+export const getApplicationById = async (id: number): Promise<ApplicationDetail> => {
   if (isMockMode()) {
     await delay(300);
-    return MOCK_APPLICATION_DETAIL;
+    return MOCK_APPLICATION_DETAIL.data!;
   }
   
   return axiosClient.get(`/applications/${id}`) as Promise<ApplicationDetail>;
@@ -129,7 +245,11 @@ export const getApplicationsByEmployeeId = async (
 ): Promise<ApplicationWorkFlow[]> => {
   if (isMockMode()) {
     await delay(300);
-    return [MOCK_APPLICATION];
+    // 根据 employeeId 过滤申请
+    const applications = MOCK_APPLICATION_LIST.data!.filter(
+      app => app.employeeId === employeeId
+    );
+    return applications.length > 0 ? applications : [MOCK_APPLICATION.data!];
   }
   
   return axiosClient.get(`/applications/employee/${employeeId}`) as Promise<ApplicationWorkFlow[]>;
@@ -144,6 +264,7 @@ export const createApplication = async (
   data: CreateApplicationRequest
 ): Promise<ApplicationWorkFlow> => {
   if (isMockMode()) {
+    console.log('[Mock Request] createApplication:', data);
     await delay(500);
     return {
       id: Date.now(),
@@ -168,9 +289,10 @@ export const updateApplicationStatus = async (
   data: UpdateApplicationStatusRequest
 ): Promise<ApplicationWorkFlow> => {
   if (isMockMode()) {
+    console.log('[Mock Request] updateApplicationStatus:', data);
     await delay(500);
     return {
-      ...MOCK_APPLICATION,
+      ...MOCK_APPLICATION.data!,
       id: data.id,
       status: data.status,
       comment: data.comment || '',
@@ -189,8 +311,9 @@ export const updateApplicationStatus = async (
  * @param id 申请 ID
  * @returns Promise<void>
  */
-export const deleteApplication = async (id: string): Promise<void> => {
+export const deleteApplication = async (id: number): Promise<void> => {
   if (isMockMode()) {
+    console.log('[Mock Request] deleteApplication:', { id });
     await delay(300);
     return;
   }
@@ -207,7 +330,7 @@ export const deleteApplication = async (id: string): Promise<void> => {
 export const getAllDigitalDocuments = async (): Promise<DigitalDocument[]> => {
   if (isMockMode()) {
     await delay(300);
-    return MOCK_DIGITAL_DOCUMENTS;
+    return MOCK_DIGITAL_DOCUMENTS.data!;
   }
   
   return axiosClient.get('/digital-documents') as Promise<DigitalDocument[]>;
@@ -221,7 +344,7 @@ export const getAllDigitalDocuments = async (): Promise<DigitalDocument[]> => {
 export const getDigitalDocumentByType = async (type: string): Promise<DigitalDocument> => {
   if (isMockMode()) {
     await delay(300);
-    return MOCK_DIGITAL_DOCUMENT;
+    return MOCK_DIGITAL_DOCUMENT.data!;
   }
   
   return axiosClient.get(`/digital-documents/type/${type}`) as Promise<DigitalDocument>;
@@ -234,7 +357,7 @@ export const getDigitalDocumentByType = async (type: string): Promise<DigitalDoc
 export const getRequiredDocuments = async (): Promise<DigitalDocument[]> => {
   if (isMockMode()) {
     await delay(300);
-    return MOCK_DIGITAL_DOCUMENTS.filter(doc => doc.isRequired);
+    return MOCK_DIGITAL_DOCUMENTS.data!.filter(doc => doc.isRequired);
   }
   
   return axiosClient.get('/digital-documents/required') as Promise<DigitalDocument[]>;
