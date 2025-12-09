@@ -16,10 +16,6 @@ import reactor.core.publisher.Mono;
 
 import java.util.List;
 
-/**
- * JWT 认证全局过滤器
- * 验证请求中的 JWT Token
- */
 @Slf4j
 @Component
 @RequiredArgsConstructor
@@ -35,14 +31,12 @@ public class JwtAuthenticationFilter implements GlobalFilter, Ordered {
         
         log.debug("Processing request: {} {}", request.getMethod(), path);
 
-        // 检查是否是开放端点（不需要认证）
         if (routeValidator.isOpenEndpoint(request)) {
             log.debug("Open endpoint, skipping authentication: {}", path);
             return chain.filter(exchange);
         }
 
-        // 检查 Authorization header
-        if (!request.getHeaders().containsHeader(HttpHeaders.AUTHORIZATION)) {
+        if (!request.getHeaders().containsKey(HttpHeaders.AUTHORIZATION)) {
             log.warn("Missing Authorization header for: {}", path);
             return onError(exchange, "Missing Authorization header", HttpStatus.UNAUTHORIZED);
         }
@@ -56,19 +50,16 @@ public class JwtAuthenticationFilter implements GlobalFilter, Ordered {
 
         String token = authHeader.substring(7);
 
-        // 验证 token
         if (!jwtUtil.validateToken(token)) {
             log.warn("Invalid or expired token for: {}", path);
             return onError(exchange, "Invalid or expired token", HttpStatus.UNAUTHORIZED);
         }
 
-        // 提取用户信息并添加到请求头
         try {
             String username = jwtUtil.extractUsername(token);
             Long userId = jwtUtil.extractUserId(token);
             List<String> roles = jwtUtil.extractRoles(token);
 
-            // 将用户信息传递给下游服务
             ServerHttpRequest modifiedRequest = request.mutate()
                     .header("X-User-Id", userId != null ? userId.toString() : "")
                     .header("X-Username", username)
@@ -98,7 +89,6 @@ public class JwtAuthenticationFilter implements GlobalFilter, Ordered {
 
     @Override
     public int getOrder() {
-        // 高优先级，在其他过滤器之前执行
         return -100;
     }
 }

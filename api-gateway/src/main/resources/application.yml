@@ -5,52 +5,40 @@ spring:
   application:
     name: api-gateway
 
+  data:
+    redis:
+      host: localhost
+      port: 6379
+      timeout: 2000ms
+
   cloud:
     gateway:
-      # 全局默认过滤器
+      # Global Filter
       default-filters:
-        # 添加请求头
+        # Add Request Header
         - AddRequestHeader=X-Gateway-Request, true
-        # 添加响应头
+        # Add Response Header
         - AddResponseHeader=X-Gateway-Response, true
-        # 去除敏感响应头
+        # Remove Sensitive Response Header
         - RemoveResponseHeader=X-Powered-By
-        # 重试配置
-        - name: Retry
-          args:
-            retries: 3
-            statuses: BAD_GATEWAY,SERVICE_UNAVAILABLE,GATEWAY_TIMEOUT
-            methods: GET,POST,PUT,DELETE
-            backoff:
-              firstBackoff: 100ms
-              maxBackoff: 500ms
-              factor: 2
-              basedOnPreviousValue: false
-      
-      # 路由配置
+
+      # Routing Config
       routes:
-        # ==================== 认证服务 ====================
+        # ==================== Auth Service ====================
         - id: auth-service
           uri: lb://authentication-service
           predicates:
             - Path=/api/auth/**
           filters:
-            # 重写路径
+            # Rewrite Path
             - RewritePath=/api/auth/(?<segment>.*), /${segment}
-            # 熔断器
+            # Circuit Breaker
             - name: CircuitBreaker
               args:
                 name: authService
                 fallbackUri: forward:/fallback/auth
-            # 限流（每秒 10 个请求，突发 20 个）
-            - name: RequestRateLimiter
-              args:
-                redis-rate-limiter.replenishRate: 10
-                redis-rate-limiter.burstCapacity: 20
-                redis-rate-limiter.requestedTokens: 1
-                key-resolver: "#{@ipKeyResolver}"
 
-        # ==================== 员工服务 ====================
+        # ==================== Employee Service ====================
         - id: employee-service
           uri: lb://employee-service
           predicates:
@@ -61,13 +49,8 @@ spring:
               args:
                 name: employeeService
                 fallbackUri: forward:/fallback/employee
-            - name: RequestRateLimiter
-              args:
-                redis-rate-limiter.replenishRate: 20
-                redis-rate-limiter.burstCapacity: 40
-                key-resolver: "#{@userKeyResolver}"
 
-        # ==================== 申请服务 ====================
+        # ==================== Application Service ====================
         - id: application-service
           uri: lb://application-service
           predicates:
@@ -78,30 +61,20 @@ spring:
               args:
                 name: applicationService
                 fallbackUri: forward:/fallback/application
-            - name: RequestRateLimiter
-              args:
-                redis-rate-limiter.replenishRate: 15
-                redis-rate-limiter.burstCapacity: 30
-                key-resolver: "#{@userKeyResolver}"
 
-        # ==================== 住房服务 ====================
+        # ==================== Housing Service ====================
         - id: housing-service
           uri: lb://housing-service
           predicates:
             - Path=/api/housing/**
           filters:
-            - RewritePath=/api/housing/(?<segment>.*), /${segment}
+            # No Need Rewrite Path，housing-service directly use /api/housing/** path
             - name: CircuitBreaker
               args:
                 name: housingService
                 fallbackUri: forward:/fallback/housing
-            - name: RequestRateLimiter
-              args:
-                redis-rate-limiter.replenishRate: 15
-                redis-rate-limiter.burstCapacity: 30
-                key-resolver: "#{@userKeyResolver}"
 
-        # ==================== 邮件服务 ====================
+        # ==================== Email Service ====================
         - id: email-service
           uri: lb://email-service
           predicates:
@@ -112,52 +85,37 @@ spring:
               args:
                 name: emailService
                 fallbackUri: forward:/fallback/email
-            - name: RequestRateLimiter
-              args:
-                redis-rate-limiter.replenishRate: 5
-                redis-rate-limiter.burstCapacity: 10
-                key-resolver: "#{@userKeyResolver}"
 
-      # 服务发现配置
+      # Service Discovery Config
       discovery:
         locator:
           enabled: true
           lower-case-service-id: true
 
-      # 全局超时配置
+      # Global Overtime Config
       httpclient:
         connect-timeout: 5000
         response-timeout: 10s
-        pool:
-          max-connections: 500
-          acquire-timeout: 10000
 
-# Eureka 客户端配置
+# Eureka Client Config
 eureka:
   instance:
     prefer-ip-address: true
-    # 心跳间隔
     lease-renewal-interval-in-seconds: 10
-    # 超时时间
     lease-expiration-duration-in-seconds: 30
   client:
     service-url:
-      # 使用 Eureka 的认证
       defaultZone: http://eureka:eureka123@localhost:8761/eureka/
-    # 注册到 Eureka
     register-with-eureka: true
-    # 从 Eureka 获取服务列表
     fetch-registry: true
-    # 刷新服务列表间隔
     registry-fetch-interval-seconds: 10
 
-# JWT 配置
+# JWT Config
 jwt:
-  # 生产环境请使用更安全的密钥
   secret: dGhpc2lzYXZlcnlsb25nc2VjcmV0a2V5Zm9yaHJvbmJvYXJkaW5nc3lzdGVtand0dG9rZW4=
-  expiration: 86400000  # 24小时（毫秒）
+  expiration: 86400000
 
-# Resilience4j 配置
+# Resilience4j Config
 resilience4j:
   circuitbreaker:
     instances:
@@ -178,6 +136,10 @@ resilience4j:
         sliding-window-type: TIME_BASED
         sliding-window-size: 60
         failure-rate-threshold: 50
+      housingService:
+        sliding-window-size: 10
+        failure-rate-threshold: 50
+        wait-duration-in-open-state: 30s
   timelimiter:
     instances:
       default:
@@ -187,12 +149,12 @@ resilience4j:
       employeeService:
         timeout-duration: 15s
 
-# Actuator 配置
+# Actuator Config
 management:
   endpoints:
     web:
       exposure:
-        include: health,info,metrics,gateway,circuitbreakers,circuitbreakerevents
+        include: health,info,metrics,gateway,circuitbreakers
   endpoint:
     health:
       show-details: always
@@ -202,12 +164,12 @@ management:
     circuitbreakers:
       enabled: true
 
-# 日志配置
+# Logging Config
 logging:
   level:
-    org.springframework.cloud.gateway: DEBUG
-    org.springframework.security: DEBUG
-    io.github.resilience4j: DEBUG
+    org.springframework.cloud.gateway: INFO
+    org.springframework.security: INFO
+    io.github.resilience4j: INFO
     org.example.apigateway: DEBUG
   pattern:
     console: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
