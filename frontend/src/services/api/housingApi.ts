@@ -144,19 +144,19 @@ const MOCK_HOUSE_EMPLOYEE_VIEW: ApiResponse<HouseEmployeeView> = {
     address: '123 Main Street, City, State 12345',
     residents: [
       {
+        employeeId: 100, // QA Test: employee 账号对应的 Employee
+        name: 'Em', // 优先显示 Preferred Name
+        phone: '555-123-4567',
+      },
+      {
         employeeId: 1,
-        name: 'Alice Johnson',
+        name: 'Alice Wang', // Preferred Name: Allie
         phone: '111-222-3333',
       },
       {
         employeeId: 2,
         name: 'Bob Smith',
         phone: '444-555-6666',
-      },
-      {
-        employeeId: 3,
-        name: 'Charlie Brown',
-        phone: '777-888-9999',
       },
     ],
   },
@@ -178,7 +178,7 @@ const MOCK_FACILITY_REPORT_LIST: ApiResponse<FacilityReportListItem[]> = {
       id: 2,
       title: 'Leaking faucet',
       createDate: '2024-01-16T14:20:00Z',
-      status: 'In Progress',
+      status: 'In Progress', // 注意：包含空格
       statusDisplayName: 'In Progress',
     },
     {
@@ -232,7 +232,7 @@ const MOCK_FACILITY_REPORT_DETAIL: ApiResponse<FacilityReportDetail> = {
     employeeId: 1,
     createdBy: 'Alice Smith',
     createDate: '2024-01-15T10:30:00Z',
-    status: 'In Progress',
+    status: 'In Progress', // ✅ 修复：包含空格
     statusDisplayName: 'In Progress',
     comments: MOCK_COMMENTS.data!,
   },
@@ -592,7 +592,7 @@ export const createFacilityReport = async (
       id: Date.now(),
       title: data.title,
       description: data.description,
-      // facilityId: data.facilityId, // 不存在的字段
+      // facilityId: data.facilityId, // 不在 CreateFacilityReportRequest 中
       createDate: new Date().toISOString(),
       status: 'Open',
       statusDisplayName: 'Open',
@@ -618,7 +618,7 @@ export const updateFacilityReportStatus = async (
     await delay(500);
     const statusDisplayNames: Record<FacilityReportStatus, string> = {
       'Open': 'Open',
-      'In Progress': 'In Progress',
+      'In Progress': 'In Progress', // Key 必须与 Enum 一致
       'Closed': 'Closed',
     };
     return {

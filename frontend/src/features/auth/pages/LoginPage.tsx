@@ -173,8 +173,8 @@ const LoginPage: React.FC = () => {
           <Form.Item
             name="password"
             rules={[
-              { required: true, message: 'Please input your password!' },
-              { min: 6, message: 'Password must be at least 6 characters' },
+              { required: true, message: 'Please enter your password' },
+              { min: 3, message: 'Password must be at least 3 characters' },
             ]}
           >
             <Input.Password
