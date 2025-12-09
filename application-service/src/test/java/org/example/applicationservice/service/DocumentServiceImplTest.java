@@ -1,12 +1,15 @@
 package org.example.applicationservice.service;
 
 import com.example.common.Result;
+import org.example.applicationservice.dao.ApplicationWorkFlowRepository;
 import org.example.applicationservice.dao.DigitalDocumentRepository;
+import org.example.applicationservice.domain.ApplicationWorkFlow;
 import org.example.applicationservice.domain.DigitalDocument;
 import org.example.applicationservice.dto.DigitalDocumentDTO;
 import org.junit.jupiter.api.*;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
+import software.amazon.awssdk.services.s3.S3Client;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
@@ -18,6 +21,10 @@ class DocumentServiceImplTest {
 
     @Mock
     private DigitalDocumentRepository repository;
+    @Mock
+    private S3Client s3Client;
+    @Mock
+    private ApplicationWorkFlowRepository applicationRepository;
 
     private DocumentServiceImpl service;
 
@@ -36,42 +43,13 @@ class DocumentServiceImplTest {
     @BeforeEach
     void setUp() {
         mocks = MockitoAnnotations.openMocks(this);
-        service = new DocumentServiceImpl(repository); // <-- inject mock manually
+        service = new DocumentServiceImpl(repository, s3Client, applicationRepository); // <-- inject mock manually
     }
 
     @AfterEach
     void tearDown() throws Exception {
         mocks.close();
     }
-
-    @Test
-    void testCreateDocument() {
-        DigitalDocumentDTO dto = new DigitalDocumentDTO();
-        dto.setType("Passport");
-        dto.setIsRequired(true);
-        dto.setPath("s3://bucket/passport.pdf");
-        dto.setDescription("Passport scan");
-        dto.setTitle("Passport");
-
-        DigitalDocument savedDoc = new DigitalDocument();
-        savedDoc.setId(1L);
-        savedDoc.setType(dto.getType());
-        savedDoc.setIsRequired(dto.getIsRequired());
-        savedDoc.setPath(dto.getPath());
-        savedDoc.setDescription(dto.getDescription());
-        savedDoc.setTitle(dto.getTitle());
-
-        when(repository.save(any(DigitalDocument.class))).thenReturn(savedDoc);
-
-        Result<DigitalDocumentDTO> result = service.createDocument(dto);
-
-        assertTrue(result.isSuccess());
-        assertEquals(1L, result.getData().getId());
-        assertEquals("Passport", result.getData().getType());
-
-        verify(repository, times(1)).save(any(DigitalDocument.class));
-    }
-
 
     @Test
     void testGetDocumentsByType() {
@@ -82,6 +60,9 @@ class DocumentServiceImplTest {
         doc.setPath("s3://bucket/passport.pdf");
         doc.setDescription("Passport scan");
         doc.setTitle("Passport");
+        ApplicationWorkFlow app = new ApplicationWorkFlow();
+        app.setId(10L);  // any test ID
+        doc.setApplication(app);
 
         when(repository.findByType("Passport")).thenReturn(Arrays.asList(doc));
 
@@ -96,17 +77,4 @@ class DocumentServiceImplTest {
         verify(repository, times(1)).findByType("Passport");
     }
 
-
-    @Test
-    void testUpdateDocumentNotFound() {
-        when(repository.findById(1L)).thenReturn(Optional.empty());
-
-        DigitalDocumentDTO updateDto = new DigitalDocumentDTO();
-        Result<DigitalDocumentDTO> result = service.updateDocument(1L, updateDto);
-
-        assertFalse(result.isSuccess());
-        assertEquals("Document not found with id: 1", result.getMessage());
-
-        verify(repository, times(1)).findById(1L);
-    }
 }

@@ -7,12 +7,10 @@ import lombok.NoArgsConstructor;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class DigitalDocumentDTO {
-    private Long id;
+public class UploadDocumentRequest {
     private String type;
-    private Boolean isRequired;
-    private String path;
-    private String description;
     private String title;
+    private String description;
     private Long applicationId;
 }
+
