@@ -178,7 +178,7 @@ const MOCK_FACILITY_REPORT_LIST: ApiResponse<FacilityReportListItem[]> = {
       id: 2,
       title: 'Leaking faucet',
       createDate: '2024-01-16T14:20:00Z',
-      status: 'InProgress',
+      status: 'In Progress',
       statusDisplayName: 'In Progress',
     },
     {
@@ -232,7 +232,7 @@ const MOCK_FACILITY_REPORT_DETAIL: ApiResponse<FacilityReportDetail> = {
     employeeId: 1,
     createdBy: 'Alice Smith',
     createDate: '2024-01-15T10:30:00Z',
-    status: 'InProgress',
+    status: 'In Progress',
     statusDisplayName: 'In Progress',
     comments: MOCK_COMMENTS.data!,
   },
@@ -307,7 +307,7 @@ export const createHouse = async (data: CreateHouseRequest): Promise<HouseDetail
       ...MOCK_HOUSE_DETAIL.data!,
       id: Date.now(),
       address: data.address,
-      maxOccupant: data.maxOccupancy || data.maxOccupant || 4,
+      maxOccupant: data.maxOccupant || 4,
       numberOfEmployees: 0,
     };
   }
@@ -592,7 +592,7 @@ export const createFacilityReport = async (
       id: Date.now(),
       title: data.title,
       description: data.description,
-      facilityId: data.facilityId,
+      // facilityId: data.facilityId, // 不存在的字段
       createDate: new Date().toISOString(),
       status: 'Open',
       statusDisplayName: 'Open',
@@ -618,7 +618,7 @@ export const updateFacilityReportStatus = async (
     await delay(500);
     const statusDisplayNames: Record<FacilityReportStatus, string> = {
       'Open': 'Open',
-      'InProgress': 'In Progress',
+      'In Progress': 'In Progress',
       'Closed': 'Closed',
     };
     return {

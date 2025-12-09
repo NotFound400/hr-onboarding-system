@@ -151,6 +151,21 @@ const HiringPage: React.FC = () => {
       ellipsis: true,
       render: (comment: string) => comment || '-',
     },
+    {
+      title: 'Action',
+      key: 'action',
+      render: (_, record) => (
+        <Button 
+          type="link" 
+          onClick={() => {
+            message.info(`Section HR.5.b: View application form (read-only) and documents for ${record.employeeName}. HR can Approve or Reject with optional comments.`);
+            // Should navigate to: /hr/applications/:id
+          }}
+        >
+          Review →
+        </Button>
+      ),
+    },
   ];
 
   return (

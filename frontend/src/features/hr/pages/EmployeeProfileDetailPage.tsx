@@ -11,7 +11,6 @@ import {
   Spin,
   Modal,
   Input,
-  Timeline,
 } from 'antd';
 import { ArrowLeftOutlined, DownloadOutlined, CommentOutlined } from '@ant-design/icons';
 import type { ColumnsType } from 'antd/es/table';
@@ -38,6 +37,7 @@ export const EmployeeProfileDetailPage: React.FC = () => {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [employee, setEmployee] = useState<Employee | null>(null);
+  const [allEmployees, setAllEmployees] = useState<Employee[]>([]);
   const [application, setApplication] = useState<Application | null>(null);
   const [commentModalVisible, setCommentModalVisible] = useState(false);
   const [currentDocument, setCurrentDocument] = useState<Document | null>(null);
@@ -51,11 +51,19 @@ export const EmployeeProfileDetailPage: React.FC = () => {
 
   /**
    * 获取员工详细信息
+   * Section HR.3.a.i - Must display <10/100> format based on user_id ordering
    */
   const fetchEmployeeDetail = async (employeeId: string) => {
     try {
       setLoading(true);
       
+      // 获取所有员工 (for <10/100> navigation)
+      const { getAllEmployees } = await import('../../../services/api');
+      const allEmps = await getAllEmployees();
+      // Sort by userID per Section HR.3.a.ii requirement
+      const sortedEmps = allEmps.sort((a, b) => (a.userID || 0) - (b.userID || 0));
+      setAllEmployees(sortedEmps);
+
       // 获取员工信息
       const empData = await getEmployeeById(employeeId);
       setEmployee(empData);
@@ -225,15 +233,53 @@ export const EmployeeProfileDetailPage: React.FC = () => {
     );
   }
 
+  // Section HR.3.a.i - Calculate <current/total> display based on user_id ordering
+  const currentIndex = allEmployees.findIndex(emp => emp.id === id);
+  const totalEmployees = allEmployees.length;
+  const displayIndex = currentIndex >= 0 ? currentIndex + 1 : 0;
+
+  const handlePrevious = () => {
+    if (currentIndex > 0) {
+      navigate(`/hr/employees/${allEmployees[currentIndex - 1].id}`);
+    }
+  };
+
+  const handleNext = () => {
+    if (currentIndex < totalEmployees - 1) {
+      navigate(`/hr/employees/${allEmployees[currentIndex + 1].id}`);
+    }
+  };
+
   return (
     <PageContainer>
-      <div style={{ marginBottom: 16 }}>
+      <div style={{ marginBottom: 16, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <Button
           icon={<ArrowLeftOutlined />}
           onClick={() => navigate('/hr/employees')}
         >
           Back to Employee List
         </Button>
+
+        {/* Section HR.3.a.i - <10/100> Navigation Display */}
+        {totalEmployees > 0 && (
+          <Space>
+            <Button 
+              onClick={handlePrevious} 
+              disabled={currentIndex <= 0}
+            >
+              Previous
+            </Button>
+            <span style={{ fontSize: 16, fontWeight: 'bold', color: '#1890ff' }}>
+              &lt;{displayIndex}/{totalEmployees}&gt;
+            </span>
+            <Button 
+              onClick={handleNext} 
+              disabled={currentIndex >= totalEmployees - 1}
+            >
+              Next
+            </Button>
+          </Space>
+        )}
       </div>
 
       <h2 style={{ marginBottom: 24 }}>
@@ -317,69 +363,6 @@ export const EmployeeProfileDetailPage: React.FC = () => {
           );
         })()}
 
-        {/* OPT Timeline */}
-        {application?.type === 'OPT' && (
-          <div style={{ marginTop: 24 }}>
-            <h4>OPT Application Timeline</h4>
-            <Timeline
-              style={{ marginTop: 16 }}
-              items={([
-                application.optReceipts && {
-                  color: application.optReceipts.status === 'Approved' ? 'green' : 'orange',
-                  children: (
-                    <>
-                      <p><strong>OPT Receipt</strong></p>
-                      <p>
-                        Status: <Tag color={application.optReceipts.status === 'Approved' ? 'green' : 'orange'}>
-                          {application.optReceipts.status}
-                        </Tag>
-                      </p>
-                    </>
-                  ),
-                },
-                application.optEAD && {
-                  color: application.optEAD.status === 'Approved' ? 'green' : 'orange',
-                  children: (
-                    <>
-                      <p><strong>OPT EAD</strong></p>
-                      <p>
-                        Status: <Tag color={application.optEAD.status === 'Approved' ? 'green' : 'orange'}>
-                          {application.optEAD.status}
-                        </Tag>
-                      </p>
-                    </>
-                  ),
-                },
-                application.i983 && {
-                  color: application.i983.status === 'Approved' ? 'green' : 'orange',
-                  children: (
-                    <>
-                      <p><strong>I-983</strong></p>
-                      <p>
-                        Status: <Tag color={application.i983.status === 'Approved' ? 'green' : 'orange'}>
-                          {application.i983.status}
-                        </Tag>
-                      </p>
-                    </>
-                  ),
-                },
-                application.i20 && {
-                  color: application.i20.status === 'Approved' ? 'green' : 'orange',
-                  children: (
-                    <>
-                      <p><strong>I-20</strong></p>
-                      <p>
-                        Status: <Tag color={application.i20.status === 'Approved' ? 'green' : 'orange'}>
-                          {application.i20.status}
-                        </Tag>
-                      </p>
-                    </>
-                  ),
-                },
-              ] as any[]).filter(Boolean)}
-            />
-          </div>
-        )}
       </Card>
 
       {/* 文档列表 */}

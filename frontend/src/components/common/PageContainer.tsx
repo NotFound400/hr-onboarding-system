@@ -15,14 +15,7 @@ export const PageContainer: React.FC<PageContainerProps> = ({
   loading = false 
 }) => {
   return (
-    <div
-      style={{
-        width: '80%',        // 核心需求：占 80%
-        maxWidth: '1200px',  // 优化：防止在超大屏幕(4K)上太宽，限制最大宽度
-        margin: '0 auto',    // 核心需求：水平居中
-        padding: '24px 0',   // 上下留点呼吸空间
-      }}
-    >
+    <div style={{ width: '100%' }}>
       {/* 统一的页面标题部分 */}
       {title && (
         <Title level={2} style={{ marginBottom: 24 }}>
@@ -30,10 +23,12 @@ export const PageContainer: React.FC<PageContainerProps> = ({
         </Title>
       )}
 
-      {/* 统一的内容卡片 */}
-      <Card loading={loading} bordered={false} style={{ boxShadow: '0 2px 8px rgba(0,0,0,0.05)' }}>
-        {children}
-      </Card>
+      {/* 内容区域 - 不再包裹 Card，避免双层卡片 */}
+      {loading ? (
+        <Card loading={loading} bordered={false} />
+      ) : (
+        children
+      )}
     </div>
   );
 };

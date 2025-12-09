@@ -28,6 +28,8 @@ export type ApplicationType = typeof ApplicationType[keyof typeof ApplicationTyp
 
 /** 签证类型 */
 export const VisaStatusType = {
+  CITIZEN: 'Citizen',
+  GREEN_CARD: 'Green Card',
   OPT: 'OPT',
   H1B: 'H1B',
   L2: 'L2',
@@ -51,10 +53,10 @@ export const AddressType = {
 } as const;
 export type AddressType = typeof AddressType[keyof typeof AddressType];
 
-/** 设施报修状态 */
+/** 设施报修状态 (Section 8.c - Status: Open, In Progress, Closed) */
 export const FacilityReportStatus = {
   OPEN: 'Open',
-  IN_PROGRESS: 'InProgress',
+  IN_PROGRESS: 'In Progress', // 注意：包含空格
   CLOSED: 'Closed'
 } as const;
 export type FacilityReportStatus = typeof FacilityReportStatus[keyof typeof FacilityReportStatus];
@@ -63,6 +65,7 @@ export type FacilityReportStatus = typeof FacilityReportStatus[keyof typeof Faci
 export const Gender = {
   MALE: 'Male',
   FEMALE: 'Female',
-  OTHER: 'Other'
+  OTHER: 'Other',
+  PREFER_NOT_TO_SAY: 'I Prefer Not to Say'
 } as const;
 export type Gender = typeof Gender[keyof typeof Gender];

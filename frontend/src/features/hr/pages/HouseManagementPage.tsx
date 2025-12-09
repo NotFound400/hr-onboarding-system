@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Table, Button, Modal, Form, Input, message, Space, Popconfirm } from 'antd';
+import { Table, Button, Modal, Form, Input, message, Space, Popconfirm, Card } from 'antd';
 import { PlusOutlined, DeleteOutlined } from '@ant-design/icons';
 import type { ColumnsType } from 'antd/es/table';
 import { PageContainer } from '../../../components/common/PageContainer';
@@ -16,6 +16,8 @@ export const HouseManagementPage: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [houseList, setHouseList] = useState<House[]>([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
+  const [selectedHouse, setSelectedHouse] = useState<House | null>(null);
   const [form] = Form.useForm();
 
   useEffect(() => {
@@ -62,7 +64,7 @@ export const HouseManagementPage: React.FC = () => {
           email: values.landlordEmail,
         },
         facilityInfo: values.facilityInfo || '',
-        maxOccupancy: parseInt(values.maxOccupancy, 10),
+        maxOccupant: parseInt(values.maxOccupancy, 10),
       };
 
       await createHouse(request);
@@ -157,21 +159,32 @@ export const HouseManagementPage: React.FC = () => {
     {
       title: 'Action',
       key: 'action',
-      width: 100,
+      width: 180,
       fixed: 'right',
       render: (_, record) => (
-        <Popconfirm
-          title="Delete House"
-          description="Are you sure you want to delete this house? All residents will be unassigned."
-          onConfirm={() => handleDelete(record.id)}
-          okText="Yes"
-          cancelText="No"
-          okButtonProps={{ danger: true }}
-        >
-          <Button type="link" danger icon={<DeleteOutlined />}>
-            Delete
+        <Space size="small">
+          <Button 
+            type="link" 
+            onClick={() => {
+              setSelectedHouse(record);
+              setIsDetailModalOpen(true);
+            }}
+          >
+            View Details
           </Button>
-        </Popconfirm>
+          <Popconfirm
+            title="Delete House"
+            description="Are you sure you want to delete this house? All residents will be unassigned."
+            onConfirm={() => handleDelete(record.id)}
+            okText="Yes"
+            cancelText="No"
+            okButtonProps={{ danger: true }}
+          >
+            <Button type="link" danger icon={<DeleteOutlined />}>
+              Delete
+            </Button>
+          </Popconfirm>
+        </Space>
       ),
     },
   ];
@@ -305,6 +318,119 @@ export const HouseManagementPage: React.FC = () => {
             />
           </Form.Item>
         </Form>
+      </Modal>
+
+      {/* Section HR.6.c - House Detail View Modal */}
+      <Modal
+        title={`House Details - ${selectedHouse?.address || ''}`}
+        open={isDetailModalOpen}
+        onCancel={() => {
+          setIsDetailModalOpen(false);
+          setSelectedHouse(null);
+        }}
+        footer={[
+          <Button key="close" onClick={() => setIsDetailModalOpen(false)}>
+            Close
+          </Button>,
+        ]}
+        width={900}
+      >
+        {selectedHouse && (
+          <Space direction="vertical" size="large" style={{ width: '100%' }}>
+            {/* Section HR.6.c.i - Basic House Information */}
+            <Card title="Basic Information" size="small">
+              <Space direction="vertical" style={{ width: '100%' }}>
+                <div><strong>Address:</strong> {selectedHouse.address}</div>
+                <div>
+                  <strong>Landlord:</strong>{' '}
+                  {selectedHouse.landlord 
+                    ? `${selectedHouse.landlord.firstName} ${selectedHouse.landlord.lastName}`
+                    : selectedHouse.landlordFullName || 'N/A'}
+                </div>
+                <div>
+                  <strong>Landlord Phone:</strong>{' '}
+                  {selectedHouse.landlord?.cellPhone || selectedHouse.landlordPhone || 'N/A'}
+                </div>
+                <div>
+                  <strong>Landlord Email:</strong>{' '}
+                  {selectedHouse.landlord?.email || selectedHouse.landlordEmail || 'N/A'}
+                </div>
+                <div>
+                  <strong>Number of People Living There:</strong>{' '}
+                  {selectedHouse.employeeList?.length || 0} / {selectedHouse.maxOccupancy || selectedHouse.maxOccupant || 0}
+                </div>
+              </Space>
+            </Card>
+
+            {/* Section HR.6.c.ii - Facility Information */}
+            <Card title="Facility Information" size="small">
+              <div style={{ whiteSpace: 'pre-wrap' }}>
+                {selectedHouse.facilityInfo || 'No facility information provided'}
+              </div>
+              <div style={{ marginTop: 16, color: '#999', fontSize: 12 }}>
+                Note: Facility counts (Beds, Mattresses, Tables, Chairs) should be managed in the Facility service.
+              </div>
+            </Card>
+
+            {/* Section HR.6.c.iii - Facility Report (List View, 3-5 per page) */}
+            <Card title="Facility Reports" size="small">
+              <div style={{ textAlign: 'center', padding: 24, color: '#999' }}>
+                Facility Reports feature pending - will display Title + Date + Status format (3-5 per page, sorted by created date).
+                <br />
+                <small>
+                  Section HR.6.c.iii requirement: When clicking a report, show Title, Description, Created By, Report Date, Status with timestamp, and Comments.
+                  HR may add or update comments they created.
+                </small>
+              </div>
+            </Card>
+
+            {/* Section HR.6.d - Employee Information (List) */}
+            <Card title="Residents" size="small">
+              {selectedHouse.employeeList && selectedHouse.employeeList.length > 0 ? (
+                <Table
+                  dataSource={selectedHouse.employeeList}
+                  rowKey="id"
+                  pagination={false}
+                  size="small"
+                  columns={[
+                    {
+                      title: 'Name',
+                      key: 'name',
+                      render: (_, emp: any) => emp.preferredName || emp.firstName,
+                    },
+                    {
+                      title: 'Phone',
+                      dataIndex: 'cellPhone',
+                      key: 'cellPhone',
+                    },
+                    {
+                      title: 'Email',
+                      dataIndex: 'email',
+                      key: 'email',
+                    },
+                    {
+                      title: 'Action',
+                      key: 'action',
+                      render: (_, emp: any) => (
+                        <Button 
+                          type="link" 
+                          onClick={() => {
+                            setIsDetailModalOpen(false);
+                            window.location.href = `/hr/employees/${emp.id}`;
+                          }}
+                        >
+                          View Profile
+                        </Button>
+                      ),
+                    },
+                  ]}
+                />
+              ) : (
+                <div style={{ textAlign: 'center', padding: 24, color: '#999' }}>No residents assigned</div>
+              )}
+            </Card>
+          </Space>
+        )}
       </Modal>
     </PageContainer>
   );

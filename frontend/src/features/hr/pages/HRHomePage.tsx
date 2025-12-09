@@ -1,6 +1,6 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Card, Row, Col, Statistic, Button, Space, Typography } from 'antd';
+import { Card, Row, Col, Statistic, Button, Space, Typography, Table, Tag, message } from 'antd';
 import {
   UserOutlined,
   FileTextOutlined,
@@ -9,26 +9,52 @@ import {
   TeamOutlined,
   CheckCircleOutlined,
   ClockCircleOutlined,
-  CloseCircleOutlined,
 } from '@ant-design/icons';
 import { PageContainer } from '../../../components/common/PageContainer';
+import { getAllApplications } from '../../../services/api';
+import type { ApplicationDetail, ApplicationStatus } from '../../../types';
+import dayjs from 'dayjs';
 
 const { Title, Text } = Typography;
 
 /**
- * HR Home Page
- * HR 仪表盘首页 - 展示系统概览和快捷入口
+ * HR Home Page - Section HR.2
+ * 必须包含: Application Tracking Table (HR Section 2.a.ii)
  */
 export const HRHomePage: React.FC = () => {
   const navigate = useNavigate();
+  const [loading, setLoading] = useState(false);
+  const [applications, setApplications] = useState<ApplicationDetail[]>([]);
 
   // Mock 统计数据
   const stats = {
     totalEmployees: 156,
-    pendingOnboarding: 8,
-    pendingVisaApplications: 5,
+    pendingOnboarding: applications.filter(a => a.status === 'Pending').length,
+    pendingVisaApplications: applications.filter(a => a.type === 'OPT' && a.status === 'Pending').length,
     totalHouses: 12,
     availableRooms: 23,
+  };
+
+  useEffect(() => {
+    fetchApplications();
+  }, []);
+
+  /**
+   * Section HR.2.a.ii - Application Tracking Table
+   * "if any action needs to be taken to update an employee's visa status or onboarding process"
+   */
+  const fetchApplications = async () => {
+    try {
+      setLoading(true);
+      const data = await getAllApplications();
+      // Filter for pending applications only (需要 HR action 的)
+      const pendingApps = data.filter(app => app.status === 'Pending' || app.status === 'Open');
+      setApplications(pendingApps);
+    } catch (error: any) {
+      message.error(error.message || 'Failed to load applications');
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -182,59 +208,83 @@ export const HRHomePage: React.FC = () => {
         </Space>
       </Card>
 
-      {/* 最近活动 */}
-      <Card title="Recent Activities">
-        <Space direction="vertical" style={{ width: '100%' }}>
-          <div style={{ display: 'flex', alignItems: 'center', padding: '8px 0' }}>
-            <CheckCircleOutlined style={{ color: '#52c41a', fontSize: 20, marginRight: 12 }} />
-            <div>
-              <Text strong>Alice Wang</Text>
-              <Text type="secondary"> onboarding approved</Text>
-              <br />
-              <Text type="secondary" style={{ fontSize: 12 }}>2 hours ago</Text>
-            </div>
-          </div>
-
-          <div style={{ display: 'flex', alignItems: 'center', padding: '8px 0' }}>
-            <ClockCircleOutlined style={{ color: '#faad14', fontSize: 20, marginRight: 12 }} />
-            <div>
-              <Text strong>Chen Wei</Text>
-              <Text type="secondary"> submitted OPT application</Text>
-              <br />
-              <Text type="secondary" style={{ fontSize: 12 }}>5 hours ago</Text>
-            </div>
-          </div>
-
-          <div style={{ display: 'flex', alignItems: 'center', padding: '8px 0' }}>
-            <HomeOutlined style={{ color: '#1890ff', fontSize: 20, marginRight: 12 }} />
-            <div>
-              <Text strong>New house</Text>
-              <Text type="secondary"> added at 456 Oak Avenue</Text>
-              <br />
-              <Text type="secondary" style={{ fontSize: 12 }}>1 day ago</Text>
-            </div>
-          </div>
-
-          <div style={{ display: 'flex', alignItems: 'center', padding: '8px 0' }}>
-            <CheckCircleOutlined style={{ color: '#52c41a', fontSize: 20, marginRight: 12 }} />
-            <div>
-              <Text strong>Maria Garcia</Text>
-              <Text type="secondary"> OPT application approved</Text>
-              <br />
-              <Text type="secondary" style={{ fontSize: 12 }}>2 days ago</Text>
-            </div>
-          </div>
-
-          <div style={{ display: 'flex', alignItems: 'center', padding: '8px 0' }}>
-            <CloseCircleOutlined style={{ color: '#ff4d4f', fontSize: 20, marginRight: 12 }} />
-            <div>
-              <Text strong>Bob Smith</Text>
-              <Text type="secondary"> onboarding rejected - incomplete documentation</Text>
-              <br />
-              <Text type="secondary" style={{ fontSize: 12 }}>3 days ago</Text>
-            </div>
-          </div>
-        </Space>
+      {/* Section HR.2.a.ii - Application Tracking Table (必需功能) */}
+      <Card title="Application Tracking" style={{ marginBottom: 24 }}>
+        <Text type="secondary" style={{ display: 'block', marginBottom: 16 }}>
+          This table shows all applications that require HR action (Onboarding, Visa Status updates)
+        </Text>
+        <Table
+          columns={[
+            {
+              title: 'Name (Legal Full Name)',
+              dataIndex: 'employeeName',
+              key: 'employeeName',
+              render: (name: string) => <Text strong>{name}</Text>,
+            },
+            {
+              title: 'Type of Application',
+              dataIndex: 'type',
+              key: 'type',
+              filters: [
+                { text: 'Onboarding', value: 'Onboarding' },
+                { text: 'OPT', value: 'OPT' },
+              ],
+              onFilter: (value, record) => record.type === value,
+              render: (type: string) => (
+                <Tag color={type === 'Onboarding' ? 'blue' : 'green'}>{type}</Tag>
+              ),
+            },
+            {
+              title: 'Status',
+              dataIndex: 'status',
+              key: 'status',
+              render: (status: ApplicationStatus) => {
+                const colorMap: Record<ApplicationStatus, string> = {
+                  Open: 'default',
+                  Pending: 'warning',
+                  Approved: 'success',
+                  Rejected: 'error',
+                };
+                return <Tag color={colorMap[status]}>{status}</Tag>;
+              },
+            },
+            {
+              title: 'Last Modification Date',
+              dataIndex: 'lastModificationDate',
+              key: 'lastModificationDate',
+              render: (date: string) => dayjs(date).format('YYYY-MM-DD HH:mm'),
+              sorter: (a, b) => dayjs(a.lastModificationDate).unix() - dayjs(b.lastModificationDate).unix(),
+            },
+            {
+              title: 'Action',
+              key: 'action',
+              render: (_, record) => (
+                <Button
+                  type="link"
+                  onClick={() => {
+                    if (record.type === 'Onboarding') {
+                      navigate('/hr/hiring');
+                    } else if (record.type === 'OPT') {
+                      navigate('/hr/visa');
+                    }
+                  }}
+                >
+                  Review →
+                </Button>
+              ),
+            },
+          ]}
+          dataSource={applications}
+          rowKey="id"
+          loading={loading}
+          pagination={{
+            pageSize: 10,
+            showTotal: (total) => `Total ${total} pending applications`,
+          }}
+          locale={{
+            emptyText: 'No pending applications requiring action',
+          }}
+        />
       </Card>
     </PageContainer>
   );

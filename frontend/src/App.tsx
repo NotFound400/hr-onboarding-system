@@ -80,6 +80,7 @@ function App() {
             <Route path="personal-info" element={<PersonalInfoPage />} />
             <Route path="visa" element={<VisaStatusPage />} />
             <Route path="housing" element={<HousingPage />} />
+            <Route path="house-detail" element={<PlaceholderPage title="House Detail" />} />
             <Route path="facility-report" element={<PlaceholderPage title="Facility Report" />} />
             <Route index element={<Navigate to="home" replace />} />
           </Route>

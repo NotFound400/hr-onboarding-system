@@ -10,7 +10,7 @@
 
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Table, Input, Space, Button, message } from 'antd';
+import { Table, Input, Space, Button, message, Card, Typography } from 'antd';
 import { SearchOutlined, EyeOutlined } from '@ant-design/icons';
 import type { ColumnsType } from 'antd/es/table';
 import { PageContainer } from '../../../components/common/PageContainer';
@@ -18,6 +18,7 @@ import { getAllEmployees } from '../../../services/api';
 import type { Employee } from '../../../types';
 
 const { Search } = Input;
+const { Text } = Typography;
 
 /**
  * EmployeeProfilePage Component
@@ -148,7 +149,21 @@ const EmployeeProfilePage: React.FC = () => {
 
   return (
     <PageContainer title="Employee Profiles" loading={loading}>
-      {/* 搜索栏 */}
+      {/* Section HR.3.a.i - Summary with <10/100> format */}
+      <Card style={{ marginBottom: 16, background: '#fafafa' }}>
+        <Space direction="vertical" size="small" style={{ width: '100%' }}>
+          <Text strong style={{ fontSize: 16 }}>Employee Summary</Text>
+          <Text>
+            Total Employees: <Text strong style={{ fontSize: 18, color: '#1890ff' }}>{employees.length}</Text>
+          </Text>
+          <Text type="secondary" style={{ fontSize: 12 }}>
+            Note: Use search bar to find employees by name, then click to view details. 
+            The employee detail page shows navigation like <Text code>&lt;10/100&gt;</Text> based on user_id ordering.
+          </Text>
+        </Space>
+      </Card>
+
+      {/* Section HR.3.a.ii - Search Bar (First OR Last OR Preferred Name) */}
       <Space style={{ marginBottom: 16 }}>
         <Search
           placeholder="Search by name (First / Last / Preferred)"

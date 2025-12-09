@@ -10,8 +10,8 @@
  */
 
 import { useState, useEffect } from 'react';
-import { Card, Descriptions, Empty, Space, Alert, Tag, Timeline, message } from 'antd';
-import { SafetyOutlined, FileTextOutlined, CheckCircleOutlined } from '@ant-design/icons';
+import { Card, Descriptions, Empty, Space, Alert, Tag, message } from 'antd';
+import { SafetyOutlined, FileTextOutlined } from '@ant-design/icons';
 import dayjs from 'dayjs';
 import type { UploadFile } from 'antd';
 import { PageContainer } from '../../../components/common/PageContainer';
@@ -203,68 +203,56 @@ const VisaStatusPage: React.FC = () => {
           </Descriptions>
         </Card>
 
-        {/* 签证历史 */}
-        {employee.visaStatus.length > 1 && (
-          <Card title="Visa History">
-            <Timeline
-              items={employee.visaStatus
-                .sort((a, b) => dayjs(b.startDate).unix() - dayjs(a.startDate).unix())
-                .map((visa) => ({
-                  color: visa.activeFlag ? 'green' : 'gray',
-                  dot: visa.activeFlag ? <CheckCircleOutlined /> : undefined,
-                  children: (
-                    <div>
-                      <div style={{ fontWeight: 'bold' }}>
-                        {visa.visaType} {visa.activeFlag && <Tag color="success">Current</Tag>}
-                      </div>
-                      <div style={{ fontSize: 12, color: '#666' }}>
-                        {dayjs(visa.startDate).format('YYYY-MM-DD')} to {dayjs(visa.endDate).format('YYYY-MM-DD')}
-                      </div>
-                    </div>
-                  ),
-                }))}
-            />
-          </Card>
-        )}
-
-        {/* OPT 文档上传 (仅针对 OPT/F1 签证类型) */}
+        {/* Section 7.b - OPT Document Upload (I-983 → I-20 → Receipt → EAD) */}
         {(activeVisa.visaType === 'OPT' || activeVisa.visaType === 'F1') && (
           <Card title="OPT Documents" extra={<FileTextOutlined style={{ fontSize: 20 }} />}>
             <Alert
               message="Document Upload Instructions"
-              description="Please upload all required OPT documents. HR will be notified via email after each upload."
+              description="Please upload all required OPT documents in order. HR will be notified via email after each upload."
               type="info"
               showIcon
               style={{ marginBottom: 24 }}
             />
 
             <Space direction="vertical" size="middle" style={{ width: '100%' }}>
-              <DocumentUpload
-                title="OPT Receipt"
-                required
-                fileList={optReceiptFiles}
-                onChange={(fileList) => handleDocumentChange(fileList, 'OPT Receipt')}
-              />
+              {/* Section 7.b.i - I-983 */}
+              <Card type="inner" title="Step 1: I-983 (Training Plan for STEM OPT)">
+                <DocumentUpload
+                  title="I-983"
+                  fileList={i983Files}
+                  onChange={(fileList) => handleDocumentChange(fileList, 'I-983')}
+                />
+              </Card>
               
-              <DocumentUpload
-                title="OPT EAD (Employment Authorization Document)"
-                required
-                fileList={optEadFiles}
-                onChange={(fileList) => handleDocumentChange(fileList, 'OPT EAD')}
-              />
+              {/* Section 7.b.ii - I-20 */}
+              <Card type="inner" title="Step 2: I-20 (Certificate of Eligibility)">
+                <DocumentUpload
+                  title="I-20"
+                  required
+                  fileList={i20Files}
+                  onChange={(fileList) => handleDocumentChange(fileList, 'I-20')}
+                />
+              </Card>
               
-              <DocumentUpload
-                title="I-983 (Training Plan for STEM OPT)"
-                fileList={i983Files}
-                onChange={(fileList) => handleDocumentChange(fileList, 'I-983')}
-              />
+              {/* Section 7.b.iii - OPT Receipt */}
+              <Card type="inner" title="Step 3: OPT Receipt">
+                <DocumentUpload
+                  title="OPT Receipt"
+                  required
+                  fileList={optReceiptFiles}
+                  onChange={(fileList) => handleDocumentChange(fileList, 'OPT Receipt')}
+                />
+              </Card>
               
-              <DocumentUpload
-                title="I-20 (Certificate of Eligibility)"
-                required
-                fileList={i20Files}
-                onChange={(fileList) => handleDocumentChange(fileList, 'I-20')}
-              />
+              {/* Section 7.b.iv - OPT EAD */}
+              <Card type="inner" title="Step 4: OPT EAD (Employment Authorization Document)">
+                <DocumentUpload
+                  title="OPT EAD"
+                  required
+                  fileList={optEadFiles}
+                  onChange={(fileList) => handleDocumentChange(fileList, 'OPT EAD')}
+                />
+              </Card>
             </Space>
           </Card>
         )}
