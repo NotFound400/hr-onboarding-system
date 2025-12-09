@@ -5,7 +5,7 @@
  */
 
 import axiosClient from './axiosClient';
-import { isMockMode, delay } from '@/utils/mockUtils';
+import { isMockMode, delay } from '../../utils/mockUtils';
 import type { 
   Employee, 
   CreateEmployeeRequest, 
@@ -17,13 +17,17 @@ import type {
   ContactType,
   AddressType,
   VisaStatusType,
-  Gender
-} from '@/types';
+  Gender,
+  ApiResponse
+} from '../../types';
 
 // ==================== Mock Data ====================
-const MOCK_EMPLOYEE: Employee = {
-  id: 1,
-  userId: 1,
+const MOCK_EMPLOYEE: ApiResponse<Employee> = {
+  success: true,
+  message: 'Employee retrieved successfully',
+  data: {
+    id: '507f1f77bcf86cd799439011',
+    userID: 1,
   firstName: 'John',
   lastName: 'Doe',
   middleName: 'Michael',
@@ -32,30 +36,32 @@ const MOCK_EMPLOYEE: Employee = {
   cellPhone: '123-456-7890',
   alternatePhone: '098-765-4321',
   gender: 'Male' as Gender,
-  ssn: '123-45-6789',
-  dob: '1990-01-15',
+  SSN: '123-45-6789',
+  DOB: '1990-01-15',
   startDate: '2024-01-01',
   endDate: '',
   driverLicense: 'DL123456',
   driverLicenseExpiration: '2026-01-15',
-  houseId: 1,
-  contacts: [
+  houseID: 1,
+  contact: [
     {
       type: 'Reference' as ContactType,
-      name: 'Jane Smith',
+      firstName: 'Jane',
+      lastName: 'Smith',
       phone: '111-222-3333',
       email: 'jane.smith@example.com',
       relationship: 'Former Manager',
     },
     {
       type: 'Emergency' as ContactType,
-      name: 'Mary Doe',
+      firstName: 'Mary',
+      lastName: 'Doe',
       phone: '444-555-6666',
       email: 'mary.doe@example.com',
       relationship: 'Spouse',
     },
   ],
-  addresses: [
+  address: [
     {
       type: 'Primary' as AddressType,
       addressLine1: '123 Main St',
@@ -65,7 +71,7 @@ const MOCK_EMPLOYEE: Employee = {
       zipCode: '10001',
     },
   ],
-  visaStatuses: [
+  visaStatus: [
     {
       visaType: 'H1B' as VisaStatusType,
       activeFlag: true,
@@ -74,7 +80,7 @@ const MOCK_EMPLOYEE: Employee = {
       lastModificationDate: '2024-01-01T00:00:00Z',
     },
   ],
-  personalDocuments: [
+  personalDocument: [
     {
       id: 1,
       path: 's3://bucket/documents/driver-license.pdf',
@@ -83,18 +89,98 @@ const MOCK_EMPLOYEE: Employee = {
       createDate: '2024-01-01T00:00:00Z',
     },
   ],
+  },
 };
 
-const MOCK_EMPLOYEE_LIST: Employee[] = [
-  MOCK_EMPLOYEE,
-  {
-    ...MOCK_EMPLOYEE,
-    id: 2,
-    firstName: 'Alice',
-    lastName: 'Johnson',
-    email: 'alice.johnson@example.com',
-  },
-];
+// Mock Employee for alice.wang (Approved onboarding user)
+const MOCK_EMPLOYEE_ALICE: Employee = {
+  id: '507f1f77bcf86cd799439100',
+  userID: 100,
+  firstName: 'Alice',
+  lastName: 'Wang',
+  middleName: 'Yi',
+  preferredName: 'Allie',
+  email: 'alice.wang@example.com',
+  cellPhone: '555-123-4567',
+  alternatePhone: '555-987-6543',
+  gender: 'Female' as Gender,
+  SSN: '987-65-4321',
+  DOB: '1995-06-20',
+  startDate: '2024-02-15',
+  endDate: '',
+  driverLicense: 'CA98765432',
+  driverLicenseExpiration: '2027-06-20',
+  houseID: 1,
+  contact: [
+    {
+      type: 'Reference' as ContactType,
+      firstName: 'Tom',
+      lastName: 'Chen',
+      phone: '555-111-2222',
+      email: 'tom.chen@example.com',
+      relationship: 'Professor',
+    },
+    {
+      type: 'Emergency' as ContactType,
+      firstName: 'Linda',
+      lastName: 'Wang',
+      phone: '555-333-4444',
+      email: 'linda.wang@example.com',
+      relationship: 'Mother',
+    },
+  ],
+  address: [
+    {
+      type: 'Primary' as AddressType,
+      addressLine1: '456 Oak Avenue',
+      addressLine2: 'Unit 12',
+      city: 'San Francisco',
+      state: 'CA',
+      zipCode: '94102',
+    },
+  ],
+  visaStatus: [
+    {
+      visaType: 'OPT' as VisaStatusType,
+      activeFlag: true,
+      startDate: '2024-02-01',
+      endDate: '2025-02-01',
+      lastModificationDate: '2024-02-01T00:00:00Z',
+    },
+  ],
+  personalDocument: [
+    {
+      id: 101,
+      path: 's3://bucket/documents/alice-opt-receipt.pdf',
+      title: 'OPT Receipt',
+      comment: 'Valid',
+      createDate: '2024-02-01T00:00:00Z',
+    },
+    {
+      id: 102,
+      path: 's3://bucket/documents/alice-i20.pdf',
+      title: 'I-20',
+      comment: 'Current I-20',
+      createDate: '2024-02-01T00:00:00Z',
+    },
+  ],
+};
+
+const MOCK_EMPLOYEE_LIST: ApiResponse<Employee[]> = {
+  success: true,
+  message: 'Employee list retrieved successfully',
+  data: [
+    MOCK_EMPLOYEE.data!,
+    {
+      ...MOCK_EMPLOYEE.data!,
+      id: '507f1f77bcf86cd799439012',
+      firstName: 'Alice',
+      lastName: 'Johnson',
+      email: 'alice.johnson@example.com',
+    },
+    MOCK_EMPLOYEE_ALICE,
+  ],
+};
 
 // ==================== API Functions ==
 
@@ -105,7 +191,7 @@ const MOCK_EMPLOYEE_LIST: Employee[] = [
 export const getAllEmployees = async (): Promise<Employee[]> => {
   if (isMockMode()) {
     await delay(500);
-    return MOCK_EMPLOYEE_LIST;
+    return MOCK_EMPLOYEE_LIST.data!;
   }
   
   return axiosClient.get('/employees') as Promise<Employee[]>;
@@ -119,7 +205,9 @@ export const getAllEmployees = async (): Promise<Employee[]> => {
 export const getEmployeeById = async (id: string): Promise<Employee> => {
   if (isMockMode()) {
     await delay(300);
-    return MOCK_EMPLOYEE;
+    // 根据 ID 返回对应的员工数据
+    const employee = MOCK_EMPLOYEE_LIST.data!.find(emp => emp.id === id);
+    return employee || MOCK_EMPLOYEE.data!;
   }
   
   return axiosClient.get(`/employees/${id}`) as Promise<Employee>;
@@ -133,7 +221,10 @@ export const getEmployeeById = async (id: string): Promise<Employee> => {
 export const getEmployeeByUserId = async (userId: string): Promise<Employee> => {
   if (isMockMode()) {
     await delay(300);
-    return MOCK_EMPLOYEE;
+    // 根据 userID 查找对应的员工
+    const userIdNum = parseInt(userId, 10);
+    const employee = MOCK_EMPLOYEE_LIST.data!.find(emp => emp.userID === userIdNum);
+    return employee || MOCK_EMPLOYEE.data!;
   }
   
   return axiosClient.get(`/employees/user/${userId}`) as Promise<Employee>;
@@ -147,11 +238,12 @@ export const getEmployeeByUserId = async (userId: string): Promise<Employee> => 
  */
 export const createEmployee = async (data: CreateEmployeeRequest): Promise<Employee> => {
   if (isMockMode()) {
+    console.log('[Mock Request] createEmployee:', data);
     await delay(800);
     return {
-      ...MOCK_EMPLOYEE,
+      ...MOCK_EMPLOYEE.data!,
       ...data,
-      id: Date.now(),
+      id: `507f1f77bcf86cd7994${Date.now().toString().slice(-5)}`,
     };
   }
   
@@ -165,10 +257,12 @@ export const createEmployee = async (data: CreateEmployeeRequest): Promise<Emplo
  */
 export const updateEmployee = async (data: UpdateEmployeeRequest): Promise<Employee> => {
   if (isMockMode()) {
+    console.log('[Mock Request] updateEmployee:', data);
     await delay(500);
     return {
-      ...MOCK_EMPLOYEE,
+      ...MOCK_EMPLOYEE.data!,
       ...data,
+      id: data.id?.toString() || MOCK_EMPLOYEE.data!.id,
     };
   }
   
@@ -182,6 +276,7 @@ export const updateEmployee = async (data: UpdateEmployeeRequest): Promise<Emplo
  */
 export const deleteEmployee = async (id: string): Promise<void> => {
   if (isMockMode()) {
+    console.log('[Mock Request] deleteEmployee:', { id });
     await delay(300);
     return;
   }
@@ -204,6 +299,7 @@ export const uploadPersonalDocument = async (
   comment?: string
 ): Promise<PersonalDocument> => {
   if (isMockMode()) {
+    console.log('[Mock Request] uploadPersonalDocument:', { employeeId, fileName: file.name, title, comment });
     await delay(1000);
     return {
       id: Date.now(),
@@ -241,6 +337,7 @@ export const deletePersonalDocument = async (
   documentId: string
 ): Promise<void> => {
   if (isMockMode()) {
+    console.log('[Mock Request] deletePersonalDocument:', { employeeId, documentId });
     await delay(300);
     return;
   }
@@ -304,26 +401,28 @@ export const mapOnboardingFormToEmployeeRequest = (
   formData: OnboardingFormData,
   userId: number
 ): CreateEmployeeRequest => {
-  // 构建 contacts 数组
-  const contacts: Contact[] = [
+  // 构建 contact 数组
+  const contact: Contact[] = [
     {
       type: 'Reference' as ContactType,
-      name: formData.refName,
+      firstName: formData.refName.split(' ')[0] || formData.refName,
+      lastName: formData.refName.split(' ').slice(1).join(' ') || '',
       phone: formData.refPhone,
       email: formData.refEmail,
       relationship: formData.refRelationship,
     },
     {
       type: 'Emergency' as ContactType,
-      name: formData.emergencyName,
+      firstName: formData.emergencyName.split(' ')[0] || formData.emergencyName,
+      lastName: formData.emergencyName.split(' ').slice(1).join(' ') || '',
       phone: formData.emergencyPhone,
       email: formData.emergencyEmail,
       relationship: formData.emergencyRelationship,
     },
   ];
   
-  // 构建 addresses 数组
-  const addresses: Address[] = [
+  // 构建 address 数组
+  const address: Address[] = [
     {
       type: 'Primary' as AddressType,
       addressLine1: formData.addressLine1,
@@ -334,8 +433,8 @@ export const mapOnboardingFormToEmployeeRequest = (
     },
   ];
   
-  // 构建 visaStatuses 数组
-  const visaStatuses: VisaStatus[] = [
+  // 构建 visaStatus 数组
+  const visaStatus: VisaStatus[] = [
     {
       visaType: formData.visaType,
       activeFlag: true,
@@ -355,13 +454,13 @@ export const mapOnboardingFormToEmployeeRequest = (
     cellPhone: formData.cellPhone,
     alternatePhone: formData.alternatePhone,
     gender: formData.gender,
-    ssn: formData.ssn,
-    dob: formData.dob,
+    SSN: formData.ssn,
+    DOB: formData.dob,
     startDate: formData.startDate,
     driverLicense: formData.driverLicense,
     driverLicenseExpiration: formData.driverLicenseExpiration,
-    contacts,
-    addresses,
-    visaStatuses,
+    contact,
+    address,
+    visaStatus,
   };
 };

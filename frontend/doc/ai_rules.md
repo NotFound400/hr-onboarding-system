@@ -14,10 +14,30 @@ export interface ApiResponse<T> {
   message: string;        // 后端返回的提示信息 (用于 Toast 展示)
   data: T | null;         // 实际业务数据 Payload
 }
-1.2 数据库对齐 (Database Alignment)
-前端 TypeScript 类型定义 (src/types/*.ts) 必须严格映射 Team_Project_DB_Design.md，禁止随意扁平化数据结构。
 
-ID 类型: 所有 ID (MySQL 或 MongoDB) 统一要在前端定义为 string 类型。
+### 1.2 命名与数据结构权威 (Naming & Data Structure Authority)
+
+**核心原则：代码优于文档 (Code over Documentation)**
+
+1.  **唯一真理来源**: `src/types/*.ts` 中的 TypeScript Interface 定义是本项目字段命名和数据结构的**最高权威**。
+2.  **字段命名规范**:
+    * **绝对禁止**直接照搬 `doc/Team_Project_DB_Design.md` 或 PDF 中的列名（如 `FirstName`, `EmployeeID`）。
+    * **必须**使用 `src/types` 中已定义的变量名（统一使用 **camelCase**，如 `firstName`, `employeeId`）。
+    * 如果 `src/types` 中缺少某个字段，请遵循 **camelCase** 风格补充，禁止使用 PascalCase。
+3.  **冲突解决**:
+    * **命名冲突**: 如果 DB 文档叫 `CellPhone`，但 TS 定义是 `mobilePhone`，**以 TS 为准**。
+    * **类型冲突**: 如果 DB 文档说 ID 是 String，但 TS 定义是 Number，**以 TS 为准**。
+
+**ID 类型规范 (Hybrid ID Strategy)**:
+虽然以 TS 为准，但在补充新类型时，需遵循以下**混合 ID 策略**：
+* **MongoDB 实体 (Employee)**:
+    * 自身 ID 及作为外键引用时 (如 `employeeId`)，必须定义为 **`string`**。
+* **SQL 实体 (User, House, Application 等)**:
+    * 自身 ID 及作为外键引用时 (如 `userId`, `houseId`)，保持为 **`number`**。
+
+**结构对齐**:
+* TS 接口应保留 DB 设计中的**嵌套结构**（例如 `Employee` 包含 `contacts` 数组），不要随意将结构扁平化，除非是为了特定的 `Request DTO`。
+
 
 枚举定义: 必须为状态字段定义 TypeScript Enum，例如：
 

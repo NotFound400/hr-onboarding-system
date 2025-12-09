@@ -1,7 +1,7 @@
 /**
  * Request DTOs (Data Transfer Objects)
- * 为复杂操作定义前端友好的 Request 结构
- * 注意：这些 DTO 最终需能映射回符合 DB 设计的结构
+ * 统一管理所有 API 请求接口
+ * 注意：这些接口定义了前端向后端发送的数据结构
  */
 
 import type {
@@ -13,8 +13,23 @@ import type {
   ApplicationStatus,
   FacilityReportStatus
 } from './enums';
+import type { Contact, Address, VisaStatus } from './employee';
 
 // ==================== Authentication Requests ====================
+
+/** 登录请求 */
+export interface LoginRequest {
+  username: string;
+  password: string;
+}
+
+/** 注册请求 */
+export interface RegisterRequest {
+  token: string;
+  username: string;
+  email: string;
+  password: string;
+}
 
 /**
  * 登录请求 DTO
@@ -95,7 +110,117 @@ export interface OnboardingFormDTO {
  * Onboarding 提交请求 DTO (包含 userId)
  */
 export interface SubmitOnboardingRequestDTO extends OnboardingFormDTO {
-  userId: string;
+  userId: number;
+}
+
+// ==================== Employee Requests ====================
+
+/** 创建员工请求 (用于 Onboarding 表单提交) */
+export interface CreateEmployeeRequest {
+  userId: number;
+  firstName: string;
+  lastName: string;
+  middleName?: string;
+  preferredName?: string;
+  email: string;
+  cellPhone: string;
+  alternatePhone?: string;
+  gender: Gender;
+  SSN: string;
+  DOB: string;
+  startDate: string;
+  driverLicense: string;
+  driverLicenseExpiration: string;
+  contact: Contact[];
+  address: Address[];
+  visaStatus: VisaStatus[];
+}
+
+/** 更新员工请求 */
+export interface UpdateEmployeeRequest extends Partial<CreateEmployeeRequest> {
+  id: string; // MongoDB ObjectId
+}
+
+// ==================== Application Requests ====================
+
+/** 创建申请请求 */
+export interface CreateApplicationRequest {
+  employeeId: string;
+  type: ApplicationType;
+  comment?: string;
+}
+
+/** 更新申请状态请求 */
+export interface UpdateApplicationStatusRequest {
+  id: number;
+  status: ApplicationStatus;
+  comment?: string;
+}
+
+// ==================== Housing Requests ====================
+
+/** 创建房屋请求 */
+export interface CreateHouseRequest {
+  address: string;
+  maxOccupancy?: number;
+  maxOccupant?: number;
+  landlordId?: number;
+  landlord?: {
+    firstName: string;
+    lastName: string;
+    phoneNumber: string;
+    email: string;
+  };
+  facilityInfo?: string;
+}
+
+/** 更新房屋请求 */
+export interface UpdateHouseRequest {
+  id: number;
+  address?: string;
+  maxOccupant?: number;
+  landlordId?: number;
+}
+
+/** 创建房东请求 */
+export interface CreateLandlordRequest {
+  firstName: string;
+  lastName: string;
+  email: string;
+  cellPhone: string;
+}
+
+/** 创建设施请求 */
+export interface CreateFacilityRequest {
+  houseId: number;
+  type: string;
+  description: string;
+  quantity: number;
+}
+
+/** 更新设施请求 */
+export interface UpdateFacilityRequest {
+  id: number;
+  type?: string;
+  description?: string;
+  quantity?: number;
+}
+
+/** 创建报修工单请求 */
+export interface CreateFacilityReportRequest {
+  facilityId: number;
+  title: string;
+  description: string;
+}
+
+/** 更新报修状态请求 */
+export interface UpdateFacilityReportStatusRequest {
+  status: FacilityReportStatus;
+}
+
+/** 添加报修评论请求 */
+export interface AddFacilityReportCommentRequest {
+  comment: string;
 }
 
 // ==================== Employee Update Request DTO ====================
@@ -104,7 +229,7 @@ export interface SubmitOnboardingRequestDTO extends OnboardingFormDTO {
  * 更新员工基本信息 DTO
  */
 export interface UpdateEmployeeInfoDTO {
-  id: string;
+  id: number;
   firstName?: string;
   lastName?: string;
   middleName?: string;
@@ -118,7 +243,7 @@ export interface UpdateEmployeeInfoDTO {
  * 添加联系人 DTO
  */
 export interface AddContactDTO {
-  employeeId: string;
+  employeeId: number;
   type: ContactType;
   name: string;
   phone: string;
@@ -137,7 +262,7 @@ export interface UpdateContactDTO extends AddContactDTO {
  * 添加地址 DTO
  */
 export interface AddAddressDTO {
-  employeeId: string;
+  employeeId: number;
   type: AddressType;
   addressLine1: string;
   addressLine2?: string;
@@ -157,7 +282,7 @@ export interface UpdateAddressDTO extends AddAddressDTO {
  * 更新签证状态 DTO
  */
 export interface UpdateVisaStatusDTO {
-  employeeId: string;
+  employeeId: number;
   visaType: VisaStatusType;
   startDate: string;
   endDate: string;
@@ -170,7 +295,7 @@ export interface UpdateVisaStatusDTO {
  * 上传个人文档 DTO
  */
 export interface UploadDocumentDTO {
-  employeeId: string;
+  employeeId: number;
   file: File;
   title: string;
   comment?: string;
@@ -191,7 +316,7 @@ export interface CreateApplicationDTO {
  * HR 审批申请 DTO
  */
 export interface ReviewApplicationDTO {
-  applicationId: string;
+  applicationId: number;
   status: ApplicationStatus; // 'Approved' | 'Rejected'
   comment?: string; // 拒绝原因或审批备注
 }
@@ -202,7 +327,7 @@ export interface ReviewApplicationDTO {
  * 创建房屋 DTO
  */
 export interface CreateHouseDTO {
-  landlordId: string;
+  landlordId: number;
   address: string;
   maxOccupant: number;
 }
@@ -221,7 +346,7 @@ export interface CreateLandlordDTO {
  * 添加设施 DTO
  */
 export interface AddFacilityDTO {
-  houseId: string;
+  houseId: number;
   type: string; // e.g., 'Bed', 'Mattress', 'Table'
   description: string;
   quantity: number;
@@ -231,8 +356,8 @@ export interface AddFacilityDTO {
  * 创建设施报修工单 DTO
  */
 export interface CreateFacilityReportDTO {
-  facilityId: string;
-  employeeId: string;
+  facilityId: number;
+  employeeId: number;
   title: string;
   description: string;
 }
@@ -241,7 +366,7 @@ export interface CreateFacilityReportDTO {
  * 更新报修状态 DTO
  */
 export interface UpdateFacilityReportStatusDTO {
-  reportId: string;
+  reportId: number;
   status: FacilityReportStatus;
 }
 
@@ -249,8 +374,8 @@ export interface UpdateFacilityReportStatusDTO {
  * 添加报修评论 DTO
  */
 export interface AddReportCommentDTO {
-  reportId: string;
-  employeeId: string;
+  reportId: number;
+  employeeId: number;
   comment: string;
 }
 
@@ -262,7 +387,7 @@ export interface AddReportCommentDTO {
 export interface EmployeeSearchDTO {
   keyword?: string; // 搜索姓名、邮箱
   visaType?: VisaStatusType;
-  houseId?: string;
+  houseId?: number;
   startDateFrom?: string;
   startDateTo?: string;
 }
@@ -273,7 +398,7 @@ export interface EmployeeSearchDTO {
 export interface ApplicationFilterDTO {
   status?: ApplicationStatus;
   type?: ApplicationType;
-  employeeId?: string;
+  employeeId?: number;
   createDateFrom?: string;
   createDateTo?: string;
 }
@@ -283,8 +408,8 @@ export interface ApplicationFilterDTO {
  */
 export interface FacilityReportFilterDTO {
   status?: FacilityReportStatus;
-  houseId?: string;
-  employeeId?: string;
+  houseId?: number;
+  employeeId?: number;
   facilityType?: string;
 }
 

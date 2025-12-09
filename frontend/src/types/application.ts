@@ -6,12 +6,15 @@
 
 import { ApplicationStatus, ApplicationType } from './enums';
 
+// Re-export request types
+export type { CreateApplicationRequest, UpdateApplicationStatusRequest } from './request';
+
 /** 申请工作流表 */
 export interface ApplicationWorkFlow {
   /** Primary Key */
   id: number;
   /** 员工 ID (Foreign Key -> Employee.ID) */
-  employeeId: number;
+  employeeId: string;
   /** 创建时间 */
   createDate: string;
   /** 最后修改时间 */
@@ -40,17 +43,10 @@ export interface DigitalDocument {
   title: string;
 }
 
-/** 创建申请请求 */
-export interface CreateApplicationRequest {
-  employeeId: number;
-  type: ApplicationType;
-  comment?: string;
-}
-
-/** 更新申请状态请求 */
-export interface UpdateApplicationStatusRequest {
-  id: number;
-  status: ApplicationStatus;
+/** OPT 文档状态 */
+export interface OPTDocumentStatus {
+  status: 'Pending' | 'Approved' | 'Rejected';
+  uploadDate?: string;
   comment?: string;
 }
 
@@ -58,4 +54,11 @@ export interface UpdateApplicationStatusRequest {
 export interface ApplicationDetail extends ApplicationWorkFlow {
   employeeName: string;
   employeeEmail: string;
+  // OPT 申请相关字段
+  optReceipts?: OPTDocumentStatus;
+  optEAD?: OPTDocumentStatus;
+  i983?: OPTDocumentStatus;
+  i20?: OPTDocumentStatus;
+  // 文档列表
+  documents?: Array<DigitalDocument & { filename?: string; uploadDate?: string; status?: string; comment?: string }>;
 }

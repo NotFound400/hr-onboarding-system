@@ -21,5 +21,8 @@ export * from './employee';
 // Application Types
 export * from './application';
 
+// Application Types
+export * from './application';
+
 // Housing Types
 export * from './housing';

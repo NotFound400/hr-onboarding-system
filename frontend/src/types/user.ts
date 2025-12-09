@@ -5,6 +5,9 @@
 
 import { RoleType } from './enums';
 
+// Re-export request types
+export type { LoginRequest, RegisterRequest } from './request';
+
 /** 用户表 */
 export interface User {
   /** Primary Key */
@@ -67,23 +70,9 @@ export interface RegistrationToken {
   createDate: string;
 }
 
-/** 登录请求 */
-export interface LoginRequest {
-  username: string;
-  password: string;
-}
-
 /** 登录响应 */
 export interface LoginResponse {
   token: string;
   user: User;
   role: RoleType;
-}
-
-/** 注册请求 */
-export interface RegisterRequest {
-  token: string;
-  username: string;
-  email: string;
-  password: string;
 }

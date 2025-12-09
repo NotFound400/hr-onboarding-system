@@ -27,8 +27,8 @@ Redux 状态管理规范
 新增补充内容汇总（追踪变更用）
 
 1. 技术栈与总体约定
-框架：React 18（TypeScript）
-React 版本：^18.2.0（与 package.json 中 "react"、"react-dom" 保持一致）
+框架：React 
+React 版本（与 package.json 中 "react"、"react-dom" 保持一致）
 
 UI：Ant Design
 
@@ -304,131 +304,67 @@ SubmitResult	返回	/login
 拒绝 → 员工登录进入 /onboarding/form 并展示拒绝原因
 
 6. 完整项目目录结构（含全部子目录）
-Project Root/
-  ├── ai_rules.md                 <-- [NEW] AI 生成规范、API 契约、Mock 策略
-  ├── db_design.md                <-- [NEW] 数据库结构定义 (MongoDB/MySQL)
-  ├── frontend_requirement.md     <-- [UPDATED] 前端业务逻辑与校验规则
-  ├── .env.development            <-- [NEW] 环境变量 (VITE_USE_MOCK=true)
-  ├── package.json
-  ├── tsconfig.json
-  ├── vite.config.ts
-  └── src/
-      ├── app/
-      │   ├── App.tsx
-      │   ├── AntdAppProvider.tsx     <-- AntD ConfigProvider 全局配置
-      │   ├── routes/
-      │   │   ├── AuthGuard.tsx       <-- [NEW] 路由权限守卫
-      │   │   ├── PublicRoutes.tsx
-      │   │   ├── EmployeeRoutes.tsx
-      │   │   └── HrRoutes.tsx
-      │   └── layout/
-      │       ├── MainLayout.tsx      <-- 统一布局 (内部根据 Role 切换 Nav)
-      │       └── AuthLayout.tsx
-      │
-      ├── config/
-      │   ├── constants.ts
-      │   └── theme.ts
-      │
-      ├── hooks/
-      │   ├── useAuth.ts
-      │   ├── useAppDispatch.ts       <-- [NEW] Redux Toolkit 官方推荐 Hook
-      │   └── useAppSelector.ts       <-- [NEW] Redux Toolkit 官方推荐 Hook
-      │
-      ├── store/
-      │   ├── index.ts
-      │   └── slices/
-      │       ├── authSlice.ts
-      │       ├── userSlice.ts
-      │       ├── onboardingSlice.ts
-      │       ├── visaSlice.ts
-      │       ├── housingSlice.ts
-      │       └── hrSlice.ts
-      │
-      ├── services/
-      │   └── api/
-      │       ├── axiosClient.ts      <-- [CORE] 包含拦截器：处理 ApiResponse 解包 & 错误提示
-      │       ├── authApi.ts
-      │       ├── employeeApi.ts      <-- 对应 EmployeeService (Mongo)
-      │       ├── applicationApi.ts   <-- 对应 Application Workflow (SQL)
-      │       ├── housingApi.ts       <-- 对应 HousingService (SQL)
-      │       └── facilityApi.ts
-      │
-      ├── types/
-      │   ├── index.ts
-      │   ├── response.ts             <-- [NEW] 定义 ApiResponse<T> 统一外壳
-      │   ├── request.ts              <-- [NEW] 定义 Request DTOs (如 OnboardingSubmitDTO)
-      │   ├── user.ts
-      │   ├── employee.ts             <-- 对应 DB Design 中的 Employee (含 nested types)
-      │   ├── application.ts          <-- 对应 DB Design 中的 Workflow & Status Enum
-      │   ├── housing.ts
-      │   └── document.ts
-      │
-      ├── utils/
-      │   ├── mockUtils.ts            <-- [NEW] 存放 delay 函数、Mock 开关检测工具
-      │   ├── validators.ts           <-- 表单校验逻辑
-      │   └── formatDate.ts
-      │
-      ├── components/
-      │   ├── common/                 <-- 基础组件二次封装
-      │   │   ├── AppButton/
-      │   │   ├── AppInput/
-      │   │   ├── AppSelect/
-      │   │   ├── AppTable/
-      │   │   ├── AppModal/
-      │   │   └── AppCard/
-      │   ├── document/
-      │   │   ├── DocumentList.tsx    <-- [REQ] 需包含显式的“下载”按钮
-      │   │   └── DocumentPreviewModal.tsx
-      │   └── form/
-      │       ├── FormSection.tsx
-      │       └── EditableField.tsx
-      │
-      ├── features/                   <-- 业务模块 (Feature-First 结构)
-      │   ├── auth/
-      │   │   ├── pages/
-      │   │   │   └── LoginPage.tsx
-      │   │   └── components/
-      │   │       └── LoginForm.tsx
-      │   ├── onboarding/
-      │   │   ├── pages/
-      │   │   │   ├── RegistrationPage.tsx
-      │   │   │   ├── OnboardingFormPage.tsx
-      │   │   │   ├── OnboardingDocsPage.tsx
-      │   │   │   └── OnboardingSubmitResultPage.tsx
-      │   │   └── components/
-      │   │       ├── OnboardingForm.tsx      <-- [CORE] 负责将表单平铺数据转为 API 嵌套数据
-      │   │       └── OnboardingDocsList.tsx
-      │   ├── employee/
-      │   │   ├── pages/
-      │   │   │   ├── EmployeeHomePage.tsx
-      │   │   │   ├── PersonalInfoPage.tsx
-      │   │   │   ├── VisaStatusPage.tsx
-      │   │   │   ├── HousingPage.tsx
-      │   │   │   ├── HouseDetailPage.tsx
-      │   │   │   └── FacilityIssuePage.tsx
-      │   │   └── components/
-      │   │       ├── personal-info/
-      │   │       ├── visa/
-      │   │       ├── housing/
-      │   │       └── facility-issue/
-      │   └── hr/
-      │       ├── pages/
-      │   │       ├── HrHomePage.tsx
-      │   │       ├── EmployeeProfilePage.tsx
-      │   │       ├── VisaManagementPage.tsx
-      │   │       ├── HireTokenPage.tsx
-      │   │       ├── HireApplicationListPage.tsx
-      │   │       ├── HireApplicationDetailPage.tsx
-      │   │       └── HouseManagementPage.tsx
-      │       └── components/
-      │           ├── home/
-      │           ├── employee-profile/
-      │           ├── visa/
-      │           ├── hire/
-      │           └── house/
-      │
-      └── styles/
-          └── global.css
+root/
+  .env                        <-- 环境变量
+  
+  doc/                        <-- 文档与规则中心 (AI Context)
+    ai_rules.md               <-- 核心：AI 生成规范与 API 契约
+    frontend_requirement.md   <-- 核心：业务逻辑与页面流程
+    Team_Project_DB_Design.md <-- 核心：数据结构定义
+    P3-2-Team_Project_DB_Design.pdf
+    API_SERVICE_LAYER.md
+    HousingDTO.md
+    INFRASTRUCTURE_CHECK.md
+    TYPE_DEFINITIONS_CHECK.md
+
+  src/
+    assets/
+    
+    components/               <-- (待创建) 公共组件
+      common/                 <-- 基础封装 (AppButton, AppInput 等)
+      document/               <-- 文档列表/预览组件
+      layout/                 <-- 布局组件 (MainLayout, AuthLayout)
+
+    features/                 <-- (待创建) 业务模块
+      auth/
+      onboarding/
+      employee/
+      hr/
+
+    services/
+      api/
+        axiosClient.ts        <-- 拦截器配置
+        applicationApi.ts
+        employeeApi.ts
+        housingApi.ts
+        userApi.ts
+        index.ts              <-- Barrel export
+
+    store/
+      hooks.ts                <-- useAppDispatch, useAppSelector
+      index.ts                <-- Redux Store 配置
+      slices/                 <-- (待创建) Redux Slices
+
+    types/
+      application.ts
+      employee.ts
+      housing.ts
+      user.ts
+      request.ts              <-- Request DTOs
+      response.ts             <-- ApiResponse Wrapper
+      enums.ts                <-- 独立枚举定义
+      index.ts                <-- Barrel export
+
+    utils/
+      mockUtils.ts            <-- Mock 延迟与开关逻辑
+      validators.ts           <-- (待创建)
+      formatDate.ts           <-- (待创建)
+
+    App.css
+    App.tsx                   <-- 主应用入口
+    index.css
+    main.tsx                  <-- Vite 入口
+    vite-env.d.ts
 
 7. 命名规范
 

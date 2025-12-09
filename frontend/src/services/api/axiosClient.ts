@@ -6,7 +6,7 @@
 import axios from 'axios';
 import type { AxiosInstance, AxiosError, AxiosResponse, InternalAxiosRequestConfig } from 'axios';
 import { message } from 'antd';
-import type { ApiResponse } from '@/types';
+import type { ApiResponse } from '../../types';
 
 // 创建 Axios 实例
 const axiosClient: AxiosInstance = axios.create({
@@ -23,7 +23,7 @@ const axiosClient: AxiosInstance = axios.create({
  */
 axiosClient.interceptors.request.use(
   (config: InternalAxiosRequestConfig) => {
-    const token = localStorage.getItem('authToken');
+    const token = localStorage.getItem('token');
     if (token && config.headers) {
       config.headers.Authorization = `Bearer ${token}`;
     }
@@ -64,7 +64,8 @@ axiosClient.interceptors.response.use(
         case 401:
           message.error('未授权，请重新登录');
           // 清除本地 Token
-          localStorage.removeItem('authToken');
+          localStorage.removeItem('token');
+          localStorage.removeItem('role');
           // 可选: 跳转到登录页
           window.location.href = '/login';
           break;
