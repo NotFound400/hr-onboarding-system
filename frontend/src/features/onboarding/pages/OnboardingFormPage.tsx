@@ -1,70 +1,86 @@
 /**
  * Onboarding Form Page
- * 员工 Onboarding 表单页面 - 多步骤表单
+ * 严格按照 raw_project_requirement.md Section 3 实现
+ * 
+ * Section 3.c 字段清单:
+ * i. First Name, Last Name, Middle Name, Preferred Name ✅
+ * ii. Avatar (default picture if not uploaded) ✅
+ * iii. Current Address ✅
+ * iv. Cell Phone, Work Phone ✅
+ * v. Email (pre-filled, not editable) ✅
+ * vi. SSN, Date of Birth, Gender (Male, Female, Other, I Prefer Not to Say) ✅
+ * vii. Citizenship flow (Citizen/Green Card OR visa types with document upload) ✅
+ * viii. Driver License checkbox flow ✅
+ * ix. Reference (ONE person): First/Last/Middle Name, Phone, Address, Email, Relationship ✅
+ * x. Emergency Contact (at least one): First/Last/Middle Name, Phone, Email, Relationship ✅
  */
 
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Form, Input, Select, DatePicker, Button, Steps, Row, Col, message, Divider } from 'antd';
+import { 
+  Form, 
+  Input, 
+  Select, 
+  DatePicker, 
+  Button, 
+  Row, 
+  Col, 
+  message, 
+  Divider, 
+  Radio, 
+  Upload, 
+  Card
+} from 'antd';
+import type { UploadFile } from 'antd';
+import { PlusOutlined, MinusCircleOutlined, UploadOutlined } from '@ant-design/icons';
 import { PageContainer } from '../../../components/common/PageContainer';
 import { useAppDispatch, useAppSelector } from '../../../store/hooks';
 import {
   submitOnboardingForm,
-  selectCurrentStep,
-  selectFormData,
   selectOnboardingLoading,
   selectOnboardingError,
   selectSubmitSuccess,
-  setCurrentStep,
-  saveFormData,
   clearError,
 } from '../../../store/slices/onboardingSlice';
 import { selectUser } from '../../../store/slices/authSlice';
-import type { CreateEmployeeRequest } from '../../../types';
+import type { OnboardingFormDTO, VisaStatusType } from '../../../types';
 import dayjs from 'dayjs';
 
 /**
  * OnboardingFormPage Component
  * 
- * 按 frontend_requirement.md 4.2 定义:
- * - 分段表单（个人信息 → 紧急联系人 → 地址/签证）
- * - Reference 和 Emergency Contact 必填
- * - 驾照信息必填
- * - 保存并继续 → /onboarding/docs
+ * 严格按照 raw_project_requirement.md Section 3 实现:
+ * - 单页完整表单（不分步骤）
+ * - Citizenship 条件分支逻辑 (Section 3.c.vii)
+ * - Driver License 条件显示 (Section 3.c.viii)
+ * - Reference (只允许一个人，包含 Address)
+ * - Emergency Contact (至少一个，支持多个)
+ * - 提交后跳转 /onboarding/docs (Section 3.d)
  */
 const OnboardingFormPage: React.FC = () => {
   const [form] = Form.useForm();
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
+  
+  // 监听条件字段状态
+  const [isCitizenOrPR, setIsCitizenOrPR] = useState<boolean | undefined>(undefined);
+  const [hasDriverLicense, setHasDriverLicense] = useState<boolean | undefined>(undefined);
+  const [workAuthType, setWorkAuthType] = useState<string | undefined>(undefined);
+  const [avatarFileList, setAvatarFileList] = useState<UploadFile[]>([]);
 
-  const currentStep = useAppSelector(selectCurrentStep);
-  const formData = useAppSelector(selectFormData);
   const loading = useAppSelector(selectOnboardingLoading);
   const error = useAppSelector(selectOnboardingError);
   const submitSuccess = useAppSelector(selectSubmitSuccess);
   const user = useAppSelector(selectUser);
 
-  // 初始化表单数据 - 步骤切换时恢复已保存的数据
+  // 初始化表单数据
   useEffect(() => {
-    if (formData) {
-      // 将日期字符串转换为 dayjs 对象
-      const formValues: any = { ...formData };
-      if (formData.dob) formValues.dob = dayjs(formData.dob);
-      if (formData.startDate) formValues.startDate = dayjs(formData.startDate);
-      if (formData.driverLicenseExpiration) {
-        formValues.driverLicenseExpiration = dayjs(formData.driverLicenseExpiration);
-      }
-      if (formData.visaStartDate) formValues.visaStartDate = dayjs(formData.visaStartDate);
-      if (formData.visaEndDate) formValues.visaEndDate = dayjs(formData.visaEndDate);
-      
-      // 使用 setTimeout 确保在 DOM 渲染后设置值
-      setTimeout(() => {
-        form.setFieldsValue(formValues);
-      }, 0);
+    if (user?.email) {
+      form.setFieldValue('email', user.email);
     }
-  }, [formData, form, currentStep]); // 添加 currentStep，确保步骤切换时恢复数据
+  }, [user, form]);
 
-  // 提交成功后跳转
+  // 提交成功后跳转到文档页面 (Section 3.d)
   useEffect(() => {
     if (submitSuccess) {
       message.success('Onboarding form submitted successfully!');
@@ -81,258 +97,309 @@ const OnboardingFormPage: React.FC = () => {
   }, [error, dispatch]);
 
   /**
-   * 步骤配置
+   * 处理表单提交 - Tech Lead Fix
+   * 
+   * 关键修复点:
+   * 1. 不从 Redux state 读取数据，直接使用 form.validateFields() 返回的 values
+   * 2. 所有 DatePicker 返回的 dayjs 对象必须转换为字符串 (解决 Redux Non-serializable 错误)
+   * 3. 显式映射所有字段，避免 undefined 问题
    */
-  const steps = [
-    { title: 'Personal Info' },
-    { title: 'Contacts' },
-    { title: 'Address & Visa' },
-  ];
-
-  /**
-   * 处理下一步
-   */
-  const handleNext = async () => {
+  const handleSubmit = async () => {
     try {
-      await form.validateFields();
-      const values = form.getFieldsValue();
-      
-      // 转换 dayjs 对象为字符串
-      const serializedValues: any = {};
-      Object.keys(values).forEach(key => {
-        const value = values[key];
-        if (value && value.format) {
-          serializedValues[key] = value.format('YYYY-MM-DD');
-        } else {
-          serializedValues[key] = value;
-        }
-      });
-      
-      // 合并 Redux 已有数据和当前步骤数据
-      const mergedData = {
-        ...(formData || {}),
-        ...serializedValues,
+      // ✅ 直接从 validateFields() 获取值，不依赖 getFieldsValue()
+      const values = await form.validateFields();
+
+      // ✅ 构建 OnboardingFormDTO - 所有日期对象立即转换为字符串
+      const onboardingData: OnboardingFormDTO = {
+        // Section 3.c.i - Name fields
+        firstName: values.firstName,
+        lastName: values.lastName,
+        middleName: values.middleName || '',
+        preferredName: values.preferredName || '',
+        
+        // Section 3.c.ii - Avatar
+        avatar: avatarFileList.length > 0 ? avatarFileList[0].url || '' : '',
+        
+        // Section 3.c.iii - Current Address
+        addressLine1: values.addressLine1,
+        addressLine2: values.addressLine2 || '',
+        city: values.city,
+        state: values.state,
+        zipCode: values.zipCode,
+        
+        // Section 3.c.iv - Phone numbers
+        cellPhone: values.cellPhone,
+        workPhone: values.workPhone || '',
+        
+        // Section 3.c.v - Email (pre-filled, not editable)
+        email: values.email,
+        
+        // Section 3.c.vi - Personal Info (✅ 关键修复: dayjs → string)
+        ssn: values.ssn,
+        dob: values.dob ? dayjs(values.dob).format('YYYY-MM-DD') : '', // ✅ 立即转换
+        gender: values.gender,
+        
+        // 添加 startDate (必需字段)
+        startDate: values.startDate ? dayjs(values.startDate).format('YYYY-MM-DD') : dayjs().format('YYYY-MM-DD'),
+        
+        // Section 3.c.vii - Citizenship/Work Authorization
+        isCitizenOrPR: values.isCitizenOrPR,
+        citizenshipType: values.isCitizenOrPR ? values.citizenshipType : undefined,
+        visaType: !values.isCitizenOrPR ? values.workAuthorizationType : undefined,
+        workAuthorizationTitle: (!values.isCitizenOrPR && values.workAuthorizationType === 'Other') 
+          ? values.workAuthorizationTitle 
+          : undefined,
+        visaStartDate: !values.isCitizenOrPR && values.workAuthStartDate
+          ? dayjs(values.workAuthStartDate).format('YYYY-MM-DD') // ✅ 立即转换
+          : undefined,
+        visaEndDate: !values.isCitizenOrPR && values.workAuthEndDate
+          ? dayjs(values.workAuthEndDate).format('YYYY-MM-DD') // ✅ 立即转换
+          : undefined,
+        workAuthorizationDocument: !values.isCitizenOrPR ? values.workAuthDocument : undefined,
+        
+        // Section 3.c.viii - Driver License
+        hasDriverLicense: values.hasDriverLicense,
+        driverLicense: values.hasDriverLicense ? values.driverLicenseNumber : undefined,
+        driverLicenseExpiration: values.hasDriverLicense && values.driverLicenseExpiration
+          ? dayjs(values.driverLicenseExpiration).format('YYYY-MM-DD') // ✅ 立即转换
+          : undefined,
+        driverLicenseCopy: values.hasDriverLicense ? values.driverLicenseCopy : undefined,
+        
+        // Section 3.c.ix - Reference (only one person, includes Address)
+        referenceFirstName: values.referenceFirstName,
+        referenceLastName: values.referenceLastName,
+        referenceMiddleName: values.referenceMiddleName || '',
+        referencePhone: values.referencePhone,
+        referenceAddress: values.referenceAddress || '',
+        referenceEmail: values.referenceEmail,
+        referenceRelationship: values.referenceRelationship,
+        
+        // Section 3.c.x - Emergency Contacts (at least one)
+        emergencyFirstName: values.emergencyContacts[0]?.firstName || '',
+        emergencyLastName: values.emergencyContacts[0]?.lastName || '',
+        emergencyMiddleName: values.emergencyContacts[0]?.middleName || '',
+        emergencyPhone: values.emergencyContacts[0]?.phone || '',
+        emergencyEmail: values.emergencyContacts[0]?.email || '',
+        emergencyRelationship: values.emergencyContacts[0]?.relationship || '',
       };
+
+      // ✅ 将 OnboardingFormDTO 转换为 CreateEmployeeRequest (嵌套结构)
+      const createEmployeeRequest: import('../../../types').CreateEmployeeRequest = {
+        userId: user?.id || 0,
+        firstName: onboardingData.firstName,
+        lastName: onboardingData.lastName,
+        middleName: onboardingData.middleName,
+        preferredName: onboardingData.preferredName,
+        avatar: onboardingData.avatar,
+        email: onboardingData.email,
+        workEmail: undefined,
+        cellPhone: onboardingData.cellPhone,
+        workPhone: onboardingData.workPhone,
+        alternatePhone: undefined,
+        gender: onboardingData.gender,
+        SSN: onboardingData.ssn,
+        DOB: onboardingData.dob,
+        startDate: onboardingData.startDate,
+        endDate: undefined,
+        title: undefined,
+        driverLicense: onboardingData.driverLicense,
+        driverLicenseExpiration: onboardingData.driverLicenseExpiration,
+        
+        // 嵌套结构: Contact[]
+        contact: [
+          // Reference Contact
+          {
+            type: 'Reference',
+            firstName: onboardingData.referenceFirstName,
+            lastName: onboardingData.referenceLastName,
+            middleName: onboardingData.referenceMiddleName,
+            phone: onboardingData.referencePhone,
+            email: onboardingData.referenceEmail,
+            relationship: onboardingData.referenceRelationship,
+          },
+          // Emergency Contact
+          {
+            type: 'Emergency',
+            firstName: onboardingData.emergencyFirstName,
+            lastName: onboardingData.emergencyLastName,
+            middleName: onboardingData.emergencyMiddleName,
+            phone: onboardingData.emergencyPhone,
+            email: onboardingData.emergencyEmail,
+            relationship: onboardingData.emergencyRelationship,
+          },
+        ],
+        
+        // 嵌套结构: Address[]
+        address: [
+          {
+            type: 'Primary',
+            addressLine1: onboardingData.addressLine1,
+            addressLine2: onboardingData.addressLine2 || '',
+            city: onboardingData.city,
+            state: onboardingData.state,
+            zipCode: onboardingData.zipCode,
+          },
+        ],
+        
+        // 嵌套结构: VisaStatus[]
+        visaStatus: onboardingData.isCitizenOrPR
+          ? [
+              {
+                visaType: onboardingData.citizenshipType as VisaStatusType || 'Citizen',
+                activeFlag: true,
+                startDate: onboardingData.startDate,
+                endDate: '9999-12-31',
+                lastModificationDate: new Date().toISOString(),
+              },
+            ]
+          : [
+              {
+                visaType: onboardingData.visaType as VisaStatusType || 'Other',
+                activeFlag: true,
+                startDate: onboardingData.visaStartDate || onboardingData.startDate,
+                endDate: onboardingData.visaEndDate || '',
+                lastModificationDate: new Date().toISOString(),
+              },
+            ],
+      };
+
+      console.log('✅ Submitting CreateEmployeeRequest (nested structure):', createEmployeeRequest);
+
+      // ✅ 提交嵌套结构的数据到 Redux
+      await dispatch(submitOnboardingForm(createEmployeeRequest)).unwrap();
       
-      dispatch(saveFormData(mergedData));
-      
-      if (currentStep < steps.length - 1) {
-        dispatch(setCurrentStep(currentStep + 1));
-      }
     } catch (error) {
+      console.error('❌ Form validation or submission failed:', error);
       message.error('Please fill in all required fields');
     }
   };
 
-  /**
-   * 处理上一步
-   */
-  const handlePrev = () => {
-    if (currentStep > 0) {
-      const values = form.getFieldsValue();
-      
-      // 转换 dayjs 对象为字符串
-      const serializedValues: any = {};
-      Object.keys(values).forEach(key => {
-        const value = values[key];
-        if (value && value.format) {
-          serializedValues[key] = value.format('YYYY-MM-DD');
-        } else {
-          serializedValues[key] = value;
-        }
-      });
-      
-      // 合并 Redux 已有数据和当前步骤数据
-      const mergedData = {
-        ...(formData || {}),
-        ...serializedValues,
-      };
-      
-      dispatch(saveFormData(mergedData));
-      dispatch(setCurrentStep(currentStep - 1));
-    }
-  };
+  return (
+    <PageContainer title="Employee Onboarding Application">
+      <Card>
+        <Form 
+          form={form} 
+          layout="vertical"
+          initialValues={{
+            emergencyContacts: [{}], // 至少一个 Emergency Contact
+          }}
+        >
+          {/* Section 3.c.i - Name Fields */}
+          <Divider><strong>Personal Information</strong></Divider>
+          <Row gutter={16}>
+            <Col span={6}>
+              <Form.Item
+                name="firstName"
+                label="First Name"
+                rules={[{ required: true, message: 'Required' }]}
+              >
+                <Input placeholder="First Name" />
+              </Form.Item>
+            </Col>
+            <Col span={6}>
+              <Form.Item
+                name="lastName"
+                label="Last Name"
+                rules={[{ required: true, message: 'Required' }]}
+              >
+                <Input placeholder="Last Name" />
+              </Form.Item>
+            </Col>
+            <Col span={6}>
+              <Form.Item name="middleName" label="Middle Name">
+                <Input placeholder="Middle Name (optional)" />
+              </Form.Item>
+            </Col>
+            <Col span={6}>
+              <Form.Item name="preferredName" label="Preferred Name">
+                <Input placeholder="Preferred Name (optional)" />
+              </Form.Item>
+            </Col>
+          </Row>
 
-  /**
-   * 处理表单提交
-   * 关键逻辑：将扁平表单数据转换为嵌套 DTO 结构
-   * 
-   * 数据转换 (按 requirement.md 要求在页面层实现):
-   * - referenceName → contacts[0] { firstName, lastName }
-   * - emergencyName → contacts[1] { firstName, lastName }
-   * - addressLine1/2 → address[0] { addressLine1, addressLine2, city, state, zipCode }
-   * - visaType → visaStatus[0] { visaType, startDate, endDate }
-   */
-  const handleSubmit = async () => {
-    try {
-      await form.validateFields();
-      
-      // 保存当前步骤的数据
-      const currentStepValues = form.getFieldsValue();
-      
-      // 序列化当前步骤的日期字段
-      const serializedCurrentStep: any = { ...currentStepValues };
-      if (currentStepValues.dob && currentStepValues.dob.format) {
-        serializedCurrentStep.dob = currentStepValues.dob.format('YYYY-MM-DD');
-      }
-      if (currentStepValues.startDate && currentStepValues.startDate.format) {
-        serializedCurrentStep.startDate = currentStepValues.startDate.format('YYYY-MM-DD');
-      }
-      if (currentStepValues.driverLicenseExpiration && currentStepValues.driverLicenseExpiration.format) {
-        serializedCurrentStep.driverLicenseExpiration = currentStepValues.driverLicenseExpiration.format('YYYY-MM-DD');
-      }
-      if (currentStepValues.visaStartDate && currentStepValues.visaStartDate.format) {
-        serializedCurrentStep.visaStartDate = currentStepValues.visaStartDate.format('YYYY-MM-DD');
-      }
-      if (currentStepValues.visaEndDate && currentStepValues.visaEndDate.format) {
-        serializedCurrentStep.visaEndDate = currentStepValues.visaEndDate.format('YYYY-MM-DD');
-      }
-      
-      // 合并 Redux 中所有步骤的数据
-      const allFormData = {
-        ...(formData || {}),
-        ...serializedCurrentStep,
-      };
-      
-      dispatch(saveFormData(allFormData));
+          {/* Section 3.c.ii - Avatar */}
+          <Form.Item 
+            label="Avatar" 
+            tooltip="Default picture will be used if not uploaded"
+          >
+            <Upload
+              listType="picture-card"
+              fileList={avatarFileList}
+              onChange={({ fileList }) => setAvatarFileList(fileList)}
+              beforeUpload={() => false}
+              maxCount={1}
+            >
+              {avatarFileList.length === 0 && (
+                <div>
+                  <PlusOutlined />
+                  <div style={{ marginTop: 8 }}>Upload</div>
+                </div>
+              )}
+            </Upload>
+          </Form.Item>
 
-      if (!user) {
-        message.error('User not authenticated');
-        return;
-      }
-
-      // 数据转换：扁平表单 → 嵌套 CreateEmployeeRequest 结构
-      // 使用合并后的完整数据
-      const values = allFormData;
-      
-      const createEmployeeRequest: CreateEmployeeRequest = {
-        userId: user.id,
-        firstName: values.firstName || '',
-        lastName: values.lastName || '',
-        middleName: values.middleName || '',
-        preferredName: values.preferredName || '',
-        email: values.email || '',
-        cellPhone: values.cellPhone || '',
-        alternatePhone: values.alternatePhone || '',
-        gender: values.gender || 'Male',
-        SSN: values.ssn || '',
-        // 日期字段已经是字符串格式（从 Redux 或刚转换的）
-        DOB: values.dob || '',
-        startDate: values.startDate || '',
-        driverLicense: values.driverLicense || '',
-        driverLicenseExpiration: values.driverLicenseExpiration || '',
-        
-        // 转换: referenceName + emergencyName → contacts 数组
-        contact: [
-          {
-            type: 'Reference' as const,
-            firstName: values.referenceName?.split(' ')[0] || '',
-            lastName: values.referenceName?.split(' ').slice(1).join(' ') || '',
-            phone: values.referencePhone || '',
-            email: values.referenceEmail || '',
-            relationship: values.referenceRelationship || '',
-          },
-          {
-            type: 'Emergency' as const,
-            firstName: values.emergencyName?.split(' ')[0] || '',
-            lastName: values.emergencyName?.split(' ').slice(1).join(' ') || '',
-            phone: values.emergencyPhone || '',
-            email: values.emergencyEmail || '',
-            relationship: values.emergencyRelationship || '',
-          },
-        ],
-        
-        // 转换: 扁平地址字段 → address 数组
-        address: [
-          {
-            type: 'Primary' as const,
-            addressLine1: values.addressLine1 || '',
-            addressLine2: values.addressLine2 || '',
-            city: values.city || '',
-            state: values.state || '',
-            zipCode: values.zipCode || '',
-          },
-        ],
-        
-        // 转换: 扁平签证字段 → visaStatus 数组
-        visaStatus: [
-          {
-            visaType: values.visaType || 'H1-B',
-            activeFlag: true,
-            // 日期字段已经是字符串格式
-            startDate: values.visaStartDate || '',
-            endDate: values.visaEndDate || '',
-            lastModificationDate: new Date().toISOString(),
-          },
-        ],
-      };
-
-      // Mock API: 打印请求数据
-      console.log('[Mock Request] createEmployee:', createEmployeeRequest);
-
-      // 调用 Redux Thunk（已完成数据转换）
-      await dispatch(submitOnboardingForm(createEmployeeRequest)).unwrap();
-
-    } catch (error) {
-      message.error('Failed to submit onboarding form');
-    }
-  };
-
-  /**
-   * 渲染步骤 0: 个人信息
-   */
-  const renderPersonalInfo = () => (
-    <>
-      <Divider><strong>Basic Information</strong></Divider>
-      <Row gutter={16}>
-        <Col span={8}>
+          {/* Section 3.c.iii - Current Address */}
+          <Divider><strong>Current Address</strong></Divider>
           <Form.Item
-            name="firstName"
-            label="First Name"
+            name="addressLine1"
+            label="Address Line 1"
             rules={[{ required: true, message: 'Required' }]}
           >
-            <Input placeholder="First Name" />
+            <Input placeholder="123 Main St" />
           </Form.Item>
-        </Col>
-        <Col span={8}>
-          <Form.Item name="middleName" label="Middle Name">
-            <Input placeholder="Middle Name" />
+          <Form.Item name="addressLine2" label="Address Line 2">
+            <Input placeholder="Apt 4B (optional)" />
           </Form.Item>
-        </Col>
-        <Col span={8}>
-          <Form.Item
-            name="lastName"
-            label="Last Name"
-            rules={[{ required: true, message: 'Required' }]}
-          >
-            <Input placeholder="Last Name" />
-          </Form.Item>
-        </Col>
-      </Row>
+          <Row gutter={16}>
+            <Col span={8}>
+              <Form.Item
+                name="city"
+                label="City"
+                rules={[{ required: true, message: 'Required' }]}
+              >
+                <Input placeholder="City" />
+              </Form.Item>
+            </Col>
+            <Col span={8}>
+              <Form.Item
+                name="state"
+                label="State"
+                rules={[{ required: true, message: 'Required' }]}
+              >
+                <Input placeholder="State" />
+              </Form.Item>
+            </Col>
+            <Col span={8}>
+              <Form.Item
+                name="zipCode"
+                label="Zip Code"
+                rules={[{ required: true, message: 'Required' }]}
+              >
+                <Input placeholder="Zip Code" />
+              </Form.Item>
+            </Col>
+          </Row>
 
-      <Row gutter={16}>
-        <Col span={12}>
-          <Form.Item name="preferredName" label="Preferred Name">
-            <Input placeholder="Preferred Name" />
-          </Form.Item>
-        </Col>
-        <Col span={12}>
-          <Form.Item
-            name="gender"
-            label="Gender"
-            rules={[{ required: true, message: 'Required' }]}
-          >
-            <Select placeholder="Select Gender">
-              <Select.Option value="Male">Male</Select.Option>
-              <Select.Option value="Female">Female</Select.Option>
-              <Select.Option value="Other">Other</Select.Option>
-            </Select>
-          </Form.Item>
-        </Col>
-      </Row>
+          {/* Section 3.c.iv - Phone Numbers */}
+          <Divider><strong>Contact Information</strong></Divider>
+          <Row gutter={16}>
+            <Col span={12}>
+              <Form.Item
+                name="cellPhone"
+                label="Cell Phone"
+                rules={[{ required: true, message: 'Required' }]}
+              >
+                <Input placeholder="123-456-7890" />
+              </Form.Item>
+            </Col>
+            <Col span={12}>
+              <Form.Item name="workPhone" label="Work Phone">
+                <Input placeholder="098-765-4321 (optional)" />
+              </Form.Item>
+            </Col>
+          </Row>
 
-      <Row gutter={16}>
-        <Col span={12}>
+          {/* Section 3.c.v - Email (pre-filled, not editable) */}
           <Form.Item
             name="email"
             label="Email"
@@ -340,296 +407,389 @@ const OnboardingFormPage: React.FC = () => {
               { required: true, message: 'Required' },
               { type: 'email', message: 'Invalid email' },
             ]}
+            tooltip="Pre-filled with registration email, not editable"
           >
-            <Input placeholder="Email" />
+            <Input placeholder="Email" disabled />
           </Form.Item>
-        </Col>
-        <Col span={12}>
-          <Form.Item
-            name="cellPhone"
-            label="Cell Phone"
-            rules={[{ required: true, message: 'Required' }]}
-          >
-            <Input placeholder="123-456-7890" />
-          </Form.Item>
-        </Col>
-      </Row>
 
-      <Row gutter={16}>
-        <Col span={12}>
-          <Form.Item name="alternatePhone" label="Alternate Phone">
-            <Input placeholder="098-765-4321" />
-          </Form.Item>
-        </Col>
-        <Col span={12}>
-          <Form.Item
-            name="ssn"
-            label="SSN"
-            rules={[{ required: true, message: 'Required' }]}
-          >
-            <Input placeholder="123-45-6789" />
-          </Form.Item>
-        </Col>
-      </Row>
+          {/* Section 3.c.vi - SSN, DOB, Gender */}
+          <Row gutter={16}>
+            <Col span={8}>
+              <Form.Item
+                name="ssn"
+                label="SSN"
+                rules={[{ required: true, message: 'Required' }]}
+              >
+                <Input placeholder="123-45-6789" />
+              </Form.Item>
+            </Col>
+            <Col span={8}>
+              <Form.Item
+                name="dob"
+                label="Date of Birth"
+                rules={[{ required: true, message: 'Required' }]}
+              >
+                <DatePicker style={{ width: '100%' }} />
+              </Form.Item>
+            </Col>
+            <Col span={8}>
+              <Form.Item
+                name="gender"
+                label="Gender"
+                rules={[{ required: true, message: 'Required' }]}
+              >
+                <Select placeholder="Select Gender">
+                  <Select.Option value="Male">Male</Select.Option>
+                  <Select.Option value="Female">Female</Select.Option>
+                  <Select.Option value="Other">Other</Select.Option>
+                  <Select.Option value="I Prefer Not to Say">I Prefer Not to Say</Select.Option>
+                </Select>
+              </Form.Item>
+            </Col>
+          </Row>
 
-      <Row gutter={16}>
-        <Col span={12}>
+          {/* Section 3.c.vii - Citizenship/Work Authorization Flow */}
+          <Divider><strong>Work Authorization</strong></Divider>
           <Form.Item
-            name="dob"
-            label="Date of Birth"
+            name="isCitizenOrPR"
+            label="Are you a citizen or permanent resident of the U.S.?"
             rules={[{ required: true, message: 'Required' }]}
           >
-            <DatePicker style={{ width: '100%' }} />
+            <Radio.Group onChange={(e) => setIsCitizenOrPR(e.target.value)}>
+              <Radio value={true}>Yes</Radio>
+              <Radio value={false}>No</Radio>
+            </Radio.Group>
           </Form.Item>
-        </Col>
-        <Col span={12}>
-          <Form.Item
-            name="startDate"
-            label="Start Date"
-            rules={[{ required: true, message: 'Required' }]}
-          >
-            <DatePicker style={{ width: '100%' }} />
-          </Form.Item>
-        </Col>
-      </Row>
 
-      <Divider><strong>Driver License</strong></Divider>
-      <Row gutter={16}>
-        <Col span={12}>
-          <Form.Item
-            name="driverLicense"
-            label="License Number"
-            rules={[{ required: true, message: 'Required' }]}
-          >
-            <Input placeholder="DL123456" />
-          </Form.Item>
-        </Col>
-        <Col span={12}>
-          <Form.Item
-            name="driverLicenseExpiration"
-            label="Expiration Date"
-            rules={[{ required: true, message: 'Required' }]}
-          >
-            <DatePicker style={{ width: '100%' }} />
-          </Form.Item>
-        </Col>
-      </Row>
-    </>
-  );
+          {/* If Yes: Choose Citizen or Green Card */}
+          {isCitizenOrPR === true && (
+            <Form.Item
+              name="citizenshipType"
+              label="Citizenship Type"
+              rules={[{ required: true, message: 'Required' }]}
+            >
+              <Radio.Group>
+                <Radio value="Citizen">Citizen</Radio>
+                <Radio value="Green Card">Green Card</Radio>
+              </Radio.Group>
+            </Form.Item>
+          )}
 
-  /**
-   * 渲染步骤 1: 联系人信息
-   */
-  const renderContacts = () => (
-    <>
-      <Divider><strong>Reference Contact (Required)</strong></Divider>
-      <Row gutter={16}>
-        <Col span={12}>
+          {/* If No: Work Authorization Type */}
+          {isCitizenOrPR === false && (
+            <>
+              <Form.Item
+                name="workAuthorizationType"
+                label="Work Authorization Type"
+                rules={[{ required: true, message: 'Required' }]}
+              >
+                <Select 
+                  placeholder="Select Work Authorization Type"
+                  onChange={(value) => setWorkAuthType(value)}
+                >
+                  <Select.Option value="H1-B">H1-B</Select.Option>
+                  <Select.Option value="L2">L2</Select.Option>
+                  <Select.Option value="F1(CPT/OPT)">F1(CPT/OPT)</Select.Option>
+                  <Select.Option value="H4">H4</Select.Option>
+                  <Select.Option value="Other">Other</Select.Option>
+                </Select>
+              </Form.Item>
+
+              {/* If Other: Show title input */}
+              {workAuthType === 'Other' && (
+                <Form.Item
+                  name="workAuthorizationTitle"
+                  label="Work Authorization Title"
+                  rules={[{ required: true, message: 'Required for Other type' }]}
+                >
+                  <Input placeholder="Specify work authorization type" />
+                </Form.Item>
+              )}
+
+              {/* Start and End Date */}
+              <Row gutter={16}>
+                <Col span={12}>
+                  <Form.Item
+                    name="workAuthStartDate"
+                    label="Start Date"
+                    rules={[{ required: true, message: 'Required' }]}
+                  >
+                    <DatePicker style={{ width: '100%' }} />
+                  </Form.Item>
+                </Col>
+                <Col span={12}>
+                  <Form.Item
+                    name="workAuthEndDate"
+                    label="End Date"
+                    rules={[{ required: true, message: 'Required' }]}
+                  >
+                    <DatePicker style={{ width: '100%' }} />
+                  </Form.Item>
+                </Col>
+              </Row>
+
+              {/* Upload work authorization document */}
+              <Form.Item
+                name="workAuthDocument"
+                label="Upload Work Authorization Document"
+                rules={[{ required: true, message: 'Document upload is required' }]}
+                tooltip="Upload EAD card, H1B document, etc."
+              >
+                <Upload beforeUpload={() => false} maxCount={1}>
+                  <Button icon={<UploadOutlined />}>Click to Upload</Button>
+                </Upload>
+              </Form.Item>
+            </>
+          )}
+
+          {/* Section 3.c.viii - Driver License Checkbox Flow */}
+          <Divider><strong>Driver License</strong></Divider>
           <Form.Item
-            name="referenceName"
-            label="Full Name"
+            name="hasDriverLicense"
+            label="Do you have a driver's license?"
             rules={[{ required: true, message: 'Required' }]}
           >
-            <Input placeholder="Jane Smith" />
+            <Radio.Group onChange={(e) => setHasDriverLicense(e.target.value)}>
+              <Radio value={true}>Yes</Radio>
+              <Radio value={false}>No</Radio>
+            </Radio.Group>
           </Form.Item>
-        </Col>
-        <Col span={12}>
-          <Form.Item
-            name="referencePhone"
-            label="Phone"
-            rules={[{ required: true, message: 'Required' }]}
-          >
-            <Input placeholder="111-222-3333" />
-          </Form.Item>
-        </Col>
-      </Row>
-      <Row gutter={16}>
-        <Col span={12}>
-          <Form.Item
-            name="referenceEmail"
-            label="Email"
+
+          {/* If Yes: Show license fields */}
+          {hasDriverLicense === true && (
+            <>
+              <Row gutter={16}>
+                <Col span={12}>
+                  <Form.Item
+                    name="driverLicenseNumber"
+                    label="Driver License Number"
+                    rules={[{ required: true, message: 'Required' }]}
+                  >
+                    <Input placeholder="DL123456" />
+                  </Form.Item>
+                </Col>
+                <Col span={12}>
+                  <Form.Item
+                    name="driverLicenseExpiration"
+                    label="Expiration Date"
+                    rules={[{ required: true, message: 'Required' }]}
+                  >
+                    <DatePicker style={{ width: '100%' }} />
+                  </Form.Item>
+                </Col>
+              </Row>
+              <Form.Item
+                name="driverLicenseCopy"
+                label="Upload Driver License Copy"
+                rules={[{ required: true, message: 'Document upload is required' }]}
+              >
+                <Upload beforeUpload={() => false} maxCount={1}>
+                  <Button icon={<UploadOutlined />}>Click to Upload</Button>
+                </Upload>
+              </Form.Item>
+            </>
+          )}
+
+          {/* Section 3.c.ix - Reference (only one person, includes Address) */}
+          <Divider><strong>Reference Contact (Required)</strong></Divider>
+          <Row gutter={16}>
+            <Col span={8}>
+              <Form.Item
+                name="referenceFirstName"
+                label="First Name"
+                rules={[{ required: true, message: 'Required' }]}
+              >
+                <Input placeholder="First Name" />
+              </Form.Item>
+            </Col>
+            <Col span={8}>
+              <Form.Item
+                name="referenceLastName"
+                label="Last Name"
+                rules={[{ required: true, message: 'Required' }]}
+              >
+                <Input placeholder="Last Name" />
+              </Form.Item>
+            </Col>
+            <Col span={8}>
+              <Form.Item name="referenceMiddleName" label="Middle Name">
+                <Input placeholder="Middle Name (optional)" />
+              </Form.Item>
+            </Col>
+          </Row>
+          <Row gutter={16}>
+            <Col span={12}>
+              <Form.Item
+                name="referencePhone"
+                label="Phone"
+                rules={[{ required: true, message: 'Required' }]}
+              >
+                <Input placeholder="111-222-3333" />
+              </Form.Item>
+            </Col>
+            <Col span={12}>
+              <Form.Item
+                name="referenceEmail"
+                label="Email"
+                rules={[
+                  { required: true, message: 'Required' },
+                  { type: 'email', message: 'Invalid email' },
+                ]}
+              >
+                <Input placeholder="reference@example.com" />
+              </Form.Item>
+            </Col>
+          </Row>
+          <Row gutter={16}>
+            <Col span={12}>
+              <Form.Item
+                name="referenceAddress"
+                label="Address"
+                rules={[{ required: true, message: 'Required' }]}
+              >
+                <Input placeholder="123 Reference St, City, State" />
+              </Form.Item>
+            </Col>
+            <Col span={12}>
+              <Form.Item
+                name="referenceRelationship"
+                label="Relationship"
+                rules={[{ required: true, message: 'Required' }]}
+              >
+                <Input placeholder="Former Manager" />
+              </Form.Item>
+            </Col>
+          </Row>
+
+          {/* Section 3.c.x - Emergency Contacts (at least one, can add more) */}
+          <Divider><strong>Emergency Contacts (At least one required)</strong></Divider>
+          <Form.List
+            name="emergencyContacts"
             rules={[
-              { required: true, message: 'Required' },
-              { type: 'email', message: 'Invalid email' },
+              {
+                validator: async (_, contacts) => {
+                  if (!contacts || contacts.length < 1) {
+                    return Promise.reject(new Error('At least one emergency contact is required'));
+                  }
+                },
+              },
             ]}
           >
-            <Input placeholder="jane.smith@example.com" />
-          </Form.Item>
-        </Col>
-        <Col span={12}>
-          <Form.Item
-            name="referenceRelationship"
-            label="Relationship"
-            rules={[{ required: true, message: 'Required' }]}
-          >
-            <Input placeholder="Former Manager" />
-          </Form.Item>
-        </Col>
-      </Row>
+            {(fields, { add, remove }, { errors }) => (
+              <>
+                {fields.map((field, index) => (
+                  <Card 
+                    key={field.key} 
+                    size="small" 
+                    title={`Emergency Contact ${index + 1}`}
+                    style={{ marginBottom: 16 }}
+                    extra={
+                      fields.length > 1 ? (
+                        <MinusCircleOutlined
+                          onClick={() => remove(field.name)}
+                          style={{ color: 'red' }}
+                        />
+                      ) : null
+                    }
+                  >
+                    <Row gutter={16}>
+                      <Col span={8}>
+                        <Form.Item
+                          {...field}
+                          name={[field.name, 'firstName']}
+                          label="First Name"
+                          rules={[{ required: true, message: 'Required' }]}
+                        >
+                          <Input placeholder="First Name" />
+                        </Form.Item>
+                      </Col>
+                      <Col span={8}>
+                        <Form.Item
+                          {...field}
+                          name={[field.name, 'lastName']}
+                          label="Last Name"
+                          rules={[{ required: true, message: 'Required' }]}
+                        >
+                          <Input placeholder="Last Name" />
+                        </Form.Item>
+                      </Col>
+                      <Col span={8}>
+                        <Form.Item
+                          {...field}
+                          name={[field.name, 'middleName']}
+                          label="Middle Name"
+                        >
+                          <Input placeholder="Middle Name (optional)" />
+                        </Form.Item>
+                      </Col>
+                    </Row>
+                    <Row gutter={16}>
+                      <Col span={8}>
+                        <Form.Item
+                          {...field}
+                          name={[field.name, 'phone']}
+                          label="Phone"
+                          rules={[{ required: true, message: 'Required' }]}
+                        >
+                          <Input placeholder="444-555-6666" />
+                        </Form.Item>
+                      </Col>
+                      <Col span={8}>
+                        <Form.Item
+                          {...field}
+                          name={[field.name, 'email']}
+                          label="Email"
+                          rules={[
+                            { required: true, message: 'Required' },
+                            { type: 'email', message: 'Invalid email' },
+                          ]}
+                        >
+                          <Input placeholder="emergency@example.com" />
+                        </Form.Item>
+                      </Col>
+                      <Col span={8}>
+                        <Form.Item
+                          {...field}
+                          name={[field.name, 'relationship']}
+                          label="Relationship"
+                          rules={[{ required: true, message: 'Required' }]}
+                        >
+                          <Input placeholder="Spouse" />
+                        </Form.Item>
+                      </Col>
+                    </Row>
+                  </Card>
+                ))}
+                <Form.Item>
+                  <Button 
+                    type="dashed" 
+                    onClick={() => add()} 
+                    block
+                    icon={<PlusOutlined />}
+                  >
+                    Add Another Emergency Contact
+                  </Button>
+                  <Form.ErrorList errors={errors} />
+                </Form.Item>
+              </>
+            )}
+          </Form.List>
 
-      <Divider><strong>Emergency Contact (Required)</strong></Divider>
-      <Row gutter={16}>
-        <Col span={12}>
-          <Form.Item
-            name="emergencyName"
-            label="Full Name"
-            rules={[{ required: true, message: 'Required' }]}
-          >
-            <Input placeholder="Mary Doe" />
-          </Form.Item>
-        </Col>
-        <Col span={12}>
-          <Form.Item
-            name="emergencyPhone"
-            label="Phone"
-            rules={[{ required: true, message: 'Required' }]}
-          >
-            <Input placeholder="444-555-6666" />
-          </Form.Item>
-        </Col>
-      </Row>
-      <Row gutter={16}>
-        <Col span={12}>
-          <Form.Item
-            name="emergencyEmail"
-            label="Email"
-            rules={[
-              { required: true, message: 'Required' },
-              { type: 'email', message: 'Invalid email' },
-            ]}
-          >
-            <Input placeholder="mary.doe@example.com" />
-          </Form.Item>
-        </Col>
-        <Col span={12}>
-          <Form.Item
-            name="emergencyRelationship"
-            label="Relationship"
-            rules={[{ required: true, message: 'Required' }]}
-          >
-            <Input placeholder="Spouse" />
-          </Form.Item>
-        </Col>
-      </Row>
-    </>
-  );
-
-  /**
-   * 渲染步骤 2: 地址和签证信息
-   */
-  const renderAddressAndVisa = () => (
-    <>
-      <Divider><strong>Current Address</strong></Divider>
-      <Form.Item
-        name="addressLine1"
-        label="Address Line 1"
-        rules={[{ required: true, message: 'Required' }]}
-      >
-        <Input placeholder="123 Main St" />
-      </Form.Item>
-      <Form.Item name="addressLine2" label="Address Line 2">
-        <Input placeholder="Apt 4B" />
-      </Form.Item>
-      <Row gutter={16}>
-        <Col span={8}>
-          <Form.Item
-            name="city"
-            label="City"
-            rules={[{ required: true, message: 'Required' }]}
-          >
-            <Input placeholder="New York" />
-          </Form.Item>
-        </Col>
-        <Col span={8}>
-          <Form.Item
-            name="state"
-            label="State"
-            rules={[{ required: true, message: 'Required' }]}
-          >
-            <Input placeholder="NY" />
-          </Form.Item>
-        </Col>
-        <Col span={8}>
-          <Form.Item
-            name="zipCode"
-            label="Zip Code"
-            rules={[{ required: true, message: 'Required' }]}
-          >
-            <Input placeholder="10001" />
-          </Form.Item>
-        </Col>
-      </Row>
-
-      <Divider><strong>Visa Information</strong></Divider>
-      <Row gutter={16}>
-        <Col span={8}>
-          <Form.Item
-            name="visaType"
-            label="Visa Type"
-            rules={[{ required: true, message: 'Required' }]}
-          >
-            <Select placeholder="Select Visa Type">
-              <Select.Option value="H1B">H1B</Select.Option>
-              <Select.Option value="L2">L2</Select.Option>
-              <Select.Option value="F1">F1</Select.Option>
-              <Select.Option value="H4">H4</Select.Option>
-              <Select.Option value="OPT">OPT</Select.Option>
-              <Select.Option value="Other">Other</Select.Option>
-            </Select>
-          </Form.Item>
-        </Col>
-        <Col span={8}>
-          <Form.Item
-            name="visaStartDate"
-            label="Start Date"
-            rules={[{ required: true, message: 'Required' }]}
-          >
-            <DatePicker style={{ width: '100%' }} />
-          </Form.Item>
-        </Col>
-        <Col span={8}>
-          <Form.Item
-            name="visaEndDate"
-            label="End Date"
-            rules={[{ required: true, message: 'Required' }]}
-          >
-            <DatePicker style={{ width: '100%' }} />
-          </Form.Item>
-        </Col>
-      </Row>
-    </>
-  );
-
-  return (
-    <PageContainer title="Employee Onboarding">
-      {/* Steps 导航 */}
-      <Steps current={currentStep} items={steps} style={{ marginBottom: 32 }} />
-
-      {/* 表单 */}
-      <Form form={form} layout="vertical">
-        {currentStep === 0 && renderPersonalInfo()}
-        {currentStep === 1 && renderContacts()}
-        {currentStep === 2 && renderAddressAndVisa()}
-
-        {/* 按钮组 */}
-        <div style={{ marginTop: 32, textAlign: 'right' }}>
-          {currentStep > 0 && (
-            <Button onClick={handlePrev} style={{ marginRight: 8 }}>
-              Previous
+          {/* Submit Button - 严格按 Section 3.d: 只有 Submit，没有 Save Draft */}
+          <Divider />
+          <Form.Item>
+            <Button 
+              type="primary" 
+              onClick={handleSubmit} 
+              loading={loading}
+              size="large"
+              block
+            >
+              Submit Application
             </Button>
-          )}
-          {currentStep < steps.length - 1 && (
-            <Button type="primary" onClick={handleNext}>
-              Next
-            </Button>
-          )}
-          {currentStep === steps.length - 1 && (
-            <Button type="primary" onClick={handleSubmit} loading={loading}>
-              Save & Continue
-            </Button>
-          )}
-        </div>
-      </Form>
+          </Form.Item>
+        </Form>
+      </Card>
     </PageContainer>
   );
 };

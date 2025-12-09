@@ -3,7 +3,7 @@
  * 主布局组件，包含动态导航菜单和用户信息显示
  */
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Outlet, useNavigate, useLocation } from 'react-router-dom';
 import { Layout, Menu, Avatar, Dropdown, Typography, Space, Modal, message } from 'antd';
 import {
@@ -20,6 +20,9 @@ import {
 import type { MenuProps } from 'antd';
 import { useAppDispatch, useAppSelector } from '../../store/hooks';
 import { logout, selectUser, selectRole } from '../../store/slices/authSlice';
+import { getEmployeeByUserId } from '../../services/api';
+import { VisaStatusType } from '../../types/enums';
+import type { Employee, VisaStatus } from '../../types/employee';
 
 const { Header, Sider, Content } = Layout;
 const { Text } = Typography;
@@ -33,12 +36,28 @@ const { Text } = Typography;
  */
 const MainLayout: React.FC = () => {
   const [collapsed, setCollapsed] = useState(false);
+  const [employeeData, setEmployeeData] = useState<Employee | null>(null);
   const navigate = useNavigate();
   const location = useLocation();
   const dispatch = useAppDispatch();
 
   const user = useAppSelector(selectUser);
   const role = useAppSelector(selectRole);
+
+  // Fetch employee data for non-citizen check (Section 5.b)
+  useEffect(() => {
+    const fetchEmployeeData = async () => {
+      if (role === 'Employee' && user?.id) {
+        try {
+          const employee = await getEmployeeByUserId(String(user.id));
+          setEmployeeData(employee);
+        } catch (error) {
+          console.error('Failed to fetch employee data:', error);
+        }
+      }
+    };
+    fetchEmployeeData();
+  }, [role, user?.id]);
 
   /**
    * HR 菜单配置
@@ -77,6 +96,22 @@ const MainLayout: React.FC = () => {
   ];
 
   /**
+   * Check if employee should see Visa menu
+   * Per Section 5.b: "only if the user is NOT a citizen or green card holder"
+   */
+  const shouldShowVisaMenu = (): boolean => {
+    if (!employeeData || !employeeData.visaStatus || employeeData.visaStatus.length === 0) {
+      return false; // Default: hide if no visa data
+    }
+    const activeVisa = employeeData.visaStatus.find((v: VisaStatus) => v.activeFlag);
+    if (!activeVisa) return false;
+    
+    // Hide for Citizen and Green Card holders
+    return activeVisa.visaType !== VisaStatusType.CITIZEN && 
+           activeVisa.visaType !== VisaStatusType.GREEN_CARD;
+  };
+
+  /**
    * Employee 菜单配置
    */
   const employeeMenuItems: MenuProps['items'] = [
@@ -92,17 +127,44 @@ const MainLayout: React.FC = () => {
       label: 'Personal Info',
       onClick: () => navigate('/employee/personal-info'),
     },
-    {
+    // Conditional Visa Status menu (Section 5.b)
+    ...(shouldShowVisaMenu() ? [{
       key: '/employee/visa',
       icon: <FileProtectOutlined />,
-      label: 'Visa Status',
+      label: 'Visa Status Management',
       onClick: () => navigate('/employee/visa'),
-    },
+      // Submenu with hover effect (Section 5.b: "show a link to OPT STEM Management")
+      children: [
+        {
+          key: '/employee/visa/opt-stem',
+          label: 'OPT STEM Management',
+          onClick: () => navigate('/employee/visa'),
+        },
+      ],
+    }] : []),
     {
       key: '/employee/housing',
       icon: <BankOutlined />,
       label: 'Housing',
       onClick: () => navigate('/employee/housing'),
+      // Submenu for House Detail (Section 4.d)
+      children: [
+        {
+          key: '/employee/housing/list',
+          label: 'My Housing',
+          onClick: () => navigate('/employee/housing'),
+        },
+        {
+          key: '/employee/house-detail',
+          label: 'House Detail',
+          onClick: () => navigate('/employee/house-detail'),
+        },
+        {
+          key: '/employee/facility-report',
+          label: 'Report Facility Issue',
+          onClick: () => navigate('/employee/facility-report'),
+        },
+      ],
     },
   ];
 

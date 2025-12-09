@@ -16,12 +16,16 @@ export interface Contact {
   firstName: string;
   /** 姓 */
   lastName: string;
+  /** 中间名 */
+  middleName?: string;
   /** 电话 */
   phone: string;
   /** 邮箱 */
   email: string;
   /** 关系 */
   relationship: string;
+  /** 地址 (仅 Reference 需要) */
+  address?: string;
 }
 
 /** 地址 (包含 Primary 和 Secondary) */
@@ -82,12 +86,16 @@ export interface Employee {
   middleName: string;
   /** 昵称/首选名 */
   preferredName: string;
-  /** 邮箱 */
+  /** 个人邮箱 */
   email: string;
+  /** 工作邮箱 (Section 6.b.iii) */
+  workEmail?: string;
   /** 手机号 */
   cellPhone: string;
   /** 备用电话 */
   alternatePhone: string;
+  /** 工作电话 (Section 3.c.iv + Section 6.b.iii) */
+  workPhone?: string;
   /** 性别 */
   gender: Gender;
   /** 社会安全号 */
@@ -98,6 +106,10 @@ export interface Employee {
   startDate: string;
   /** 离职日期 */
   endDate: string;
+  /** 职位 (Section 6.b.iv) */
+  title?: string;
+  /** 头像 URL (Section 3.c.ii + Section 6.b.i) */
+  avatar?: string;
   /** 驾照号码 */
   driverLicense: string;
   /** 驾照过期日期 */

@@ -72,8 +72,8 @@ const LoginPage: React.FC = () => {
             // 没有 Onboarding 申请记录，跳转到表单填写
             navigate('/onboarding/form', { replace: true });
           } else if (onboardingApp.status === 'Approved') {
-            // 已批准，进入 Employee Home
-            navigate('/employee/home', { replace: true });
+            // 已批准，进入 Personal Information Page (per Section 2.a)
+            navigate('/employee/personal-info', { replace: true });
           } else {
             // Pending/Rejected/其他状态，跳转到表单页
             // 理由：用户登录时应进入表单页查看/编辑信息，而非直接看结果页

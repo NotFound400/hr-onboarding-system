@@ -148,7 +148,7 @@ const PersonalInfoPage: React.FC = () => {
         cellPhone: values.cellPhone,
         alternatePhone: values.alternatePhone || '',
         gender: values.gender,
-        SSN: values.SSN,
+        // SSN is not editable for security
         DOB: values.DOB ? values.DOB.format('YYYY-MM-DD') : '',
         driverLicense: values.driverLicense || '',
         driverLicenseExpiration: values.driverLicenseExpiration ? values.driverLicenseExpiration.format('YYYY-MM-DD') : '',
@@ -170,72 +170,140 @@ const PersonalInfoPage: React.FC = () => {
   };
 
   /**
-   * 渲染只读模式
+   * 渲染只读模式 - 严格按 Section 6(b) 实现
    */
   const renderReadMode = () => {
     if (!employee) return null;
 
-    // 获取主地址
+    // Section 6.b.ii - 获取主地址和次地址
     const primaryAddress = employee.address?.find(addr => addr.type === 'Primary');
-    const addressStr = primaryAddress 
-      ? `${primaryAddress.addressLine1}${primaryAddress.addressLine2 ? ', ' + primaryAddress.addressLine2 : ''}, ${primaryAddress.city}, ${primaryAddress.state} ${primaryAddress.zipCode}`
-      : 'N/A';
+    const secondaryAddress = employee.address?.find(addr => addr.type === 'Secondary');
 
-    // 获取活跃签证
+    // Section 6.b.iv - 获取活跃签证
     const activeVisa = employee.visaStatus?.find(visa => visa.activeFlag);
+
+    // Section 6.b.i - 计算年龄
+    const age = employee.DOB ? dayjs().diff(dayjs(employee.DOB), 'year') : 'N/A';
+
+    // Section 6.b.iv - 获取紧急联系人
+    const emergencyContacts = employee.contact?.filter(c => c.type === 'Emergency') || [];
 
     return (
       <Space direction="vertical" size="large" style={{ width: '100%' }}>
-        {/* 基本信息卡片 */}
+        {/* Section 6.b.i - Name Section */}
         <Card
-          title={
-            <Space>
-              <Avatar size={64} icon={<UserOutlined />} />
-              <div>
-                <div style={{ fontSize: 20, fontWeight: 'bold' }}>
-                  {employee.firstName} {employee.middleName && `${employee.middleName} `}{employee.lastName}
-                  {employee.preferredName && ` (${employee.preferredName})`}
-                </div>
-                <div style={{ fontSize: 14, color: '#666' }}>{employee.email}</div>
-              </div>
-            </Space>
-          }
+          title="Name"
           extra={
             <Button type="primary" icon={<EditOutlined />} onClick={handleEdit}>
               Edit
             </Button>
           }
         >
-          <Descriptions column={2} bordered>
-            <Descriptions.Item label="First Name">{employee.firstName}</Descriptions.Item>
-            <Descriptions.Item label="Last Name">{employee.lastName}</Descriptions.Item>
-            <Descriptions.Item label="Middle Name">{employee.middleName || 'N/A'}</Descriptions.Item>
-            <Descriptions.Item label="Preferred Name">{employee.preferredName || 'N/A'}</Descriptions.Item>
-            <Descriptions.Item label="Email">{employee.email}</Descriptions.Item>
-            <Descriptions.Item label="Cell Phone">{employee.cellPhone}</Descriptions.Item>
-            <Descriptions.Item label="Alternate Phone">{employee.alternatePhone || 'N/A'}</Descriptions.Item>
-            <Descriptions.Item label="Gender">{employee.gender}</Descriptions.Item>
-            <Descriptions.Item label="SSN">***-**-{employee.SSN?.split('-')[2] || '****'}</Descriptions.Item>
-            <Descriptions.Item label="Date of Birth">{employee.DOB ? dayjs(employee.DOB).format('YYYY-MM-DD') : 'N/A'}</Descriptions.Item>
-            <Descriptions.Item label="Start Date">{employee.startDate ? dayjs(employee.startDate).format('YYYY-MM-DD') : 'N/A'}</Descriptions.Item>
-            <Descriptions.Item label="Work Authorization">{activeVisa?.visaType || 'N/A'}</Descriptions.Item>
+          <Row gutter={[16, 16]} align="middle">
+            <Col>
+              <Avatar 
+                size={80} 
+                src={employee.avatar} 
+                icon={<UserOutlined />} 
+              />
+            </Col>
+            <Col flex="auto">
+              <Descriptions column={2} bordered>
+                <Descriptions.Item label="Legal Name (Full Name)" span={2}>
+                  <strong style={{ fontSize: 16 }}>
+                    {employee.firstName} {employee.middleName && `${employee.middleName} `}{employee.lastName}
+                  </strong>
+                </Descriptions.Item>
+                <Descriptions.Item label="Preferred Name">{employee.preferredName || 'N/A'}</Descriptions.Item>
+                <Descriptions.Item label="Avatar">{employee.avatar ? 'Uploaded' : 'Default'}</Descriptions.Item>
+                <Descriptions.Item label="Date of Birth">
+                  {employee.DOB ? dayjs(employee.DOB).format('YYYY-MM-DD') : 'N/A'}
+                </Descriptions.Item>
+                <Descriptions.Item label="Age">{age}</Descriptions.Item>
+                <Descriptions.Item label="Gender">{employee.gender}</Descriptions.Item>
+                <Descriptions.Item label="SSN (Last 4 digits)">
+                  ***-**-{employee.SSN?.split('-')[2] || '****'}
+                </Descriptions.Item>
+              </Descriptions>
+            </Col>
+          </Row>
+        </Card>
+
+        {/* Section 6.b.ii - Address Section */}
+        <Card title="Address">
+          <Descriptions column={1} bordered>
+            <Descriptions.Item label="Primary Address">
+              {primaryAddress ? (
+                <>
+                  <div>{primaryAddress.addressLine1}</div>
+                  {primaryAddress.addressLine2 && <div>{primaryAddress.addressLine2}</div>}
+                  <div>{`${primaryAddress.city}, ${primaryAddress.state}, ${primaryAddress.zipCode}`}</div>
+                </>
+              ) : 'N/A'}
+            </Descriptions.Item>
+            <Descriptions.Item label="Secondary Address">
+              {secondaryAddress ? (
+                <>
+                  <div>{secondaryAddress.addressLine1}</div>
+                  {secondaryAddress.addressLine2 && <div>{secondaryAddress.addressLine2}</div>}
+                  <div>{`${secondaryAddress.city}, ${secondaryAddress.state}, ${secondaryAddress.zipCode}`}</div>
+                </>
+              ) : 'N/A'}
+            </Descriptions.Item>
           </Descriptions>
         </Card>
 
-        {/* 驾照信息 */}
-        <Card title="Driver License Information">
+        {/* Section 6.b.iii - Contact Info Section */}
+        <Card title="Contact Info">
+          <Descriptions column={2} bordered>
+            <Descriptions.Item label="Personal Email">{employee.email}</Descriptions.Item>
+            <Descriptions.Item label="Work Email">{employee.workEmail || 'N/A'}</Descriptions.Item>
+            <Descriptions.Item label="Cell Phone">{employee.cellPhone}</Descriptions.Item>
+            <Descriptions.Item label="Work Phone">{employee.workPhone || 'N/A'}</Descriptions.Item>
+          </Descriptions>
+        </Card>
+
+        {/* Section 6.b.iv - Employment Section */}
+        <Card title="Employment">
+          <Descriptions column={2} bordered>
+            <Descriptions.Item label="Work Authorization">{activeVisa?.visaType || 'N/A'}</Descriptions.Item>
+            <Descriptions.Item label="Work Authorization Start Date">
+              {activeVisa?.startDate ? dayjs(activeVisa.startDate).format('YYYY-MM-DD') : 'N/A'}
+            </Descriptions.Item>
+            <Descriptions.Item label="Work Authorization End Date">
+              {activeVisa?.endDate ? dayjs(activeVisa.endDate).format('YYYY-MM-DD') : 'N/A'}
+            </Descriptions.Item>
+            <Descriptions.Item label="Employment Start Date">
+              {employee.startDate ? dayjs(employee.startDate).format('YYYY-MM-DD') : 'N/A'}
+            </Descriptions.Item>
+            <Descriptions.Item label="Employment End Date">
+              {employee.endDate ? dayjs(employee.endDate).format('YYYY-MM-DD') : 'Not Set'}
+            </Descriptions.Item>
+            <Descriptions.Item label="Title">{employee.title || 'N/A'}</Descriptions.Item>
+            <Descriptions.Item label="Emergency Contact (List View)" span={2}>
+              {emergencyContacts.length > 0 ? (
+                <Space direction="vertical" style={{ width: '100%' }}>
+                  {emergencyContacts.map((contact, index) => (
+                    <Card key={index} size="small" type="inner">
+                      <div><strong>Full Name:</strong> {contact.firstName} {contact.middleName && `${contact.middleName} `}{contact.lastName}</div>
+                      <div><strong>Phone:</strong> {contact.phone}</div>
+                      <div><strong>Email:</strong> {contact.email}</div>
+                      <div><strong>Relationship:</strong> {contact.relationship}</div>
+                    </Card>
+                  ))}
+                </Space>
+              ) : 'N/A'}
+            </Descriptions.Item>
+          </Descriptions>
+        </Card>
+
+        {/* Driver License */}
+        <Card title="Driver License">
           <Descriptions column={2} bordered>
             <Descriptions.Item label="License Number">{employee.driverLicense || 'N/A'}</Descriptions.Item>
             <Descriptions.Item label="Expiration Date">
               {employee.driverLicenseExpiration ? dayjs(employee.driverLicenseExpiration).format('YYYY-MM-DD') : 'N/A'}
             </Descriptions.Item>
-          </Descriptions>
-        </Card>
-
-        {/* 地址信息 */}
-        <Card title="Address Information">
-          <Descriptions column={1} bordered>
-            <Descriptions.Item label="Primary Address">{addressStr}</Descriptions.Item>
           </Descriptions>
         </Card>
       </Space>

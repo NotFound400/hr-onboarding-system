@@ -113,42 +113,23 @@ const VisaManagementPage: React.FC = () => {
   };
 
   /**
-   * 获取状态标签颜色
-   */
-  const getStatusColor = (status: ApplicationStatus) => {
-    switch (status) {
-      case 'Approved':
-        return 'success';
-      case 'Rejected':
-        return 'error';
-      case 'Pending':
-        return 'warning';
-      default:
-        return 'default';
-    }
-  };
-
-  /**
-   * 表格列定义
+   * Section HR.4 - Visa Status Management Table Columns
+   * Required fields: Name, Work Authorization, Expiration Date, Days Left, Active STEM OPT Application and Actions
    */
   const columns: ColumnsType<ApplicationDetail> = [
     {
-      title: 'Employee Name',
+      title: 'Name (Legal Full Name)',
       dataIndex: 'employeeName',
       key: 'employeeName',
       sorter: (a, b) => a.employeeName.localeCompare(b.employeeName),
     },
     {
-      title: 'Email',
-      dataIndex: 'employeeEmail',
-      key: 'employeeEmail',
-    },
-    {
-      title: 'Type',
+      title: 'Work Authorization',
       dataIndex: 'type',
       key: 'type',
       filters: [
         { text: 'OPT', value: 'OPT' },
+        { text: 'F1', value: 'F1' },
       ],
       onFilter: (value, record) => record.type === value,
       render: (type: string) => (
@@ -158,43 +139,54 @@ const VisaManagementPage: React.FC = () => {
       ),
     },
     {
-      title: 'Status',
-      dataIndex: 'status',
-      key: 'status',
-      filters: [
-        { text: 'Pending', value: 'Pending' },
-        { text: 'Approved', value: 'Approved' },
-        { text: 'Rejected', value: 'Rejected' },
-      ],
-      onFilter: (value, record) => record.status === value,
-      render: (status: ApplicationStatus) => (
-        <Tag color={getStatusColor(status)}>
-          {status}
-        </Tag>
-      ),
-    },
-    {
-      title: 'Create Date',
-      dataIndex: 'createDate',
-      key: 'createDate',
-      render: (date: string) => new Date(date).toLocaleDateString(),
-      sorter: (a, b) => new Date(a.createDate).getTime() - new Date(b.createDate).getTime(),
-    },
-    {
-      title: 'Last Modified',
-      dataIndex: 'lastModificationDate',
-      key: 'lastModificationDate',
-      render: (date: string) => new Date(date).toLocaleDateString(),
-      sorter: (a, b) => new Date(a.lastModificationDate).getTime() - new Date(b.lastModificationDate).getTime(),
-    },
-    {
-      title: 'Action',
-      key: 'action',
+      title: 'Expiration Date',
+      key: 'expirationDate',
       render: (_, record) => {
+        // Mock - in real app, get from employee's visa status
+        return record.createDate ? new Date(new Date(record.createDate).getTime() + 365 * 24 * 60 * 60 * 1000).toLocaleDateString() : 'N/A';
+      },
+    },
+    {
+      title: 'Days Left',
+      key: 'daysLeft',
+      render: (_, record) => {
+        // Mock calculation
+        const expiryDate = new Date(new Date(record.createDate).getTime() + 365 * 24 * 60 * 60 * 1000);
+        const daysLeft = Math.floor((expiryDate.getTime() - Date.now()) / (1000 * 60 * 60 * 24));
+        const color = daysLeft < 30 ? 'red' : daysLeft < 90 ? 'orange' : 'green';
+        return <span style={{ color }}><strong>{daysLeft}</strong> days</span>;
+      },
+    },
+    {
+      title: 'Active STEM OPT Application',
+      key: 'activeApplication',
+      render: (_, record) => {
+        if (record.status === 'Pending') {
+          return <Tag color="warning">Pending Review</Tag>;
+        } else if (record.status === 'Approved') {
+          return <Tag color="success">Approved</Tag>;
+        } else if (record.status === 'Rejected') {
+          return <Tag color="error">Rejected</Tag>;
+        }
+        return <Tag>NONE</Tag>;
+      },
+    },
+    {
+      title: 'Actions (Approve, Reject, NONE)',
+      key: 'action',
+      width: 200,
+      render: (_, record) => {
+        if (record.status === 'Approved') {
+          return <Tag color="success">Already Approved</Tag>;
+        }
+        if (record.status === 'Rejected') {
+          return <Tag color="error">Already Rejected</Tag>;
+        }
         if (record.status !== 'Pending') {
-          return <span style={{ color: '#999' }}>-</span>;
+          return <Tag>NONE</Tag>;
         }
 
+        // Section HR.4.b.v - Approve/Reject actions with optional comment
         return (
           <Space>
             <Button
@@ -218,6 +210,22 @@ const VisaManagementPage: React.FC = () => {
           </Space>
         );
       },
+    },
+    {
+      title: 'Document Received',
+      key: 'documents',
+      render: (_, record) => (
+        <Button 
+          type="link" 
+          size="small"
+          onClick={() => {
+            message.info(`Section HR.4.b.vi: HR should be able to access all past documents submitted by ${record.employeeName}`);
+            // Should show document list modal or navigate to document view
+          }}
+        >
+          View Docs →
+        </Button>
+      ),
     },
   ];
 
