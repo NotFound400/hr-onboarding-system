@@ -203,11 +203,7 @@ export const RegistrationPage: React.FC = () => {
             name="password"
             rules={[
               { required: true, message: 'Please enter your password' },
-              { min: 6, message: 'Password must be at least 6 characters' },
-              {
-                pattern: /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/,
-                message: 'Password must contain at least one uppercase letter, one lowercase letter, and one number',
-              },
+              { min: 3, message: 'Password must be at least 3 characters' },
             ]}
             hasFeedback
           >

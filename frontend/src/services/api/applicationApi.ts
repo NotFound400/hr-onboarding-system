@@ -46,6 +46,34 @@ const MOCK_APPLICATION_LIST: ApiResponse<ApplicationDetail[]> = {
   message: 'Application list retrieved successfully',
   data: [
     // Onboarding Applications
+    
+    // QA Test Account: new_user (userID=200) - Pending Onboarding
+    {
+      id: 200,
+      employeeId: '200',
+      employeeName: 'New User',
+      employeeEmail: 'newuser@company.com',
+      type: 'Onboarding' as ApplicationType,
+      status: 'Pending' as ApplicationStatus,
+      comment: 'Waiting for employee to submit onboarding form',
+      createDate: '2024-12-01T08:00:00Z',
+      lastModificationDate: '2024-12-01T08:00:00Z',
+    },
+    
+    // QA Test Account: employee (userID=100) - Approved Onboarding
+    {
+      id: 100,
+      employeeId: '507f1f77bcf86cd799439100',
+      employeeName: 'Emily Johnson',
+      employeeEmail: 'employee@company.com',
+      type: 'Onboarding' as ApplicationType,
+      status: 'Approved' as ApplicationStatus,
+      comment: 'All documents verified and approved',
+      createDate: '2024-01-10T09:00:00Z',
+      lastModificationDate: '2024-01-15T14:30:00Z',
+    },
+    
+    // Other test data
     MOCK_APPLICATION_DETAIL.data!,
     {
       ...MOCK_APPLICATION_DETAIL.data!,
@@ -56,17 +84,6 @@ const MOCK_APPLICATION_LIST: ApiResponse<ApplicationDetail[]> = {
       status: 'Approved' as ApplicationStatus,
       createDate: '2024-01-05T10:30:00Z',
       lastModificationDate: '2024-01-06T14:20:00Z',
-    },
-    {
-      id: 100,
-      employeeId: '507f1f77bcf86cd799439100',
-      employeeName: 'Alice Wang',
-      employeeEmail: 'alice.wang@example.com',
-      type: 'Onboarding' as ApplicationType,
-      status: 'Approved' as ApplicationStatus,
-      comment: 'All documents verified and approved',
-      createDate: '2024-02-05T09:00:00Z',
-      lastModificationDate: '2024-02-10T14:30:00Z',
     },
     {
       ...MOCK_APPLICATION_DETAIL.data!,
