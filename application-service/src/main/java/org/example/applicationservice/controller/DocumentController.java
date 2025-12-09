@@ -1,11 +1,16 @@
 package org.example.applicationservice.controller;
 
 import com.example.common.Result;
+import org.example.applicationservice.domain.DigitalDocument;
 import org.example.applicationservice.dto.DigitalDocumentDTO;
+import org.example.applicationservice.dto.UploadDocumentRequest;
 import org.example.applicationservice.service.DocumentService;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
+import org.springframework.web.multipart.MultipartFile;
+import tools.jackson.databind.ObjectMapper;
+import java.io.IOException;
 import java.util.List;
 
 @RestController
@@ -16,14 +21,6 @@ public class DocumentController {
 
     public DocumentController(DocumentService documentService) {
         this.documentService = documentService;
-    }
-
-    @PostMapping
-    public ResponseEntity<Result<DigitalDocumentDTO>> uploadDocument(
-            @RequestBody DigitalDocumentDTO request) {
-
-        Result<DigitalDocumentDTO> result = documentService.createDocument(request);
-        return ResponseEntity.ok(result);
     }
 
     @GetMapping("/application/{applicationId}")
@@ -42,21 +39,6 @@ public class DocumentController {
         return ResponseEntity.ok(result);
     }
 
-    @PutMapping("/{documentId}")
-    public ResponseEntity<Result<DigitalDocumentDTO>> updateDocument(
-            @PathVariable Long documentId,
-            @RequestBody DigitalDocumentDTO request) {
-
-        Result<DigitalDocumentDTO> result = documentService.updateDocument(documentId, request);
-        return ResponseEntity.ok(result);
-    }
-
-    @DeleteMapping("/{documentId}")
-    public ResponseEntity<Result<Void>> deleteDocument(@PathVariable Long documentId) {
-        Result<Void> result = documentService.deleteDocument(documentId);
-        return ResponseEntity.ok(result);
-    }
-
     @GetMapping("/type/{type}")
     public ResponseEntity<Result<List<DigitalDocumentDTO>>> getDocumentsByType(
             @PathVariable String type) {
@@ -71,5 +53,45 @@ public class DocumentController {
         return ResponseEntity.ok(result);
     }
 
+    @PostMapping("/upload")
+    public ResponseEntity<Result<DigitalDocumentDTO>> uploadDocument(
+            @RequestPart("file") MultipartFile file,
+            @RequestParam("metadata") String metadataJson) {
+        UploadDocumentRequest request = new ObjectMapper().readValue(metadataJson, UploadDocumentRequest.class);
+        DigitalDocumentDTO dto = documentService.uploadDocument(file, request);
+        return ResponseEntity.ok(Result.success(dto));
+    }
+
+    //download by documentId
+    @GetMapping("/download/{id}")
+    public ResponseEntity<byte[]> downloadDocument(@PathVariable Long id) {
+        byte[] data = documentService.downloadDocumentById(id);
+        DigitalDocument doc = documentService.getDocumentEntityById(id);
+
+        return ResponseEntity.ok()
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + doc.getTitle() + "\"")
+                .contentLength(data.length)
+                .body(data);
+    }
+
+    @DeleteMapping("/delete/{id}")
+    public ResponseEntity<String> deleteDocument(@PathVariable Long id) {
+        documentService.deleteDocumentById(id);
+        return ResponseEntity.ok("Document deleted successfully");
+    }
+
+    @PutMapping("/update/{id}")
+    public ResponseEntity<Result<DigitalDocumentDTO>> updateDocument(
+            @PathVariable Long id,
+            @RequestPart("file") MultipartFile file,
+            @RequestParam("metadata") String metadataJson) throws IOException {
+
+        UploadDocumentRequest request =
+                new ObjectMapper().readValue(metadataJson, UploadDocumentRequest.class);
+
+        DigitalDocumentDTO dto = documentService.updateDocument(id, file, request);
+
+        return ResponseEntity.ok(Result.success(dto));
+    }
 
 }
