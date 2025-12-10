@@ -42,3 +42,26 @@ CREATE TABLE `UserRole` (
     -- prevent duplicate (User, Role) combinations
     CONSTRAINT `UQ_UserRole_User_Role` UNIQUE (`UserID`, `RoleID`)
 ) ENGINE=InnoDB;
+
+-- RegistrationToken table
+CREATE TABLE `RegistrationToken` (
+    `ID` BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+    `Token` VARCHAR(64) NOT NULL,
+    `Email` VARCHAR(100) NOT NULL,
+    `ExpirationDate` DATETIME NOT NULL,
+    `CreateBy` BIGINT UNSIGNED NOT NULL,
+
+    CONSTRAINT `PK_RegistrationToken` PRIMARY KEY (`ID`),
+
+    -- each token string must be unique
+    CONSTRAINT `UQ_RegistrationToken_Token` UNIQUE (`Token`),
+
+    -- prevent duplicate token for same email
+    CONSTRAINT `UQ_RegistrationToken_Email_Token` UNIQUE (`Email`, `Token`),
+
+    -- who created the token: FK to User(ID)
+    CONSTRAINT `FK_RegistrationToken_CreateBy_User` FOREIGN KEY (`CreateBy`)
+        REFERENCES `User`(`ID`)
+        ON DELETE RESTRICT
+        ON UPDATE CASCADE
+) ENGINE=InnoDB;

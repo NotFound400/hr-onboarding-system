@@ -25,9 +25,9 @@ spring:
       
       # Route configurations
       routes:
-        # ==================== Auth Service ====================
+        # ==================== Auth Service (Standalone - Not in Eureka) ====================
         - id: auth-service
-          uri: lb://auth-service
+          uri: http://auth-service
           predicates:
             - Path=/api/auth/**
           filters:
