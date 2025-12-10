@@ -18,7 +18,7 @@ import type { Contact, Address, VisaStatus } from './employee';
 
 /** 登录请求 (Section 2 + HR Section 1) */
 export interface LoginRequest {
-  username: string;
+  usernameOrEmail: string;
   password: string;
 }
 
@@ -35,7 +35,6 @@ export interface RegisterRequest {
  */
 export interface GenerateTokenRequest {
   email: string;
-  name?: string;
 }
 
 // ==================== Onboarding Request DTO ====================
@@ -153,6 +152,10 @@ export interface UpdateEmployeeRequest {
   driverLicense?: string;
   driverLicenseExpiration?: string;
   title?: string;
+  startDate?: string;
+  endDate?: string;
+  address?: Address[];
+  contact?: Contact[];
 }
 
 // ==================== Application Requests ====================

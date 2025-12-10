@@ -66,67 +66,69 @@ const OnboardingDocsPage: React.FC = () => {
   };
 
   return (
-    <PageContainer title="Upload Documents">
-      <Alert
-        message="Required Documents"
-        description="Please upload all required documents below. All documents must be uploaded before you can submit your application."
-        type="info"
-        showIcon
-        style={{ marginBottom: 24 }}
-      />
-
-      {/* I-983 表单 */}
-      <DocumentUpload
-        title="I-983 Training Plan (OPT/STEM OPT Students)"
-        required
-        fileList={i983Files}
-        onChange={setI983Files}
-        maxCount={1}
-      />
-
-      {/* I-20 表单 */}
-      <DocumentUpload
-        title="I-20 Certificate of Eligibility"
-        required
-        fileList={i20Files}
-        onChange={setI20Files}
-        maxCount={1}
-      />
-
-      {/* 驾照 */}
-      <DocumentUpload
-        title="Driver License Copy"
-        required
-        fileList={driverLicenseFiles}
-        onChange={setDriverLicenseFiles}
-        maxCount={2}
-      />
-
-      {/* 按钮组 */}
-      <div style={{ marginTop: 32, textAlign: 'right' }}>
-        <Button onClick={handleBack} style={{ marginRight: 8 }}>
-          Back to Form
-        </Button>
-        <Button
-          type="primary"
-          onClick={handleSubmit}
-          loading={submitting}
-          disabled={!isAllDocumentsUploaded()}
-        >
-          Submit Application
-        </Button>
-      </div>
-
-      {!isAllDocumentsUploaded() && (
+    <div style={{ width: '80%', margin: '0 auto' }}>
+      <PageContainer title="Upload Documents">
         <Alert
-          message="Missing Required Documents"
-          description="Please upload all required documents before submitting."
-          type="warning"
+          message="Required Documents"
+          description="Please upload all required documents below. All documents must be uploaded before you can submit your application."
+          type="info"
           showIcon
-          style={{ marginTop: 16 }}
+          style={{ marginBottom: 24 }}
         />
-      )}
-    </PageContainer>
+
+        {/* I-983 表单 */}
+        <DocumentUpload
+          title="I-983 Training Plan (OPT/STEM OPT Students)"
+          required
+          fileList={i983Files}
+          onChange={setI983Files}
+          maxCount={1}
+        />
+
+        {/* I-20 表单 */}
+        <DocumentUpload
+          title="I-20 Certificate of Eligibility"
+          required
+          fileList={i20Files}
+          onChange={setI20Files}
+          maxCount={1}
+        />
+
+        {/* 驾照 */}
+        <DocumentUpload
+          title="Driver License Copy"
+          required
+          fileList={driverLicenseFiles}
+          onChange={setDriverLicenseFiles}
+          maxCount={2}
+        />
+
+        {/* 按钮组 */}
+        <div style={{ marginTop: 32, textAlign: 'right' }}>
+          <Button onClick={handleBack} style={{ marginRight: 8 }}>
+            Back to Form
+          </Button>
+          <Button
+            type="primary"
+            onClick={handleSubmit}
+            loading={submitting}
+            disabled={!isAllDocumentsUploaded()}
+          >
+            Submit Application
+          </Button>
+        </div>
+
+        {!isAllDocumentsUploaded() && (
+          <Alert
+            message="Missing Required Documents"
+            description="Please upload all required documents before submitting."
+            type="warning"
+            showIcon
+            style={{ marginTop: 16 }}
+          />
+        )}
+      </PageContainer>
+    </div>
   );
 };
 

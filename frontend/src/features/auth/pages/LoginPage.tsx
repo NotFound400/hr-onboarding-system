@@ -74,9 +74,12 @@ const LoginPage: React.FC = () => {
           } else if (onboardingApp.status === 'Approved') {
             // 已批准，进入 Personal Information Page (per Section 2.a)
             navigate('/employee/personal-info', { replace: true });
+          } else if (onboardingApp.status === 'Rejected') {
+            // Section 3.e.iii: "The user should be able to log in and see what is wrong"
+            // 被拒绝，显示拒绝原因和缺失文档信息
+            navigate('/onboarding/rejected', { replace: true });
           } else {
-            // Pending/Rejected/其他状态，跳转到表单页
-            // 理由：用户登录时应进入表单页查看/编辑信息，而非直接看结果页
+            // Pending/其他状态，跳转到表单页
             navigate('/onboarding/form', { replace: true });
           }
         } catch (error) {
@@ -157,15 +160,15 @@ const LoginPage: React.FC = () => {
           layout="vertical"
         >
           <Form.Item
-            name="username"
+            name="usernameOrEmail"
             rules={[
-              { required: true, message: 'Please input your username!' },
-              { min: 3, message: 'Username must be at least 3 characters' },
+              { required: true, message: 'Please input your username or email!' },
+              { min: 3, message: 'Must be at least 3 characters' },
             ]}
           >
             <Input
               prefix={<UserOutlined />}
-              placeholder="Username"
+              placeholder="Username or Email"
               size="large"
             />
           </Form.Item>

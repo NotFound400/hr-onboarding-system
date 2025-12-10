@@ -275,15 +275,16 @@ const OnboardingFormPage: React.FC = () => {
   };
 
   return (
-    <PageContainer title="Employee Onboarding Application">
-      <Card>
-        <Form 
-          form={form} 
-          layout="vertical"
-          initialValues={{
-            emergencyContacts: [{}], // 至少一个 Emergency Contact
-          }}
-        >
+    <div style={{ width: '80%', margin: '0 auto' }}>
+      <PageContainer title="Employee Onboarding Application">
+        <Card>
+          <Form 
+            form={form} 
+            layout="vertical"
+            initialValues={{
+              emergencyContacts: [{}], // 至少一个 Emergency Contact
+            }}
+          >
           {/* Section 3.c.i - Name Fields */}
           <Divider><strong>Personal Information</strong></Divider>
           <Row gutter={16}>
@@ -788,9 +789,10 @@ const OnboardingFormPage: React.FC = () => {
               Submit Application
             </Button>
           </Form.Item>
-        </Form>
-      </Card>
-    </PageContainer>
+          </Form>
+        </Card>
+      </PageContainer>
+    </div>
   );
 };
 

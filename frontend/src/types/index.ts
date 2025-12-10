@@ -14,12 +14,10 @@ export * from './enums';
 
 // Auth Types
 export * from './user';
+export * from './auth';
 
 // Employee Types
 export * from './employee';
-
-// Application Types
-export * from './application';
 
 // Application Types
 export * from './application';

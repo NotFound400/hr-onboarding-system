@@ -12,7 +12,7 @@ import { Table, Card, Input, Button, Space, Form, message, Tag, Descriptions } f
 import { UserAddOutlined, CopyOutlined, ReloadOutlined } from '@ant-design/icons';
 import type { ColumnsType } from 'antd/es/table';
 import { PageContainer } from '../../../components/common/PageContainer';
-import { getAllApplications } from '../../../services/api';
+import { getAllApplications, generateRegistrationToken } from '../../../services/api';
 import type { ApplicationDetail, ApplicationStatus } from '../../../types';
 
 /**
@@ -53,18 +53,12 @@ const HiringPage: React.FC = () => {
   const handleGenerateToken = async (values: { email: string; name?: string }) => {
     try {
       setGenerating(true);
-      
-      // Mock: 生成一个随机 Token
-      const mockToken = `TOKEN_${Date.now()}_${Math.random().toString(36).substring(2, 15)}`;
-      const expiryTime = new Date(Date.now() + 3 * 60 * 60 * 1000); // 3 小时后
-      
-      setGeneratedToken(mockToken);
-      setTokenExpiry(expiryTime.toLocaleString());
-      
+      const tokenInfo = await generateRegistrationToken(values.email);
+
+      setGeneratedToken(tokenInfo.token);
+      setTokenExpiry(new Date(tokenInfo.expirationDate).toLocaleString());
+
       message.success(`Token generated successfully for ${values.email}`);
-      
-      // 实际实现应该调用 API
-      // await generateRegistrationToken({ email: values.email, name: values.name });
     } catch (error: any) {
       message.error(error.message || 'Failed to generate token');
     } finally {
@@ -158,8 +152,8 @@ const HiringPage: React.FC = () => {
         <Button 
           type="link" 
           onClick={() => {
-            message.info(`Section HR.5.b: View application form (read-only) and documents for ${record.employeeName}. HR can Approve or Reject with optional comments.`);
-            // Should navigate to: /hr/applications/:id
+            // HR Section 5.b: Navigate to review detail page
+            window.location.href = `/hr/applications/${record.id}`;
           }}
         >
           Review →

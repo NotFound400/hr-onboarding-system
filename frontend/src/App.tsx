@@ -21,7 +21,8 @@ import { LoginPage, RegistrationPage } from './features/auth';
 import { 
   OnboardingFormPage, 
   OnboardingDocsPage, 
-  OnboardingSubmitResultPage 
+  OnboardingSubmitResultPage,
+  OnboardingRejectedPage
 } from './features/onboarding';
 import {
   HRHomePage,
@@ -30,8 +31,17 @@ import {
   VisaManagementPage,
   HiringPage,
   HouseManagementPage,
+  ApplicationReviewDetailPage,
+  HouseDetailManagementPage,
 } from './features/hr';
-import { EmployeeHomePage, PersonalInfoPage, VisaStatusPage, HousingPage } from './features/employee';
+import { 
+  EmployeeHomePage, 
+  PersonalInfoPage, 
+  VisaStatusPage, 
+  HousingPage,
+  HouseDetailPage,
+  FacilityReportPage,
+} from './features/employee';
 import './App.css';
 
 /**
@@ -80,8 +90,8 @@ function App() {
             <Route path="personal-info" element={<PersonalInfoPage />} />
             <Route path="visa" element={<VisaStatusPage />} />
             <Route path="housing" element={<HousingPage />} />
-            <Route path="house-detail" element={<PlaceholderPage title="House Detail" />} />
-            <Route path="facility-report" element={<PlaceholderPage title="Facility Report" />} />
+            <Route path="house-detail" element={<HouseDetailPage />} />
+            <Route path="facility-report" element={<FacilityReportPage />} />
             <Route index element={<Navigate to="home" replace />} />
           </Route>
 
@@ -99,7 +109,11 @@ function App() {
             <Route path="employees/:id" element={<EmployeeProfileDetailPage />} />
             <Route path="visa" element={<VisaManagementPage />} />
             <Route path="hiring" element={<HiringPage />} />
+            {/* HR Section 5.b: Application Review Detail */}
+            <Route path="applications/:id" element={<ApplicationReviewDetailPage />} />
             <Route path="housing" element={<HouseManagementPage />} />
+            {/* HR Section 6.c: House Detail Management */}
+            <Route path="houses/:id" element={<HouseDetailManagementPage />} />
             <Route index element={<Navigate to="home" replace />} />
           </Route>
 
@@ -120,6 +134,8 @@ function App() {
             <Route path="form" element={<OnboardingFormPage />} />
             <Route path="docs" element={<OnboardingDocsPage />} />
             <Route path="submit-result" element={<OnboardingSubmitResultPage />} />
+            {/* Section 3.e.iii: Show rejection feedback */}
+            <Route path="rejected" element={<OnboardingRejectedPage />} />
           </Route>
 
           {/* 默认重定向到登录页 */}

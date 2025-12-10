@@ -5,6 +5,7 @@
 
 import axiosClient from './axiosClient';
 import { isMockMode, delay } from '../../utils/mockUtils';
+import * as HousingMocks from '../mocks/housingMocks';
 import type { 
   HouseListItem,
   HouseDetail,
@@ -22,221 +23,8 @@ import type {
   CreateFacilityReportRequest,
   UpdateFacilityReportStatusRequest,
   AddFacilityReportCommentRequest,
-  FacilityReportStatus,
-  ApiResponse
+  FacilityReportStatus
 } from '../../types';
-
-// ==================== Mock Data ====================
-
-/** Mock 房东数据 */
-const MOCK_LANDLORD: ApiResponse<Landlord> = {
-  success: true,
-  message: 'Landlord retrieved successfully',
-  data: {
-    id: 1,
-    firstName: 'John',
-    lastName: 'Doe',
-    fullName: 'John Doe',
-    email: 'john.doe@example.com',
-    cellPhone: '123-456-7890',
-  },
-};
-
-const MOCK_LANDLORD_2: ApiResponse<Landlord> = {
-  success: true,
-  message: 'Landlord retrieved successfully',
-  data: {
-    id: 2,
-    firstName: 'Jane',
-    lastName: 'Smith',
-    fullName: 'Jane Smith',
-    email: 'jane.smith@example.com',
-    cellPhone: '098-765-4321',
-  },
-};
-
-/** Mock 房屋列表数据 */
-const MOCK_HOUSE_LIST: ApiResponse<HouseListItem[]> = {
-  success: true,
-  message: 'House list retrieved successfully',
-  data: [
-    {
-      id: 1,
-      address: '123 Main Street, City, State 12345',
-      maxOccupant: 4,
-      numberOfEmployees: 3,
-      landlordId: 1,
-      landlordFullName: 'John Doe',
-      landlordPhone: '123-456-7890',
-      landlordEmail: 'john.doe@example.com',
-    },
-    {
-      id: 2,
-      address: '456 Oak Avenue, City, State 12345',
-      maxOccupant: 6,
-      numberOfEmployees: 4,
-      landlordId: 2,
-      landlordFullName: 'Jane Smith',
-      landlordPhone: '098-765-4321',
-      landlordEmail: 'jane.smith@example.com',
-    },
-  ],
-};
-
-/** Mock 设施数据 */
-const MOCK_FACILITIES: ApiResponse<Facility[]> = {
-  success: true,
-  message: 'Facilities retrieved successfully',
-  data: [
-    {
-      id: 1,
-      type: 'Bed',
-      description: 'Queen size bed',
-      quantity: 2,
-    },
-    {
-      id: 2,
-      type: 'Mattress',
-      description: 'Memory foam mattress',
-      quantity: 4,
-    },
-    {
-      id: 3,
-      type: 'Table',
-      description: 'Dining table',
-      quantity: 2,
-    },
-    {
-      id: 4,
-      type: 'Chair',
-      description: 'Dining chairs',
-      quantity: 6,
-    },
-  ],
-};
-
-/** Mock 房屋详情数据 */
-const MOCK_HOUSE_DETAIL: ApiResponse<HouseDetail> = {
-  success: true,
-  message: 'House detail retrieved successfully',
-  data: {
-    id: 1,
-    address: '123 Main Street',
-    maxOccupant: 4,
-    numberOfEmployees: 3,
-    landlord: MOCK_LANDLORD.data!,
-    facilitySummary: {
-      Bed: 4,
-      Mattress: 4,
-      Table: 2,
-      Chair: 6,
-    },
-    facilities: MOCK_FACILITIES.data!,
-  },
-};
-
-/** Mock 住户数据 */
-const MOCK_HOUSE_EMPLOYEE_VIEW: ApiResponse<HouseEmployeeView> = {
-  success: true,
-  message: 'House employee view retrieved successfully',
-  data: {
-    id: 1,
-    address: '123 Main Street, City, State 12345',
-    residents: [
-      {
-        employeeId: 100, // QA Test: employee 账号对应的 Employee
-        name: 'Em', // 优先显示 Preferred Name
-        phone: '555-123-4567',
-      },
-      {
-        employeeId: 1,
-        name: 'Alice Wang', // Preferred Name: Allie
-        phone: '111-222-3333',
-      },
-      {
-        employeeId: 2,
-        name: 'Bob Smith',
-        phone: '444-555-6666',
-      },
-    ],
-  },
-};
-
-/** Mock 报修工单列表 */
-const MOCK_FACILITY_REPORT_LIST: ApiResponse<FacilityReportListItem[]> = {
-  success: true,
-  message: 'Facility report list retrieved successfully',
-  data: [
-    {
-      id: 1,
-      title: 'Broken bed frame',
-      createDate: '2024-01-15T10:30:00Z',
-      status: 'Open',
-      statusDisplayName: 'Open',
-    },
-    {
-      id: 2,
-      title: 'Leaking faucet',
-      createDate: '2024-01-16T14:20:00Z',
-      status: 'In Progress', // 注意：包含空格
-      statusDisplayName: 'In Progress',
-    },
-    {
-      id: 3,
-      title: 'Broken chair',
-      createDate: '2024-01-10T09:15:00Z',
-      status: 'Closed',
-      statusDisplayName: 'Closed',
-    },
-  ],
-};
-
-/** Mock 报修评论 */
-const MOCK_COMMENTS: ApiResponse<FacilityReportComment[]> = {
-  success: true,
-  message: 'Comments retrieved successfully',
-  data: [
-    {
-      id: 1,
-      employeeId: 1,
-      createdBy: 'Alice Smith',
-      comment: 'Please fix ASAP',
-      createDate: '2024-01-15T10:30:00Z',
-      displayDate: '2024-01-15T10:30:00Z',
-      canEdit: true,
-    },
-    {
-      id: 2,
-      employeeId: 200,
-      createdBy: 'HR Admin',
-      comment: 'Maintenance scheduled for tomorrow',
-      createDate: '2024-01-15T14:00:00Z',
-      displayDate: '2024-01-15T14:00:00Z',
-      canEdit: false,
-    },
-  ],
-};
-
-/** Mock 报修工单详情 */
-const MOCK_FACILITY_REPORT_DETAIL: ApiResponse<FacilityReportDetail> = {
-  success: true,
-  message: 'Facility report detail retrieved successfully',
-  data: {
-    id: 1,
-    facilityId: 1,
-    facilityType: 'Bed',
-    houseId: 1,
-    houseAddress: '123 Main Street',
-    title: 'Broken bed frame',
-    description: 'The bed frame is broken and needs repair',
-    employeeId: 1,
-    createdBy: 'Alice Smith',
-    createDate: '2024-01-15T10:30:00Z',
-    status: 'In Progress', // ✅ 修复：包含空格
-    statusDisplayName: 'In Progress',
-    comments: MOCK_COMMENTS.data!,
-  },
-};
 
 // ==================== House APIs (HR) ====================
 
@@ -247,7 +35,18 @@ const MOCK_FACILITY_REPORT_DETAIL: ApiResponse<FacilityReportDetail> = {
 export const getAllHouses = async (): Promise<HouseListItem[]> => {
   if (isMockMode()) {
     await delay(500);
-    return MOCK_HOUSE_LIST.data!;
+    // return HousingMocks.MOCK_HOUSE_LIST.data!; // 🟢 标准房屋列表
+    // return [HousingMocks.SCENARIO_HOUSE_HEAVY_LOAD].map(house => ({
+    //   id: house.id,
+    //   address: house.address,
+    //   maxOccupant: house.maxOccupant,
+    //   numberOfEmployees: house.numberOfEmployees,
+    //   landlordId: house.landlord.id,
+    //   landlordFullName: house.landlord.fullName,
+    //   landlordPhone: house.landlord.cellPhone,
+    //   landlordEmail: house.landlord.email,
+    // })); // 🔴 场景：HR 重载分页
+    return HousingMocks.MOCK_HOUSE_LIST.data!;
   }
   
   return axiosClient.get('/houses') as Promise<HouseListItem[]>;
@@ -261,7 +60,8 @@ export const getAllHouses = async (): Promise<HouseListItem[]> => {
 export const getHouseById = async (id: number): Promise<HouseDetail> => {
   if (isMockMode()) {
     await delay(300);
-    return MOCK_HOUSE_DETAIL.data!;
+    // return HousingMocks.SCENARIO_HOUSE_HEAVY_LOAD; // 🔴 场景：包含 12 条报修记录
+    return HousingMocks.MOCK_HOUSE_DETAIL.data!;
   }
   
   return axiosClient.get(`/houses/${id}`) as Promise<HouseDetail>;
@@ -275,7 +75,8 @@ export const getHouseById = async (id: number): Promise<HouseDetail> => {
 export const getEmployeeHouse = async (employeeId: number): Promise<HouseEmployeeView> => {
   if (isMockMode()) {
     await delay(300);
-    return MOCK_HOUSE_EMPLOYEE_VIEW.data!;
+    // return HousingMocks.MOCK_HOUSE_EMPLOYEE_VIEW.data!; // 🟢 默认员工视图
+    return HousingMocks.MOCK_HOUSE_EMPLOYEE_VIEW.data!;
   }
   
   return axiosClient.get(`/houses/employee/${employeeId}`) as Promise<HouseEmployeeView>;
@@ -303,8 +104,9 @@ export const createHouse = async (data: CreateHouseRequest): Promise<HouseDetail
   if (isMockMode()) {
     console.log('[Mock Request] createHouse:', data);
     await delay(500);
+    // return HousingMocks.SCENARIO_HOUSE_HEAVY_LOAD; // 🔴 直接返回压力测试房屋
     return {
-      ...MOCK_HOUSE_DETAIL.data!,
+      ...HousingMocks.MOCK_HOUSE_DETAIL.data!,
       id: Date.now(),
       address: data.address,
       maxOccupant: data.maxOccupant || 4,
@@ -325,8 +127,9 @@ export const updateHouse = async (id: number, data: Partial<UpdateHouseRequest>)
   if (isMockMode()) {
     console.log('[Mock Request] updateHouse:', { id, data });
     await delay(500);
+    // return { ...HousingMocks.SCENARIO_HOUSE_HEAVY_LOAD, ...data, id }; // 🔴 检查分页后的房屋
     return {
-      ...MOCK_HOUSE_DETAIL.data!,
+      ...HousingMocks.MOCK_HOUSE_DETAIL.data!,
       ...data,
       id,
     };
@@ -359,7 +162,8 @@ export const deleteHouse = async (id: number): Promise<void> => {
 export const getAllLandlords = async (): Promise<Landlord[]> => {
   if (isMockMode()) {
     await delay(300);
-    return [MOCK_LANDLORD.data!, MOCK_LANDLORD_2.data!];
+    // return [HousingMocks.MOCK_LANDLORD.data!, HousingMocks.MOCK_LANDLORD_2.data!]; // 🟢
+    return [HousingMocks.MOCK_LANDLORD.data!, HousingMocks.MOCK_LANDLORD_2.data!];
   }
   
   return axiosClient.get('/landlords') as Promise<Landlord[]>;
@@ -373,7 +177,8 @@ export const getAllLandlords = async (): Promise<Landlord[]> => {
 export const getLandlordById = async (id: number): Promise<Landlord> => {
   if (isMockMode()) {
     await delay(300);
-    return MOCK_LANDLORD.data!;
+    // return HousingMocks.MOCK_LANDLORD.data!; // 🟢
+    return HousingMocks.MOCK_LANDLORD.data!;
   }
   
   return axiosClient.get(`/landlords/${id}`) as Promise<Landlord>;
@@ -412,9 +217,9 @@ export const updateLandlord = async (id: number, data: Partial<CreateLandlordReq
     console.log('[Mock Request] updateLandlord:', { id, data });
     await delay(500);
     return {
-      ...MOCK_LANDLORD.data!,
+      ...HousingMocks.MOCK_LANDLORD.data!,
       ...data,
-      fullName: data.firstName && data.lastName ? `${data.firstName} ${data.lastName}` : MOCK_LANDLORD.data!.fullName,
+      fullName: data.firstName && data.lastName ? `${data.firstName} ${data.lastName}` : HousingMocks.MOCK_LANDLORD.data!.fullName,
       id,
     };
   }
@@ -447,7 +252,8 @@ export const deleteLandlord = async (id: number): Promise<void> => {
 export const getFacilitiesByHouseId = async (houseId: number): Promise<Facility[]> => {
   if (isMockMode()) {
     await delay(300);
-    return MOCK_FACILITIES.data!;
+    // return HousingMocks.MOCK_FACILITIES.data!; // 🟢
+    return HousingMocks.MOCK_FACILITIES.data!;
   }
   
   return axiosClient.get(`/houses/${houseId}/facilities`) as Promise<Facility[]>;
@@ -489,8 +295,9 @@ export const updateFacility = async (
   if (isMockMode()) {
     console.log('[Mock Request] updateFacility:', { houseId, facilityId, data });
     await delay(500);
+    // return HousingMocks.MOCK_FACILITIES.data![0]; // 🟢
     return {
-      ...MOCK_FACILITIES.data![0],
+      ...HousingMocks.MOCK_FACILITIES.data![0],
       ...data,
       id: facilityId,
     };
@@ -524,7 +331,15 @@ export const deleteFacility = async (houseId: number, facilityId: number): Promi
 export const getAllFacilityReports = async (): Promise<FacilityReportListItem[]> => {
   if (isMockMode()) {
     await delay(500);
-    return MOCK_FACILITY_REPORT_LIST.data!;
+    // return HousingMocks.MOCK_FACILITY_REPORT_LIST.data!; // 🟢 默认报修列表
+    // return HousingMocks.SCENARIO_HOUSE_HEAVY_LOAD.reports.map(report => ({
+    //   id: report.id,
+    //   title: report.title,
+    //   createDate: report.createDate,
+    //   status: report.status,
+    //   statusDisplayName: report.statusDisplayName,
+    // })); // 🔴 12 条工单分页测试
+    return HousingMocks.MOCK_FACILITY_REPORT_LIST.data!;
   }
   
   return axiosClient.get('/facility-reports') as Promise<FacilityReportListItem[]>;
@@ -540,7 +355,16 @@ export const getFacilityReportsByStatus = async (
 ): Promise<FacilityReportListItem[]> => {
   if (isMockMode()) {
     await delay(500);
-    return MOCK_FACILITY_REPORT_LIST.data!.filter(report => report.status === status);
+    // return HousingMocks.SCENARIO_HOUSE_HEAVY_LOAD.reports
+    //   .filter(report => report.status === status)
+    //   .map(report => ({
+    //     id: report.id,
+    //     title: report.title,
+    //     createDate: report.createDate,
+    //     status: report.status,
+    //     statusDisplayName: report.statusDisplayName,
+    //   })); // 🔴 结合分页筛选
+    return HousingMocks.MOCK_FACILITY_REPORT_LIST.data!.filter(report => report.status === status);
   }
   
   return axiosClient.get(`/facility-reports?status=${status}`) as Promise<FacilityReportListItem[]>;
@@ -554,7 +378,8 @@ export const getFacilityReportsByStatus = async (
 export const getFacilityReportById = async (id: number): Promise<FacilityReportDetail> => {
   if (isMockMode()) {
     await delay(300);
-    return MOCK_FACILITY_REPORT_DETAIL.data!;
+     // return HousingMocks.SCENARIO_HOUSE_HEAVY_LOAD.reports[0]; // 🔴 报修包含多条评论
+    return HousingMocks.MOCK_FACILITY_REPORT_DETAIL.data!;
   }
   
   return axiosClient.get(`/facility-reports/${id}`) as Promise<FacilityReportDetail>;
@@ -570,7 +395,16 @@ export const getFacilityReportsByEmployeeId = async (
 ): Promise<FacilityReportListItem[]> => {
   if (isMockMode()) {
     await delay(300);
-    return MOCK_FACILITY_REPORT_LIST.data!;
+    // return HousingMocks.SCENARIO_HOUSE_HEAVY_LOAD.reports
+    //   .filter(report => report.employeeId === employeeId)
+    //   .map(report => ({
+    //     id: report.id,
+    //     title: report.title,
+    //     createDate: report.createDate,
+    //     status: report.status,
+    //     statusDisplayName: report.statusDisplayName,
+    //   })); // 🔴 员工维度工单
+    return HousingMocks.MOCK_FACILITY_REPORT_LIST.data!;
   }
   
   return axiosClient.get(`/facility-reports/employee/${employeeId}`) as Promise<FacilityReportListItem[]>;
@@ -587,8 +421,9 @@ export const createFacilityReport = async (
   if (isMockMode()) {
     console.log('[Mock Request] createFacilityReport:', data);
     await delay(500);
+    // return HousingMocks.SCENARIO_HOUSE_HEAVY_LOAD.reports[1]; // 🔴 直接返回已有工单
     return {
-      ...MOCK_FACILITY_REPORT_DETAIL.data!,
+      ...HousingMocks.MOCK_FACILITY_REPORT_DETAIL.data!,
       id: Date.now(),
       title: data.title,
       description: data.description,
@@ -622,7 +457,7 @@ export const updateFacilityReportStatus = async (
       'Closed': 'Closed',
     };
     return {
-      ...MOCK_FACILITY_REPORT_DETAIL.data!,
+      ...HousingMocks.MOCK_FACILITY_REPORT_DETAIL.data!,
       id,
       status: data.status,
       statusDisplayName: statusDisplayNames[data.status],
@@ -655,8 +490,8 @@ export const addFacilityReportComment = async (
       canEdit: true,
     };
     return {
-      ...MOCK_FACILITY_REPORT_DETAIL.data!,
-      comments: [...MOCK_FACILITY_REPORT_DETAIL.data!.comments, newComment],
+      ...HousingMocks.MOCK_FACILITY_REPORT_DETAIL.data!,
+      comments: [...HousingMocks.MOCK_FACILITY_REPORT_DETAIL.data!.comments, newComment],
     };
   }
   
@@ -678,7 +513,8 @@ export const updateFacilityReportComment = async (
   if (isMockMode()) {
     console.log('[Mock Request] updateFacilityReportComment:', { reportId, commentId, comment });
     await delay(500);
-    return MOCK_FACILITY_REPORT_DETAIL.data!;
+    // return HousingMocks.SCENARIO_HOUSE_HEAVY_LOAD.reports[0]; // 🔴 复用多评论工单
+    return HousingMocks.MOCK_FACILITY_REPORT_DETAIL.data!;
   }
   
   return axiosClient.put(
@@ -701,8 +537,8 @@ export const deleteFacilityReportComment = async (
     console.log('[Mock Request] deleteFacilityReportComment:', { reportId, commentId });
     await delay(300);
     return {
-      ...MOCK_FACILITY_REPORT_DETAIL.data!,
-      comments: MOCK_FACILITY_REPORT_DETAIL.data!.comments.filter(c => c.id !== commentId),
+      ...HousingMocks.MOCK_FACILITY_REPORT_DETAIL.data!,
+      comments: HousingMocks.MOCK_FACILITY_REPORT_DETAIL.data!.comments.filter(c => c.id !== commentId),
     };
   }
   

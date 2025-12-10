@@ -1,38 +1,18 @@
-### 🚪 1. 注册与登录 (Entry & Auth)
-#### 1.1 注册 (Registration)
-[cite_start]*参考: Section 1* [cite: 58-61]
-- **字段验证**: 注册页缺失 `Username`
-
 ### 📝 2. Onboarding 表单 (Onboarding)
 #### 2.1 个人信息字段逻辑
 2. Onboarding 表单 (Onboarding)
-- [N] [cite_start]**头像 (Avatar)**: 如果用户未上传，必须显示**默认图片** [cite: 76-77]。
+- **头像 (Avatar)**: 如果用户未上传，必须显示**默认图片** [cite: 76-77]。
 
-#### 2.2 文档与提交逻辑
-- **文档页面**:
-    [IC] [cite_start]**下载**: 每个文档必须有下载链接 [cite: 99]。
-    [ ] [cite_start]如果被 HR 拒绝 (Rejected): 用户登录后应能看到错误信息或缺失文件的提示 [cite: 108-109]。
 
-### 🏠 3. 员工门户 (Employee Portal)
-- [cite_start]**欢迎语**: 主页 Body 必须显示 "Hello [Name], Welcome to BeaconFire" [cite: 120-121]。
 #### 3.1 导航栏与主页
   [cite_start]**导航项** [cite: 112-119]:
     Housing, House Detail, Report Facility Issue Appear to be same page
 
 **Hover 特效**: 鼠标悬停在 "Visa Status Management" 上时，显示 "OPT STEM Management" 链接 [cite: 115-116]。
 
-#### 3.2 个人信息 (Personal Info)
-Employment, Contact, Emergency Contact 等板块 [cite: 236-263]。都需要添加Edit, 逻辑和 Name板块保持一致
-
-#### 3.3 Visa 状态管理 (Visa Status)
-**流程顺序 (Flow)** 顺序并未强制执行：
-    1.  **Step 1: I-983** (Training Plan for STEM OPT) - 下载并填写
-    2.  **Step 2: I-20** (Certificate of Eligibility) - 上传（必需）
-    3.  **Step 3: OPT Receipt** - 上传（必需）
-    4.  **Step 4: OPT EAD** (Employment Authorization Document) - 上传（必需）
 
 #### 3.4 房屋 (Housing)
-房屋页面似乎不正确，需要满足：
+房屋页面不正确，需要满足：
 6. House Management
 
 a. HR should be able to view, add, and delete house properties belonging to the company.
