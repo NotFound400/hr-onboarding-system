@@ -102,7 +102,7 @@ const EmployeeHomePage: React.FC = () => {
           <Avatar size={80} icon={<UserOutlined />} style={{ backgroundColor: '#fff', color: '#667eea' }} />
           <div>
             <Title level={2} style={{ color: '#fff', margin: 0 }}>
-              Welcome, {getDisplayName()}! 👋
+              Hello {getDisplayName()}, Welcome to BeaconFire 🎉
             </Title>
             <Paragraph style={{ color: '#fff', marginTop: 8, marginBottom: 0, opacity: 0.9 }}>
               {employee?.email}

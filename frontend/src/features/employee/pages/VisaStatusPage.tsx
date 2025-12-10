@@ -10,8 +10,8 @@
  */
 
 import { useState, useEffect } from 'react';
-import { Card, Descriptions, Empty, Space, Alert, Tag, message } from 'antd';
-import { SafetyOutlined, FileTextOutlined } from '@ant-design/icons';
+import { Card, Descriptions, Empty, Space, Alert, Tag, message, Steps } from 'antd';
+import { SafetyOutlined, FileTextOutlined, CheckCircleOutlined } from '@ant-design/icons';
 import dayjs from 'dayjs';
 import type { UploadFile } from 'antd';
 import { PageContainer } from '../../../components/common/PageContainer';
@@ -208,14 +208,48 @@ const VisaStatusPage: React.FC = () => {
           <Card title="OPT Documents" extra={<FileTextOutlined style={{ fontSize: 20 }} />}>
             <Alert
               message="Document Upload Instructions"
-              description="Please upload all required OPT documents in order. HR will be notified via email after each upload."
+              description="Please upload all required OPT documents in order. Each step must be completed before the next is unlocked. HR will be notified via email after each upload."
               type="info"
               showIcon
               style={{ marginBottom: 24 }}
             />
 
+            {/* Steps Indicator */}
+            <Steps
+              current={
+                i983Files.length > 0
+                  ? i20Files.length > 0
+                    ? optReceiptFiles.length > 0
+                      ? optEadFiles.length > 0
+                        ? 4
+                        : 3
+                      : 2
+                    : 1
+                  : 0
+              }
+              style={{ marginBottom: 32 }}
+              items={[
+                {
+                  title: 'I-983',
+                  icon: i983Files.length > 0 ? <CheckCircleOutlined /> : undefined,
+                },
+                {
+                  title: 'I-20',
+                  icon: i20Files.length > 0 ? <CheckCircleOutlined /> : undefined,
+                },
+                {
+                  title: 'OPT Receipt',
+                  icon: optReceiptFiles.length > 0 ? <CheckCircleOutlined /> : undefined,
+                },
+                {
+                  title: 'OPT EAD',
+                  icon: optEadFiles.length > 0 ? <CheckCircleOutlined /> : undefined,
+                },
+              ]}
+            />
+
             <Space direction="vertical" size="middle" style={{ width: '100%' }}>
-              {/* Section 7.b.i - I-983 */}
+              {/* Section 7.b.i - I-983 (Always enabled) */}
               <Card type="inner" title="Step 1: I-983 (Training Plan for STEM OPT)">
                 <DocumentUpload
                   title="I-983"
@@ -223,35 +257,74 @@ const VisaStatusPage: React.FC = () => {
                   onChange={(fileList) => handleDocumentChange(fileList, 'I-983')}
                 />
               </Card>
-              
-              {/* Section 7.b.ii - I-20 */}
-              <Card type="inner" title="Step 2: I-20 (Certificate of Eligibility)">
-                <DocumentUpload
-                  title="I-20"
-                  required
-                  fileList={i20Files}
-                  onChange={(fileList) => handleDocumentChange(fileList, 'I-20')}
-                />
+
+              {/* Section 7.b.ii - I-20 (Enabled after I-983 uploaded) */}
+              <Card
+                type="inner"
+                title="Step 2: I-20 (Certificate of Eligibility)"
+                style={{ opacity: i983Files.length > 0 ? 1 : 0.5 }}
+              >
+                {i983Files.length > 0 ? (
+                  <DocumentUpload
+                    title="I-20"
+                    required
+                    fileList={i20Files}
+                    onChange={(fileList) => handleDocumentChange(fileList, 'I-20')}
+                  />
+                ) : (
+                  <Alert
+                    message="Locked"
+                    description="Please upload I-983 first to unlock this step."
+                    type="warning"
+                    showIcon
+                  />
+                )}
               </Card>
-              
-              {/* Section 7.b.iii - OPT Receipt */}
-              <Card type="inner" title="Step 3: OPT Receipt">
-                <DocumentUpload
-                  title="OPT Receipt"
-                  required
-                  fileList={optReceiptFiles}
-                  onChange={(fileList) => handleDocumentChange(fileList, 'OPT Receipt')}
-                />
+
+              {/* Section 7.b.iii - OPT Receipt (Enabled after I-20 uploaded) */}
+              <Card
+                type="inner"
+                title="Step 3: OPT Receipt"
+                style={{ opacity: i20Files.length > 0 ? 1 : 0.5 }}
+              >
+                {i20Files.length > 0 ? (
+                  <DocumentUpload
+                    title="OPT Receipt"
+                    required
+                    fileList={optReceiptFiles}
+                    onChange={(fileList) => handleDocumentChange(fileList, 'OPT Receipt')}
+                  />
+                ) : (
+                  <Alert
+                    message="Locked"
+                    description="Please upload I-20 first to unlock this step."
+                    type="warning"
+                    showIcon
+                  />
+                )}
               </Card>
-              
-              {/* Section 7.b.iv - OPT EAD */}
-              <Card type="inner" title="Step 4: OPT EAD (Employment Authorization Document)">
-                <DocumentUpload
-                  title="OPT EAD"
-                  required
-                  fileList={optEadFiles}
-                  onChange={(fileList) => handleDocumentChange(fileList, 'OPT EAD')}
-                />
+
+              {/* Section 7.b.iv - OPT EAD (Enabled after OPT Receipt uploaded) */}
+              <Card
+                type="inner"
+                title="Step 4: OPT EAD (Employment Authorization Document)"
+                style={{ opacity: optReceiptFiles.length > 0 ? 1 : 0.5 }}
+              >
+                {optReceiptFiles.length > 0 ? (
+                  <DocumentUpload
+                    title="OPT EAD"
+                    required
+                    fileList={optEadFiles}
+                    onChange={(fileList) => handleDocumentChange(fileList, 'OPT EAD')}
+                  />
+                ) : (
+                  <Alert
+                    message="Locked"
+                    description="Please upload OPT Receipt first to unlock this step."
+                    type="warning"
+                    showIcon
+                  />
+                )}
               </Card>
             </Space>
           </Card>

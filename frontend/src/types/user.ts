@@ -18,6 +18,10 @@ export interface User {
   email: string;
   /** 加密密码 */
   password: string;
+  /** 账号是否启用 */
+  active: boolean;
+  /** 用户角色集合 */
+  roles: RoleType[];
   /** 创建时间 */
   createDate: string;
   /** 最后修改时间 */
@@ -66,6 +70,8 @@ export interface RegistrationToken {
   expirationDate: string;
   /** 创建者 (HR User ID) */
   createBy: string;
+  /** 创建者 User ID (后端字段 createdByUserId) */
+  createdByUserId?: string;
   /** 创建时间 */
   createDate: string;
 }
@@ -73,6 +79,9 @@ export interface RegistrationToken {
 /** 登录响应 */
 export interface LoginResponse {
   token: string;
+  tokenType: string;
+  expiresAt: string;
   user: User;
   role: RoleType;
+  roles: RoleType[];
 }

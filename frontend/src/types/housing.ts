@@ -72,8 +72,6 @@ export interface HouseListItem {
   address: string;
   /** 最大入住人数 */
   maxOccupant: number;
-  /** 最大入住人数 (别名) */
-  maxOccupancy?: number;
   /** 当前入住员工数 */
   numberOfEmployees: number;
   /** 房东 ID */

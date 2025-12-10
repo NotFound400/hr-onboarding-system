@@ -49,8 +49,10 @@ const HousingPage: React.FC = () => {
 
       // 如果有分配的房屋，获取房屋详情
       if (empData.houseID) {
-        const houseData = await getEmployeeHouse(empData.houseID);
+        const houseData = await getEmployeeHouse(empData.userID);
         setHouseInfo(houseData);
+      } else {
+        setHouseInfo(null);
       }
     } catch (error: any) {
       message.error(error.message || 'Failed to load housing information');
@@ -97,12 +99,12 @@ const HousingPage: React.FC = () => {
 
     // 过滤出当前用户
     const currentResident = houseInfo.residents.find(
-      r => r.employeeId.toString() === employee?.id
+      r => r.employeeId === employee?.userID
     );
     
     // 过滤出室友（排除当前用户）
     const roommates = houseInfo.residents.filter(
-      r => r.employeeId.toString() !== employee?.id
+      r => r.employeeId !== employee?.userID
     );
 
     return (

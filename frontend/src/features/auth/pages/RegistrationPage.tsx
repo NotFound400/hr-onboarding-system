@@ -3,7 +3,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Form, Input, Button, Card, message, Spin, Alert } from 'antd';
 import { UserOutlined, LockOutlined, CheckCircleOutlined } from '@ant-design/icons';
 import { validateToken, registerUser } from '../../../services/api';
-import type { RegisterRequest } from '../../../types';
+import type { RegisterRequest, RegistrationTokenValidationResponse } from '../../../types';
 
 /**
  * 注册页面
@@ -46,15 +46,15 @@ export const RegistrationPage: React.FC = () => {
   const validateRegistrationToken = async (tokenValue: string) => {
     try {
       setValidating(true);
-      const result = await validateToken(tokenValue);
+      const tokenInfo: RegistrationTokenValidationResponse = await validateToken(tokenValue);
 
-      if (result.valid) {
+      if (tokenInfo?.email) {
         setTokenValid(true);
-        setEmail(result.email);
+        setEmail(tokenInfo.email);
         setErrorMessage('');
       } else {
         setTokenValid(false);
-        setErrorMessage(result.message || 'Token is invalid or expired. Please request a new registration link.');
+        setErrorMessage('Token is invalid or expired. Please request a new registration link.');
       }
     } catch (error: any) {
       setTokenValid(false);
@@ -68,6 +68,7 @@ export const RegistrationPage: React.FC = () => {
 
   /**
    * 提交注册表单
+   * Section 1: "Users must provide a password, unique username, and unique email"
    */
   const handleSubmit = async (values: any) => {
     if (!token) {
@@ -80,7 +81,7 @@ export const RegistrationPage: React.FC = () => {
 
       const request: RegisterRequest = {
         token,
-        username: email.split('@')[0], // 使用 email 前缀作为 username
+        username: values.username, // Use user-provided username (Section 1 requirement)
         email,
         password: values.password,
       };
@@ -194,6 +195,26 @@ export const RegistrationPage: React.FC = () => {
               size="large"
               disabled
               value={email}
+            />
+          </Form.Item>
+
+          {/* Username - Section 1: "unique username" required */}
+          <Form.Item
+            label="Username"
+            name="username"
+            rules={[
+              { required: true, message: 'Please enter your username' },
+              { min: 3, message: 'Username must be at least 3 characters' },
+              { 
+                pattern: /^[a-zA-Z0-9_-]+$/, 
+                message: 'Username can only contain letters, numbers, hyphens and underscores' 
+              },
+            ]}
+          >
+            <Input
+              prefix={<UserOutlined />}
+              size="large"
+              placeholder="Enter your unique username"
             />
           </Form.Item>
 

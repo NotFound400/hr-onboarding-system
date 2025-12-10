@@ -177,6 +177,13 @@
 9. 提交表单后验证显示 "Please wait for HR to review"
 10. 验证提交后无法通过 URL 访问 `/employee/home` (应被拦截)
 
+### 测试流程 4: 被拒绝的 Onboarding 用户
+1. 登录: `rejected_user` / `rejected123`
+2. 登录后应自动跳转到 `/onboarding/rejected` 查看拒绝详情
+3. 页面需要显示 HR 反馈：“Missing signed I-983 and OPT receipt...”
+4. 点击 “Resubmit Application” 应导航回 `/onboarding/form`
+5. 验证在 HR → Hiring 页面或 Application 列表中可看到该用户的 Rejected 记录
+
 ---
 
 ## 🔍 数据查找说明
@@ -188,6 +195,7 @@
 | 999 | admin | N/A (HR 无 Employee 记录) | N/A | N/A |
 | 100 | employee | 507f1f77bcf86cd799439100 | 1 | 100 |
 | 200 | new_user | 未创建 | 未分配 | 200 |
+| 400 | rejected_user | 507f1f77bcf86cd799439200 | 1 | 400 |
 | 1 | (legacy) | 507f1f77bcf86cd799439011 | 1 | 1 |
 
 ### 登录流程跳转逻辑 (LoginPage.tsx)

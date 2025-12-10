@@ -142,29 +142,24 @@ const MainLayout: React.FC = () => {
         },
       ],
     }] : []),
+    // Flatten Housing navigation (no submenu)
     {
       key: '/employee/housing',
       icon: <BankOutlined />,
       label: 'Housing',
       onClick: () => navigate('/employee/housing'),
-      // Submenu for House Detail (Section 4.d)
-      children: [
-        {
-          key: '/employee/housing/list',
-          label: 'My Housing',
-          onClick: () => navigate('/employee/housing'),
-        },
-        {
-          key: '/employee/house-detail',
-          label: 'House Detail',
-          onClick: () => navigate('/employee/house-detail'),
-        },
-        {
-          key: '/employee/facility-report',
-          label: 'Report Facility Issue',
-          onClick: () => navigate('/employee/facility-report'),
-        },
-      ],
+    },
+    {
+      key: '/employee/house-detail',
+      icon: <HomeOutlined />,
+      label: 'House Detail',
+      onClick: () => navigate('/employee/house-detail'),
+    },
+    {
+      key: '/employee/facility-report',
+      icon: <SettingOutlined />,
+      label: 'Report Issue',
+      onClick: () => navigate('/employee/facility-report'),
     },
   ];
 
@@ -283,6 +278,8 @@ const MainLayout: React.FC = () => {
             justifyContent: 'space-between',
             alignItems: 'center',
             boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
+            height: 64,
+            lineHeight: 'normal',
           }}
         >
           <div>
@@ -294,9 +291,9 @@ const MainLayout: React.FC = () => {
           <Dropdown menu={{ items: userMenuItems }} placement="bottomRight">
             <Space style={{ cursor: 'pointer' }}>
               <Avatar icon={<UserOutlined />} style={{ backgroundColor: '#1890ff' }} />
-              <Space direction="vertical" size={0}>
-                <Text strong>{user?.username || 'User'}</Text>
-                <Text type="secondary" style={{ fontSize: 12 }}>
+              <Space direction="vertical" size={0} style={{ lineHeight: 1.2, textAlign: 'right' }}>
+                <Text strong style={{ lineHeight: '1.2' }}>{user?.username || 'User'}</Text>
+                <Text type="secondary" style={{ fontSize: 12, lineHeight: '1.2' }}>
                   {role || 'Employee'}
                 </Text>
               </Space>

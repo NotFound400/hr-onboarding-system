@@ -66,6 +66,9 @@ axiosClient.interceptors.response.use(
           // 清除本地 Token
           localStorage.removeItem('token');
           localStorage.removeItem('role');
+          localStorage.removeItem('tokenType');
+          localStorage.removeItem('tokenExpiresAt');
+          localStorage.removeItem('roles');
           // 可选: 跳转到登录页
           window.location.href = '/login';
           break;
