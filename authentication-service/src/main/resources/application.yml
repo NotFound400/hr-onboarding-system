@@ -1,0 +1,54 @@
+server:
+  port: 8081
+
+spring:
+  application:
+    name: authentication-service
+
+  datasource:
+    url: jdbc:mysql://hr-onboarding-mysql-dev.cjmeo8yi2a1k.us-east-2.rds.amazonaws.com:3306/hronboarding
+    username: admin
+    password: HRonboarding2025
+    driver-class-name: com.mysql.cj.jdbc.Driver
+
+  jpa:
+    hibernate:
+      ddl-auto: none
+      naming:
+        physical-strategy: org.hibernate.boot.model.naming.PhysicalNamingStrategyStandardImpl
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+
+  profiles:
+    active: dev
+
+# Swagger/OpenAPI
+springdoc:
+  api-docs:
+    path: /api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+
+# JWT Configuration - MATCH API GATEWAY
+jwt:
+  secret: dGhpc2lzYXZlcnlsb25nc2VjcmV0a2V5Zm9yaHJvbmJvYXJkaW5nc3lzdGVtand0dG9rZW4=
+  expiration: 86400000
+
+# Registration Token Configuration
+registration:
+  token:
+    expiration-hours: 3
+
+# Email Service Configuration
+email:
+  service:
+    url: http://localhost:8085
+  frontend:
+    registration-url: http://localhost:3000/register
+
+# Eureka - DISABLED (Auth Service is standalone)
+eureka:
+  client:
+    enabled: false
