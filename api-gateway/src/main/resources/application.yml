@@ -24,14 +24,14 @@ spring:
 
       # Routing Config
       routes:
-        # ==================== Auth Service ====================
+        # ==================== Auth Service (Standalone - Not in Eureka) ====================
         - id: auth-service
-          uri: lb://authentication-service
+          uri: http://localhost:8081  # Direct URL, NOT lb://
           predicates:
             - Path=/api/auth/**
           filters:
-            # Rewrite Path
-            - RewritePath=/api/auth/(?<segment>.*), /${segment}
+            # No Rewrite Path Needed for Auth Service, Auth Service uses /api/auth/* directly
+#            - RewritePath=/api/auth/(?<segment>.*), /${segment}
             # Circuit Breaker
             - name: CircuitBreaker
               args:

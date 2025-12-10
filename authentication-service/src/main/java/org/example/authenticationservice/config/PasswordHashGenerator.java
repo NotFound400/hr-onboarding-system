@@ -15,7 +15,7 @@ public class PasswordHashGenerator implements CommandLineRunner {
 
     @Override
     public void run(String... args) {
-        String hash = new BCryptPasswordEncoder().encode("password123");
-        System.out.println("[Setup] HR Admin password hash: " + hash);
+//        String hash = new BCryptPasswordEncoder().encode("password123");
+//        System.out.println("[Setup] HR Admin password hash: " + hash);
     }
 }

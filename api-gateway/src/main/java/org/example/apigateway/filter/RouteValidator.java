@@ -10,11 +10,13 @@ import java.util.function.Predicate;
 public class RouteValidator {
 
     public static final List<String> OPEN_API_ENDPOINTS = List.of(
-            // Auth
+            // Auth - Public endpoints
             "/api/auth/login",
             "/api/auth/register",
             "/api/auth/refresh",
             "/api/auth/forgot-password",
+            "/api/auth/validate-token",       // Token validation before registration
+            "/api/auth/registration-token/",  // GET registration token info (the "/" ensures it's the path prefix for GET)
             
             // Health
             "/actuator/health",

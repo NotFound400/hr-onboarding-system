@@ -81,6 +81,7 @@ public class AuthService {
         user.setEmail(request.getEmail());
         user.setPassword(passwordEncoder.encode(request.getPassword()));
         user.setActiveFlag(true);
+
         user = userRepository.save(user);
 
         // Assign default role: Employee
@@ -92,6 +93,7 @@ public class AuthService {
         userRole.setUser(user);
         userRole.setRole(employeeRole);
         userRole.setActiveFlag(true);
+
         userRoleRepository.save(userRole);
 
         // Consume token
@@ -121,8 +123,9 @@ public class AuthService {
         // Load roles
         List<String> roleNames = getUserRoleNames(user);
 
-        // Generate JWT
-        String jwtToken = jwtTokenProvider.createToken(user.getUsername(), roleNames);
+        // Generate JWT with userId (NEW: added userId parameter)
+        String jwtToken = jwtTokenProvider.createToken(user.getUsername(), user.getId(), roleNames);
+
         Instant expiresAt = Instant.now().plusMillis(jwtTokenProvider.getValidityInMs());
 
         // Build response
@@ -145,6 +148,7 @@ public class AuthService {
                 .orElseThrow(() -> new IllegalArgumentException("User not found"));
 
         List<String> roleNames = getUserRoleNamesById(userId);
+
         return mapToUserDto(user, roleNames);
     }
 
@@ -158,6 +162,7 @@ public class AuthService {
                 .orElseThrow(() -> new IllegalArgumentException("User not found"));
 
         List<String> roleNames = getUserRoleNames(user);
+
         return mapToUserDto(user, roleNames);
     }
 
@@ -179,12 +184,8 @@ public class AuthService {
      * Get user ID by extracting username from JWT token.
      */
     public Long getUserIdFromToken(String token) {
-        String username = jwtTokenProvider.getUsernameFromToken(token);
-
-        User user = userRepository.findByUsername(username)
-                .orElseThrow(() -> new IllegalArgumentException("User not found"));
-
-        return user.getId();
+        // NEW: can directly extract userId from token now
+        return jwtTokenProvider.getUserIdFromToken(token);
     }
 
     /**
