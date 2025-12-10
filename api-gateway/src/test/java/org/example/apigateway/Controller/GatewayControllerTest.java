@@ -1,5 +1,6 @@
 package org.example.apigateway.Controller;
 
+import org.example.apigateway.client.AuthServiceClient;
 import org.example.apigateway.config.JwtUtil;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -20,18 +21,24 @@ import java.util.Map;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.when;
 
+/**
+ * Unit tests for GatewayController
+ * Tests health check, info, and token generation/validation endpoints
+ */
 @ExtendWith(MockitoExtension.class)
 @DisplayName("GatewayController Unit Tests")
 class GatewayControllerTest {
 
     @Mock
     private JwtUtil jwtUtil;
+    @Mock
+    private AuthServiceClient authServiceClient;
 
     private GatewayController gatewayController;
 
     @BeforeEach
     void setUp() {
-        gatewayController = new GatewayController(jwtUtil);
+        gatewayController = new GatewayController(jwtUtil, authServiceClient);
     }
 
     @Nested
@@ -185,7 +192,7 @@ class GatewayControllerTest {
                     .assertNext(response -> {
                         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
                         assertThat(response.getBody()).containsEntry("valid", false);
-                        assertThat(response.getBody()).containsEntry("message", "Invalid Authorization header");
+                        assertThat(response.getBody()).containsEntry("message", "Invalid Authorization header format");
                     })
                     .verifyComplete();
         }
