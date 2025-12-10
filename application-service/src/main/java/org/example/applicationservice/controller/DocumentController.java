@@ -23,6 +23,7 @@ public class DocumentController {
         this.documentService = documentService;
     }
 
+    //get documents by applicationId
     @GetMapping("/application/{applicationId}")
     public ResponseEntity<Result<List<DigitalDocumentDTO>>> getDocumentsByApplication(
             @PathVariable Long applicationId) {
@@ -31,6 +32,7 @@ public class DocumentController {
         return ResponseEntity.ok(result);
     }
 
+    //get documents by employeeId
     @GetMapping("/employee/{employeeId}")
     public ResponseEntity<Result<List<DigitalDocumentDTO>>> getDocumentsByEmployee(
             @PathVariable String employeeId) {
@@ -39,6 +41,7 @@ public class DocumentController {
         return ResponseEntity.ok(result);
     }
 
+    //get documents by type
     @GetMapping("/type/{type}")
     public ResponseEntity<Result<List<DigitalDocumentDTO>>> getDocumentsByType(
             @PathVariable String type) {
@@ -47,12 +50,14 @@ public class DocumentController {
         return ResponseEntity.ok(result);
     }
 
+    //get required documents
     @GetMapping("/required")
     public ResponseEntity<Result<List<DigitalDocumentDTO>>> getRequiredDocuments() {
         Result<List<DigitalDocumentDTO>> result = documentService.getRequiredDocuments();
         return ResponseEntity.ok(result);
     }
 
+    //upload document
     @PostMapping("/upload")
     public ResponseEntity<Result<DigitalDocumentDTO>> uploadDocument(
             @RequestPart("file") MultipartFile file,
@@ -74,12 +79,14 @@ public class DocumentController {
                 .body(data);
     }
 
+    //delete document by documentId
     @DeleteMapping("/delete/{id}")
-    public ResponseEntity<String> deleteDocument(@PathVariable Long id) {
+    public ResponseEntity<Result<String>> deleteDocument(@PathVariable Long id) {
         documentService.deleteDocumentById(id);
-        return ResponseEntity.ok("Document deleted successfully");
+        return ResponseEntity.ok(Result.success("Document deleted successfully"));
     }
 
+    //update document
     @PutMapping("/update/{id}")
     public ResponseEntity<Result<DigitalDocumentDTO>> updateDocument(
             @PathVariable Long id,
