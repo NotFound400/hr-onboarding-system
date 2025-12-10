@@ -4,35 +4,36 @@ server:
 spring:
   application:
     name: api-gateway
-
+  
+  # Redis configuration (for rate limiting)
   data:
     redis:
       host: localhost
       port: 6379
       timeout: 2000ms
-
+  
   cloud:
     gateway:
-      # Global Filter
+      # Global default filters
       default-filters:
-        # Add Request Header
+        # Add gateway request marker header
         - AddRequestHeader=X-Gateway-Request, true
-        # Add Response Header
+        # Add gateway response marker header
         - AddResponseHeader=X-Gateway-Response, true
-        # Remove Sensitive Response Header
+        # Remove sensitive response headers
         - RemoveResponseHeader=X-Powered-By
-
-      # Routing Config
+      
+      # Route configurations
       routes:
         # ==================== Auth Service (Standalone - Not in Eureka) ====================
         - id: auth-service
-          uri: http://localhost:8081  # Direct URL, NOT lb://
+          uri: http://auth-service
           predicates:
             - Path=/api/auth/**
           filters:
-            # No Rewrite Path Needed for Auth Service, Auth Service uses /api/auth/* directly
-#            - RewritePath=/api/auth/(?<segment>.*), /${segment}
-            # Circuit Breaker
+            # Rewrite path: /api/auth/** -> /**
+            - RewritePath=/api/auth/(?<segment>.*), /${segment}
+            # Circuit breaker for fault tolerance
             - name: CircuitBreaker
               args:
                 name: authService
@@ -68,7 +69,7 @@ spring:
           predicates:
             - Path=/api/housing/**
           filters:
-            # No Need Rewrite Path，housing-service directly use /api/housing/** path
+            # No path rewrite - housing-service uses /api/housing/** paths directly
             - name: CircuitBreaker
               args:
                 name: housingService
@@ -86,18 +87,23 @@ spring:
                 name: emailService
                 fallbackUri: forward:/fallback/email
 
-      # Service Discovery Config
+      # Service discovery configuration
       discovery:
         locator:
           enabled: true
           lower-case-service-id: true
 
-      # Global Overtime Config
+      # Global HTTP client configuration
       httpclient:
         connect-timeout: 5000
         response-timeout: 10s
 
-# Eureka Client Config
+# Auth Service client configuration
+auth-service:
+  url: lb://auth-service
+  timeout: 5000
+
+# Eureka client configuration
 eureka:
   instance:
     prefer-ip-address: true
@@ -110,12 +116,12 @@ eureka:
     fetch-registry: true
     registry-fetch-interval-seconds: 10
 
-# JWT Config
+# JWT configuration (must match Auth Service)
 jwt:
   secret: dGhpc2lzYXZlcnlsb25nc2VjcmV0a2V5Zm9yaHJvbmJvYXJkaW5nc3lzdGVtand0dG9rZW4=
   expiration: 86400000
 
-# Resilience4j Config
+# Resilience4j circuit breaker configuration
 resilience4j:
   circuitbreaker:
     instances:
@@ -149,7 +155,7 @@ resilience4j:
       employeeService:
         timeout-duration: 15s
 
-# Actuator Config
+# Actuator configuration
 management:
   endpoints:
     web:
@@ -164,7 +170,7 @@ management:
     circuitbreakers:
       enabled: true
 
-# Logging Config
+# Logging configuration
 logging:
   level:
     org.springframework.cloud.gateway: INFO

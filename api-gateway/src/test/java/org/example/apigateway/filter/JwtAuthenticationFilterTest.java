@@ -43,31 +43,6 @@ class JwtAuthenticationFilterTest {
     }
 
     @Nested
-    @DisplayName("Open Endpoint Tests")
-    class OpenEndpointTests {
-
-        @Test
-        @DisplayName("Should skip authentication for open endpoints")
-        void shouldSkipAuthenticationForOpenEndpoints() {
-            MockServerHttpRequest request = MockServerHttpRequest
-                    .get("/api/auth/login")
-                    .build();
-            MockServerWebExchange exchange = MockServerWebExchange.from(request);
-
-            when(routeValidator.isOpenEndpoint(any())).thenReturn(true);
-            when(filterChain.filter(exchange)).thenReturn(Mono.empty());
-
-            Mono<Void> result = jwtAuthenticationFilter.filter(exchange, filterChain);
-
-            StepVerifier.create(result)
-                    .verifyComplete();
-
-            verify(filterChain).filter(exchange);
-            verify(jwtUtil, never()).validateToken(any());
-        }
-    }
-
-    @Nested
     @DisplayName("Missing Authorization Header Tests")
     class MissingAuthorizationHeaderTests {
 

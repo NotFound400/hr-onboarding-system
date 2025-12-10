@@ -1,0 +1,71 @@
+server:
+  port: 8083
+
+spring:
+  application:
+    name: housing-service
+
+  # ==================== MySQL Database Configuration ====================
+  datasource:
+    url: jdbc:mysql://${AWS_RDS_ENDPOINT:hr-onboarding-mysql-dev.cjmeo8yi2a1k.us-east-2.rds.amazonaws.com}:${AWS_RDS_PORT:3306}/${AWS_RDS_DATABASE:hronboarding}?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true
+    username: ${AWS_RDS_USERNAME:admin}
+    password: ${AWS_RDS_PASSWORD:HRonboarding2025}
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    
+    hikari:
+      pool-name: HousingServiceHikariPool
+      maximum-pool-size: 10
+      minimum-idle: 5
+      idle-timeout: 300000
+      max-lifetime: 1200000
+      connection-timeout: 30000
+
+  # ==================== JPA Configuration ====================
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+        dialect: org.hibernate.dialect.MySQLDialect
+    open-in-view: false
+
+# ==================== Eureka Client Configuration ====================
+eureka:
+  client:
+    register-with-eureka: true
+    fetch-registry: true
+    service-url:
+      defaultZone: http://${EUREKA_USER:eureka}:${EUREKA_PASSWORD:eureka123}@${EUREKA_HOST:localhost}:${EUREKA_PORT:8761}/eureka/
+  instance:
+    instance-id: ${spring.application.name}:${random.value}
+    prefer-ip-address: true
+    lease-renewal-interval-in-seconds: 10
+    lease-expiration-duration-in-seconds: 30
+
+# ==================== Actuator Configuration ====================
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics
+  endpoint:
+    health:
+      show-details: always
+
+# ==================== Logging Configuration ====================
+logging:
+  level:
+    root: INFO
+    org.example.housingservice: DEBUG
+    org.hibernate.SQL: DEBUG
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
+
+# ==================== Swagger Configuration ====================
+springdoc:
+  api-docs:
+    path: /api-docs
+  swagger-ui:
+    path: /swagger-ui.html
