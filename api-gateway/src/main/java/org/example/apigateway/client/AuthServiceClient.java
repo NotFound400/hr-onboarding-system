@@ -18,7 +18,7 @@ public class AuthServiceClient {
 
     private final WebClient.Builder webClientBuilder;
 
-    @Value("${auth-service.url:lb://auth-service}")
+    @Value("${auth-service.url:https://auth-service}")
     private String authServiceUrl;
 
     @Value("${auth-service.timeout:5000}")
