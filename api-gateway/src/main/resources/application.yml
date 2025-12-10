@@ -100,7 +100,7 @@ spring:
 
 # Auth Service client configuration
 auth-service:
-  url: lb://auth-service
+  url: https://auth-service
   timeout: 5000
 
 # Eureka client configuration
