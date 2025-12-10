@@ -4,11 +4,13 @@ server:
 spring:
   application:
     name: authentication-service
+
   datasource:
     url: jdbc:mysql://hr-onboarding-mysql-dev.cjmeo8yi2a1k.us-east-2.rds.amazonaws.com:3306/hronboarding
     username: admin
     password: HRonboarding2025
     driver-class-name: com.mysql.cj.jdbc.Driver
+
   jpa:
     hibernate:
       ddl-auto: none
@@ -19,21 +21,27 @@ spring:
       hibernate:
         format_sql: true
 
+  profiles:
+    active: dev
+
+# Swagger/OpenAPI
 springdoc:
   api-docs:
     path: /api-docs
   swagger-ui:
     path: /swagger-ui.html
 
-security:
-  jwt:
-    secret: HrOnboardingJwtSecretKey_2025_MustBeAtLeast32Characters
-    expiration-ms: 3600000
+# JWT Configuration - MATCH API GATEWAY
+jwt:
+  secret: dGhpc2lzYXZlcnlsb25nc2VjcmV0a2V5Zm9yaHJvbmJvYXJkaW5nc3lzdGVtand0dG9rZW4=
+  expiration: 86400000
 
+# Registration Token Configuration
 registration:
   token:
     expiration-hours: 3
 
+# Eureka - DISABLED (Auth Service is standalone per project requirements)
 eureka:
   client:
     enabled: false

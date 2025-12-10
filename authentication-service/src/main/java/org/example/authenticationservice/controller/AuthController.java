@@ -1,5 +1,6 @@
 package org.example.authenticationservice.controller;
 
+import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import org.example.authenticationservice.dto.*;
 import org.example.authenticationservice.service.AuthService;
@@ -24,7 +25,7 @@ public class AuthController {
      * Backend also accepts: { "usernameOrEmail": "...", "password": "..." }
      */
     @PostMapping("/login")
-    public ResponseEntity<ApiResponse<LoginResponse>> login(@RequestBody LoginRequest request) {
+    public ResponseEntity<@NonNull ApiResponse<LoginResponse>> login(@RequestBody LoginRequest request) {
         try {
             LoginResponse loginResponse = authService.login(request);
             return ResponseEntity.ok(ApiResponse.ok("Login successful", loginResponse));
@@ -47,7 +48,7 @@ public class AuthController {
      * Backend also accepts: { "registrationToken": "...", ... }
      */
     @PostMapping("/register")
-    public ResponseEntity<ApiResponse<UserDto>> register(@RequestBody RegisterRequest request) {
+    public ResponseEntity<@NonNull ApiResponse<UserDto>> register(@RequestBody RegisterRequest request) {
         try {
             UserDto userDto = authService.register(request);
             return ResponseEntity
@@ -70,7 +71,7 @@ public class AuthController {
      * Supports both API Gateway (X-User-Id header) and direct JWT token.
      */
     @GetMapping("/profile")
-    public ResponseEntity<ApiResponse<UserDto>> getUserProfile(
+    public ResponseEntity<@NonNull ApiResponse<UserDto>> getUserProfile(
             @RequestHeader(value = "X-User-Id", required = false) Long userId,
             @RequestHeader(value = "Authorization", required = false) String authHeader) {
         try {
@@ -107,7 +108,7 @@ public class AuthController {
      * Requires HR role.
      */
     @PostMapping("/registration-token")
-    public ResponseEntity<ApiResponse<RegistrationTokenDto>> generateRegistrationToken(
+    public ResponseEntity<@NonNull ApiResponse<RegistrationTokenDto>> generateRegistrationToken(
             @RequestBody GenerateRegistrationTokenRequest request,
             @RequestHeader(value = "X-User-Id", required = false) Long userId,
             @RequestHeader(value = "Authorization", required = false) String authHeader) {
@@ -153,7 +154,7 @@ public class AuthController {
      * Backend primary endpoint.
      */
     @GetMapping("/validate-token/{token}")
-    public ResponseEntity<ApiResponse<RegistrationTokenDto>> validateRegistrationToken(
+    public ResponseEntity<@NonNull ApiResponse<RegistrationTokenDto>> validateRegistrationToken(
             @PathVariable String token) {
         try {
             RegistrationTokenDto dto = authService.validateRegistrationToken(token);
@@ -175,7 +176,7 @@ public class AuthController {
      * Same as /validate-token/{token}
      */
     @GetMapping("/registration-token/{token}")
-    public ResponseEntity<ApiResponse<RegistrationTokenDto>> validateRegistrationTokenAlias(
+    public ResponseEntity<@NonNull ApiResponse<RegistrationTokenDto>> validateRegistrationTokenAlias(
             @PathVariable String token) {
         return validateRegistrationToken(token);
     }
@@ -185,7 +186,7 @@ public class AuthController {
      * Logout endpoint (for audit/logging purposes since JWT is stateless).
      */
     @PostMapping("/logout")
-    public ResponseEntity<ApiResponse<Void>> logout(
+    public ResponseEntity<@NonNull ApiResponse<Void>> logout(
             @RequestHeader(value = "Authorization", required = false) String authHeader) {
         // For stateless JWT, logout is handled client-side by removing the token
         // This endpoint can be used for audit logging or token blacklisting if needed
