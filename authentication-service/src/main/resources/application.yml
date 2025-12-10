@@ -41,7 +41,14 @@ registration:
   token:
     expiration-hours: 3
 
-# Eureka - DISABLED (Auth Service is standalone per project requirements)
+# Email Service Configuration
+email:
+  service:
+    url: http://localhost:8085
+  frontend:
+    registration-url: http://localhost:3000/register
+
+# Eureka - DISABLED (Auth Service is standalone)
 eureka:
   client:
     enabled: false

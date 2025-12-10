@@ -1,6 +1,9 @@
 package org.example.authenticationservice.service;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.example.authenticationservice.client.EmailServiceClient;
+import org.example.authenticationservice.client.RegistrationEmailRequest;
 import org.example.authenticationservice.dto.*;
 import org.example.authenticationservice.entity.RegistrationToken;
 import org.example.authenticationservice.entity.Role;
@@ -24,6 +27,7 @@ import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class AuthService {
 
     private final UserRepository userRepository;
@@ -32,9 +36,13 @@ public class AuthService {
     private final RegistrationTokenRepository registrationTokenRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtTokenProvider jwtTokenProvider;
+    private final EmailServiceClient emailServiceClient;
 
     @Value("${registration.token.expiration-hours:3}")
     private int tokenExpirationHours;
+
+    @Value("${email.frontend.registration-url:http://localhost:3000/register}")
+    private String frontendRegistrationUrl;
 
     private static final DateTimeFormatter ISO_FORMATTER = DateTimeFormatter.ISO_DATE_TIME;
 
@@ -57,7 +65,32 @@ public class AuthService {
 
         token = registrationTokenRepository.save(token);
 
+        sendRegistrationEmail(request.getEmail(), token.getToken());
+
         return mapToRegistrationTokenDto(token);
+    }
+
+    /**
+     * Send registration email via Email Service
+     */
+    private void sendRegistrationEmail(String email, String token) {
+        try {
+            String registrationLink = frontendRegistrationUrl + "?token=" + token;
+
+            RegistrationEmailRequest emailRequest = RegistrationEmailRequest.builder()
+                    .to(email)
+                    .token(token)
+                    .registrationLink(registrationLink)
+                    .build();
+
+            // Use async endpoint to queue email (non-blocking)
+            emailServiceClient.sendRegistrationEmailAsync(emailRequest);
+            log.info("Registration email queued for: {}", email);
+
+        } catch (Exception e) {
+            // Log error but don't fail the token generation
+            log.error("Failed to send registration email to {}: {}", email, e.getMessage());
+        }
     }
 
     /**
@@ -123,7 +156,7 @@ public class AuthService {
         // Load roles
         List<String> roleNames = getUserRoleNames(user);
 
-        // Generate JWT with userId (NEW: added userId parameter)
+        // Generate JWT with userId
         String jwtToken = jwtTokenProvider.createToken(user.getUsername(), user.getId(), roleNames);
 
         Instant expiresAt = Instant.now().plusMillis(jwtTokenProvider.getValidityInMs());
@@ -184,7 +217,6 @@ public class AuthService {
      * Get user ID by extracting username from JWT token.
      */
     public Long getUserIdFromToken(String token) {
-        // NEW: can directly extract userId from token now
         return jwtTokenProvider.getUserIdFromToken(token);
     }
 
