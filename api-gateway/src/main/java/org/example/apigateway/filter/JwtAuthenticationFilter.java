@@ -24,6 +24,11 @@ public class JwtAuthenticationFilter implements GlobalFilter, Ordered {
     private final JwtUtil jwtUtil;
     private final RouteValidator routeValidator;
 
+    public static final String HEADER_USER_ID = "X-User-Id";
+    public static final String HEADER_USERNAME = "X-Username";
+    public static final String HEADER_USER_ROLES = "X-User-Roles";
+    public static final String HEADER_GATEWAY_REQUEST = "X-Gateway-Request";
+
     @Override
     public Mono<Void> filter(ServerWebExchange exchange, GatewayFilterChain chain) {
         ServerHttpRequest request = exchange.getRequest();
@@ -33,7 +38,10 @@ public class JwtAuthenticationFilter implements GlobalFilter, Ordered {
 
         if (routeValidator.isOpenEndpoint(request)) {
             log.debug("Open endpoint, skipping authentication: {}", path);
-            return chain.filter(exchange);
+            ServerHttpRequest modifiedRequest = request.mutate()
+                    .header(HEADER_GATEWAY_REQUEST, "true")
+                    .build();
+            return chain.filter(exchange.mutate().request(modifiedRequest).build());
         }
 
         if (!request.getHeaders().containsKey(HttpHeaders.AUTHORIZATION)) {
@@ -42,10 +50,10 @@ public class JwtAuthenticationFilter implements GlobalFilter, Ordered {
         }
 
         String authHeader = request.getHeaders().getFirst(HttpHeaders.AUTHORIZATION);
-        
+
         if (authHeader == null || !authHeader.startsWith("Bearer ")) {
             log.warn("Invalid Authorization header format for: {}", path);
-            return onError(exchange, "Invalid Authorization header", HttpStatus.UNAUTHORIZED);
+            return onError(exchange, "Invalid Authorization header format", HttpStatus.UNAUTHORIZED);
         }
 
         String token = authHeader.substring(7);
@@ -61,12 +69,13 @@ public class JwtAuthenticationFilter implements GlobalFilter, Ordered {
             List<String> roles = jwtUtil.extractRoles(token);
 
             ServerHttpRequest modifiedRequest = request.mutate()
-                    .header("X-User-Id", userId != null ? userId.toString() : "")
-                    .header("X-Username", username)
-                    .header("X-User-Roles", String.join(",", roles))
+                    .header(HEADER_USER_ID, userId != null ? userId.toString() : "")
+                    .header(HEADER_USERNAME, username != null ? username : "")
+                    .header(HEADER_USER_ROLES, roles != null ? String.join(",", roles) : "")
+                    .header(HEADER_GATEWAY_REQUEST, "true")
                     .build();
 
-            log.debug("Authenticated user: {} with roles: {}", username, roles);
+            log.debug("Authenticated user: {} (id: {}) with roles: {}", username, userId, roles);
             
             return chain.filter(exchange.mutate().request(modifiedRequest).build());
         } catch (Exception e) {
@@ -78,9 +87,14 @@ public class JwtAuthenticationFilter implements GlobalFilter, Ordered {
     private Mono<Void> onError(ServerWebExchange exchange, String message, HttpStatus status) {
         ServerHttpResponse response = exchange.getResponse();
         response.setStatusCode(status);
-        response.getHeaders().add("Content-Type", "application/json");
+        response.getHeaders().add(HttpHeaders.CONTENT_TYPE, "application/json");
         
-        String body = String.format("{\"error\": \"%s\", \"status\": %d}", message, status.value());
+        String body = String.format(
+                "{\"success\": false, \"error\": \"%s\", \"status\": %d, \"timestamp\": \"%s\"}",
+                message, 
+                status.value(),
+                java.time.LocalDateTime.now().toString()
+        );
         
         return response.writeWith(
             Mono.just(response.bufferFactory().wrap(body.getBytes()))
