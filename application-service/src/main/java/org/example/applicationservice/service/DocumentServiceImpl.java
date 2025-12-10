@@ -18,6 +18,7 @@ import software.amazon.awssdk.services.s3.model.GetObjectRequest;
 import software.amazon.awssdk.services.s3.model.PutObjectRequest;
 import java.io.IOException;
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -141,7 +142,11 @@ public class DocumentServiceImpl implements DocumentService {
             doc.setTitle(request.getTitle());
             doc.setDescription(request.getDescription());
             doc.setPath(s3Url);
-            doc.setIsRequired(false);
+            boolean isRequired = false;
+            if(isRequired(request.getType())) {
+                isRequired = true;
+            }
+            doc.setIsRequired(isRequired);
 
             DigitalDocument saved = repository.save(doc);
 
@@ -157,6 +162,24 @@ public class DocumentServiceImpl implements DocumentService {
         } catch (IOException e) {
             throw new RuntimeException("Failed to upload document", e);
         }
+    }
+
+    private boolean isRequired(String type) {
+        if (type == null || type.trim().isEmpty()) return false;
+        String t = type.trim().toLowerCase();
+        Set<String> requiredExact = Set.of(
+                "passport",
+                "driver license",
+                "driver's license",
+                "i-20 form",
+                "driving licence",
+                "driving license"
+        );
+
+        if (requiredExact.contains(t)) {
+            return true;
+        }
+        return t.contains("visa");
     }
 
     @Override

@@ -5,10 +5,7 @@ import com.example.common.Result;
 import org.example.applicationservice.client.EmailServiceClient;
 import org.example.applicationservice.dao.ApplicationWorkFlowRepository;
 import org.example.applicationservice.domain.ApplicationWorkFlow;
-import org.example.applicationservice.dto.ApplicationFlowDTO;
-import org.example.applicationservice.dto.CreateApplicationDTO;
-import org.example.applicationservice.dto.HRRequestDTO;
-import org.example.applicationservice.dto.UpdateApplicationDTO;
+import org.example.applicationservice.dto.*;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDateTime;
@@ -47,7 +44,7 @@ public class ApplicationServiceImpl implements ApplicationService{
         entity.setComment(request.getComment());
         entity.setCreateDate(LocalDateTime.now());
         entity.setLastModificationDate(LocalDateTime.now());
-        entity.setStatus(ApplicationStatus.Open);
+        entity.setStatus(ApplicationStatus.Pending);
 
         ApplicationWorkFlow saved = repository.save(entity);
 
@@ -94,6 +91,71 @@ public class ApplicationServiceImpl implements ApplicationService{
         dto.setStatus(app.getStatus());
 
         return Result.success(dto);
+    }
+
+//    @Override
+//    @Transactional(readOnly = true)
+//    public Result<List<ApplicationFlowDTO>> getActiveApplications(String employeeID) {
+//        if (employeeID == null || employeeID.trim().isEmpty()) {
+//            return Result.fail("employeeID is required");
+//        }
+//
+//        List<ApplicationStatus> activeStatuses = Arrays.asList(
+//                ApplicationStatus.Open,
+//                ApplicationStatus.Pending
+//        );
+//
+//        List<ApplicationWorkFlow> apps =
+//                repository.findByEmployeeIdAndStatusInOrderByCreateDateDesc(employeeID, activeStatuses);
+//
+//        if (apps == null || apps.isEmpty()) {
+//            return Result.fail("No active applications found for employeeID: " + employeeID);
+//        }
+//
+//        List<ApplicationFlowDTO> dtoList = apps.stream().map(app -> {
+//            ApplicationFlowDTO dto = new ApplicationFlowDTO();
+//            dto.setId(app.getId());
+//            dto.setEmployeeId(app.getEmployeeId());
+//            dto.setApplicationType(app.getApplicationType());
+//            dto.setComment(app.getComment());
+//            dto.setCreateDate(app.getCreateDate());
+//            dto.setLastModificationDate(app.getLastModificationDate());
+//            dto.setStatus(app.getStatus());
+//            return dto;
+//        }).toList();
+//
+//        return Result.success(dtoList);
+//    }
+    @Override
+    @Transactional(readOnly = true)
+    public Result<List<ApplicationListResponseDTO>> getActiveApplications(String employeeID) {
+        if (employeeID == null || employeeID.trim().isEmpty()) {
+            return Result.fail("employeeID is required");
+        }
+
+        List<ApplicationStatus> activeStatuses = Arrays.asList(
+                ApplicationStatus.Open,
+                ApplicationStatus.Pending
+        );
+
+        List<ApplicationWorkFlow> apps =
+                repository.findByEmployeeIdAndStatusInOrderByCreateDateDesc(employeeID, activeStatuses);
+
+        if (apps == null || apps.isEmpty()) {
+            return Result.fail("No active applications found for employeeID: " + employeeID);
+        }
+
+        List<ApplicationListResponseDTO> dtoList = apps.stream().map(app -> {
+            ApplicationListResponseDTO dto = new ApplicationListResponseDTO();
+            dto.setId(app.getId());
+            dto.setEmployeeId(app.getEmployeeId());
+            dto.setApplicationType(app.getApplicationType());
+            dto.setComment(app.getComment());
+            dto.setStatus(app.getStatus());
+            return dto;
+        }).toList();
+
+        return Result.success(dtoList);
     }
 
     @Override
@@ -194,40 +256,68 @@ public class ApplicationServiceImpl implements ApplicationService{
         return Result.success(null); // No data needed
     }
 
+//    @Override
+//    @Transactional
+//    public Result<Void> approveApplication(Long applicationId, HRRequestDTO request) {
+//        if (applicationId == null) {
+//            return Result.fail("applicationId is required");
+//        }
+//
+//        Optional<ApplicationWorkFlow> optionalApp = repository.findById(applicationId);
+//        if (optionalApp.isEmpty()) {
+//            return Result.fail("Application not found with ID: " + applicationId);
+//        }
+//
+//        ApplicationWorkFlow app = optionalApp.get();
+//
+//        // Only allow HR to approve if status = Pending
+//        if (app.getStatus() != ApplicationStatus.Pending) {
+//            return Result.fail("Cannot approve application with status: " + app.getStatus());
+//        }
+//
+//        app.setStatus(ApplicationStatus.Approved);
+//        app.setComment(request.getComment());
+//        app.setLastModificationDate(LocalDateTime.now());
+//
+//        repository.save(app);
+//
+//        // Trigger Email Service (Feign)
+////        try {
+////            emailServiceClient.sendApprovalEmail(app.getEmployeeID(), request.getComment());
+////        } catch (Exception e) {
+////            System.err.println("Failed to send approval email: " + e.getMessage());
+////        }
+//
+//        return Result.success(null);
+//    }
+
     @Override
     @Transactional
-    public Result<Void> approveApplication(Long applicationId, HRRequestDTO request) {
-        if (applicationId == null) {
-            return Result.fail("applicationId is required");
+    public Result<UpdateApplicationStatusDTO> approveApplication(Long applicationId, HRRequestDTO request) {
+
+        Optional<ApplicationWorkFlow> optional = repository.findById(applicationId);
+        if (optional.isEmpty()) {
+            return Result.fail("Application not found");
         }
 
-        Optional<ApplicationWorkFlow> optionalApp = repository.findById(applicationId);
-        if (optionalApp.isEmpty()) {
-            return Result.fail("Application not found with ID: " + applicationId);
-        }
+        ApplicationWorkFlow app = optional.get();
 
-        ApplicationWorkFlow app = optionalApp.get();
-
-        // Only allow HR to approve if status = Pending
-        if (app.getStatus() != ApplicationStatus.Pending) {
-            return Result.fail("Cannot approve application with status: " + app.getStatus());
-        }
-
+        // update status
         app.setStatus(ApplicationStatus.Approved);
         app.setComment(request.getComment());
         app.setLastModificationDate(LocalDateTime.now());
 
         repository.save(app);
 
-        // Trigger Email Service (Feign)
-//        try {
-//            emailServiceClient.sendApprovalEmail(app.getEmployeeID(), request.getComment());
-//        } catch (Exception e) {
-//            System.err.println("Failed to send approval email: " + e.getMessage());
-//        }
+        // create response DTO
+        UpdateApplicationStatusDTO dto = new UpdateApplicationStatusDTO(
+                app.getStatus(),
+                app.getComment()
+        );
 
-        return Result.success(null);
+        return Result.success(dto);
     }
+
 
     @Override
     @Transactional
