@@ -7,6 +7,7 @@ import org.example.applicationservice.domain.ApplicationWorkFlow;
 import org.example.applicationservice.domain.DigitalDocument;
 import org.example.applicationservice.dto.DigitalDocumentDTO;
 import org.example.applicationservice.dto.UploadDocumentRequest;
+import org.example.applicationservice.exception.EntityNotFoundException;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
@@ -131,7 +132,7 @@ public class DocumentServiceImpl implements DocumentService {
 
             // 4. Fetch ApplicationWorkFlow
             ApplicationWorkFlow application = applicationRepository.findById(request.getApplicationId())
-                    .orElseThrow(() -> new RuntimeException("Application not found"));
+                    .orElseThrow(() -> new EntityNotFoundException("Application not found"));
 
             // 5. Save DigitalDocument entity
             DigitalDocument doc = new DigitalDocument();
@@ -162,7 +163,7 @@ public class DocumentServiceImpl implements DocumentService {
     public byte[] downloadDocumentById(Long documentId) {
         // 1. Fetch document entity
         DigitalDocument doc = repository.findById(documentId)
-                .orElseThrow(() -> new RuntimeException("Document not found with id: " + documentId));
+                .orElseThrow(() -> new EntityNotFoundException("Document not found with id: " + documentId));
 
         // 2. Extract S3 key from URL (assuming you stored full S3 URL in doc.getPath())
         String s3Url = doc.getPath();
@@ -178,7 +179,7 @@ public class DocumentServiceImpl implements DocumentService {
 
     public DigitalDocument getDocumentEntityById(Long id) {
         return repository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Document not found with id: " + id));
+                .orElseThrow(() -> new EntityNotFoundException("Document not found with id: " + id));
     }
 
     @Override
@@ -186,7 +187,7 @@ public class DocumentServiceImpl implements DocumentService {
 
         // 1. Fetch entity
         DigitalDocument doc = repository.findById(documentId)
-                .orElseThrow(() -> new RuntimeException("Document not found with id: " + documentId));
+                .orElseThrow(() -> new EntityNotFoundException("Document not found with id: " + documentId));
 
         // 2. Extract S3 key
         String s3Url = doc.getPath();
@@ -207,7 +208,7 @@ public class DocumentServiceImpl implements DocumentService {
 
         // 1. Find existing document
         DigitalDocument doc = repository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Document not found: " + id));
+                .orElseThrow(() -> new EntityNotFoundException("Document not found: " + id));
 
         // 2. Extract S3 key from existing path
         String s3Url = doc.getPath();

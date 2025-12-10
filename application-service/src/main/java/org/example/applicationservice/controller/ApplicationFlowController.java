@@ -9,7 +9,6 @@ import org.example.applicationservice.dto.UpdateApplicationDTO;
 import org.example.applicationservice.service.ApplicationService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
 import java.util.List;
 
 @RestController
