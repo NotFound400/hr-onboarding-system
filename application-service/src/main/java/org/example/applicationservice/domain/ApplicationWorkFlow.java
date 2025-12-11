@@ -1,7 +1,6 @@
 package org.example.applicationservice.domain;
 
-import com.example.common.ApplicationStatus;
-import com.example.common.ApplicationType;
+import org.example.applicationservice.utils.*;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
