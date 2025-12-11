@@ -1,8 +1,8 @@
 package org.example.authenticationservice.config;
 
+import org.example.authenticationservice.security.CombinedAuthenticationFilter;
 import org.example.authenticationservice.security.CustomAccessDeniedHandler;
 import org.example.authenticationservice.security.CustomAuthenticationEntryPoint;
-import org.example.authenticationservice.security.JwtAuthenticationFilter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -23,14 +23,14 @@ import org.springframework.http.HttpMethod;
 @EnableMethodSecurity
 public class SecurityConfig {
 
-    private final JwtAuthenticationFilter jwtAuthenticationFilter;
+    private final CombinedAuthenticationFilter combinedAuthenticationFilter;
     private final CustomAccessDeniedHandler customAccessDeniedHandler;
     private final CustomAuthenticationEntryPoint customAuthenticationEntryPoint;
 
-    public SecurityConfig(JwtAuthenticationFilter jwtAuthenticationFilter,
+    public SecurityConfig(CombinedAuthenticationFilter combinedAuthenticationFilter,
                           CustomAccessDeniedHandler customAccessDeniedHandler,
                           CustomAuthenticationEntryPoint customAuthenticationEntryPoint) {
-        this.jwtAuthenticationFilter = jwtAuthenticationFilter;
+        this.combinedAuthenticationFilter = combinedAuthenticationFilter;
         this.customAccessDeniedHandler = customAccessDeniedHandler;
         this.customAuthenticationEntryPoint = customAuthenticationEntryPoint;
     }
@@ -66,7 +66,7 @@ public class SecurityConfig {
                         .accessDeniedHandler(customAccessDeniedHandler)            // 403 for unauthorized
                 )
                 // Add JWT filter before UsernamePasswordAuthenticationFilter
-                .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
+                .addFilterBefore(combinedAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
     }
