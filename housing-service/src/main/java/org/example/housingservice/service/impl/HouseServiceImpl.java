@@ -4,6 +4,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.example.housingservice.client.EmployeeServiceClient;
 import org.example.housingservice.context.UserContext;
+import org.example.housingservice.dto.ApiResponse;
 import org.example.housingservice.dto.FacilityDTO;
 import org.example.housingservice.dto.HouseDTO;
 import org.example.housingservice.dto.LandlordDTO;
@@ -17,6 +18,7 @@ import org.example.housingservice.repository.FacilityRepository;
 import org.example.housingservice.repository.HouseRepository;
 import org.example.housingservice.repository.LandlordRepository;
 import org.example.housingservice.service.HouseService;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -221,6 +223,34 @@ public class HouseServiceImpl implements HouseService {
         }
 
         return buildEmployeeViewResponse(house);
+    }
+
+    @Override
+    public Map<String, Object> checkHouseAvailability(Long houseId) {
+        log.info("Checking availability for house: {}", houseId);
+
+        House house = houseRepository.findById(houseId)
+                .orElseThrow(() -> new ResourceNotFoundException("House", "id", houseId));
+
+        int currentOccupants = employeeServiceClient.countEmployeesByHouseId(houseId);
+        boolean available = currentOccupants < house.getMaxOccupant();
+
+        Map<String, Object> result = new HashMap<>();
+        result.put("houseId", house.getId());
+        result.put("address", house.getAddress());
+        result.put("currentOccupants", currentOccupants);
+        result.put("maxOccupant", house.getMaxOccupant());
+        result.put("available", available);
+
+        log.info("House {} availability: {}/{}, available: {}",
+                houseId, currentOccupants, house.getMaxOccupant(), available);
+
+        return result;
+    }
+
+    @Override
+    public List<EmployeeServiceClient.EmployeeInfo> getEmployeesByHouseId(Long houseId) {
+        return employeeServiceClient.getEmployeesByHouseId(houseId);
     }
 
     @Override

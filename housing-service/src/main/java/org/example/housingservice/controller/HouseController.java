@@ -6,15 +6,19 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.example.housingservice.client.EmployeeServiceClient;
 import org.example.housingservice.context.UserContext;
 import org.example.housingservice.dto.ApiResponse;
 import org.example.housingservice.dto.HouseDTO;
+import org.example.housingservice.entity.House;
 import org.example.housingservice.service.HouseService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * House Management Controller
@@ -222,6 +226,13 @@ public class HouseController {
     public ResponseEntity<ApiResponse<HouseDTO.Summary>> getHouseSummary(@PathVariable Long id) {
         HouseDTO.Summary summary = houseService.getHouseSummary(id);
         return ResponseEntity.ok(ApiResponse.success(summary));
+    }
+
+    // ==================== Check Vacancy of House ====================
+    @GetMapping("/{houseId}/availability")
+    public ResponseEntity<ApiResponse<Map<String, Object>>> checkHouseAvailability(
+            @PathVariable Long houseId) {
+        return ResponseEntity.ok(ApiResponse.success(houseService.checkHouseAvailability(houseId)));
     }
 
     // ==================== Helper Methods ====================

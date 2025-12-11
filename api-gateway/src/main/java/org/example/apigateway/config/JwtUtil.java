@@ -76,4 +76,16 @@ public class JwtUtil {
                 .parseClaimsJws(token)
                 .getBody();
     }
+
+    public Long getHouseId(String token) {
+        Claims claims = extractAllClaims(token);
+        Object houseIdObj = claims.get("houseId");
+        if (houseIdObj == null) {
+            return null;
+        }
+        if (houseIdObj instanceof Integer) {
+            return ((Integer) houseIdObj).longValue();
+        }
+        return (Long) houseIdObj;
+    }
 }
