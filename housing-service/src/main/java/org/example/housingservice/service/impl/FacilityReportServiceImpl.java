@@ -20,6 +20,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -52,6 +53,7 @@ public class FacilityReportServiceImpl implements FacilityReportService {
                 .employeeId(employeeId)
                 .title(request.getTitle())
                 .description(request.getDescription())
+                .createDate(LocalDateTime.now())
                 .status(FacilityReportStatus.Open)  // NewCreateReports default to Open Status
                 .build();
 
@@ -131,6 +133,7 @@ public class FacilityReportServiceImpl implements FacilityReportService {
                 .facilityReport(report)
                 .employeeId(employeeId)
                 .comment(request.getComment())
+                .createDate(LocalDateTime.now())
                 .build();
 
         FacilityReportDetail saved = commentRepository.save(comment);

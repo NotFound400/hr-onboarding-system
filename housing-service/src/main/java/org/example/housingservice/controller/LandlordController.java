@@ -33,7 +33,7 @@ public class LandlordController {
             @RequestHeader("X-User-Roles") String userRoles,
             @Valid @RequestBody LandlordDTO.CreateRequest request) {
 
-        if (!userRoles.equals("HR")) {
+        if (!userRoles.contains("HR")) {
             throw new ForbiddenException("Only HR can create landlords");
         }
 
@@ -58,7 +58,7 @@ public class LandlordController {
             @RequestHeader("X-User-Roles") String userRoles
     ) {
 
-        if (!userRoles.equals("HR")) {
+        if (!userRoles.contains("HR")) {
             throw new ForbiddenException("Only HR can view landlords");
         }
 
@@ -74,7 +74,7 @@ public class LandlordController {
             @PathVariable Long id,
             @Valid @RequestBody LandlordDTO.UpdateRequest request) {
 
-        if (!userRoles.equals("HR")) {
+        if (!userRoles.contains("HR")) {
             throw new ForbiddenException("Only HR can update landlord");
         }
 
@@ -90,7 +90,7 @@ public class LandlordController {
             @RequestHeader("X-User-Roles") String userRoles,
             @PathVariable Long id) {
 
-        if (!userRoles.equals("HR")) {
+        if (!userRoles.contains("HR")) {
             throw new ForbiddenException("Only HR can delete landlord");
         }
 
