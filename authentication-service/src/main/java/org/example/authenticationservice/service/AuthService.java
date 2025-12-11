@@ -337,6 +337,7 @@ public class AuthService {
 
     /**
      * Validate a registration token.
+     * Returns token info including house address for display on registration page.
      */
     public RegistrationTokenDto validateRegistrationToken(String token) {
         RegistrationToken regToken = registrationTokenRepository.findByToken(token)
@@ -346,7 +347,28 @@ public class AuthService {
             throw new IllegalArgumentException("Registration token has expired");
         }
 
-        return mapToRegistrationTokenDto(regToken);
+        // 🆕 Fetch house address if houseId exists
+        String houseAddress = null;
+        if (regToken.getHouseId() != null) {
+            houseAddress = getHouseAddress(regToken.getHouseId());
+        }
+
+        return mapToRegistrationTokenDto(regToken, houseAddress);  // ✅ Uses version WITH houseAddress
+    }
+
+    /**
+     * 🆕 Helper method to get house address from Housing Service
+     */
+    private String getHouseAddress(Long houseId) {
+        try {
+            var response = housingServiceClient.checkHouseAvailability(houseId);
+            if (response != null && response.isSuccess() && response.getData() != null) {
+                return response.getData().getAddress();
+            }
+        } catch (Exception e) {
+            log.warn("Failed to fetch house address for houseId {}: {}", houseId, e.getMessage());
+        }
+        return null;
     }
 
     /**
