@@ -54,11 +54,12 @@ public class HouseController {
     public ResponseEntity<ApiResponse<List<HouseDTO.UnifiedListResponse>>> getAllHouses(
             @Parameter(hidden = true) @RequestHeader(value = "X-User-Id", required = false) Long userId,
             @Parameter(hidden = true) @RequestHeader(value = "X-Username", required = false) String username,
-            @Parameter(hidden = true) @RequestHeader(value = "X-User-Roles", required = false) String roles) {
-        
-        UserContext userContext = buildUserContext(userId, username, roles);
-        log.info("Getting all houses for user: {}, roles: {}", userId, roles);
-        
+            @Parameter(hidden = true) @RequestHeader(value = "X-User-Roles", required = false) String roles,
+            @Parameter(hidden = true) @RequestHeader(value = "X-House-Id", required = false) Long houseId) {
+
+        UserContext userContext = UserContext.fromHeaders(userId, username, roles, houseId);
+        log.info("Getting all houses for user: {}, roles: {}, houseId from JWT: {}", userId, roles, houseId);
+
         List<HouseDTO.UnifiedListResponse> houses = houseService.getAllHouses(userContext);
         return ResponseEntity.ok(ApiResponse.success(houses));
     }
@@ -78,11 +79,12 @@ public class HouseController {
             @PathVariable Long id,
             @Parameter(hidden = true) @RequestHeader(value = "X-User-Id", required = false) Long userId,
             @Parameter(hidden = true) @RequestHeader(value = "X-Username", required = false) String username,
-            @Parameter(hidden = true) @RequestHeader(value = "X-User-Roles", required = false) String roles) {
-        
-        UserContext userContext = buildUserContext(userId, username, roles);
-        log.info("Getting house detail for id: {}, user: {}, roles: {}", id, userId, roles);
-        
+            @Parameter(hidden = true) @RequestHeader(value = "X-User-Roles", required = false) String roles,
+            @Parameter(hidden = true) @RequestHeader(value = "X-House-Id", required = false) Long houseId) {
+
+        UserContext userContext = UserContext.fromHeaders(userId, username, roles, houseId);
+        log.info("Getting house detail for id: {}, user: {}, roles: {}, houseId from JWT: {}", id, userId, roles, houseId);
+
         HouseDTO.UnifiedDetailResponse house = houseService.getHouseDetail(id, userContext);
         return ResponseEntity.ok(ApiResponse.success(house));
     }
@@ -241,12 +243,12 @@ public class HouseController {
      * Build UserContext from request headers
      * If headers are missing, creates a default user context for testing
      */
-    private UserContext buildUserContext(Long userId, String username, String roles) {
+    private UserContext buildUserContext(Long userId, String username, String roles, Long houseId) {
         if (userId == null && roles == null) {
             // For testing without Gateway - default to HR
             log.warn("No user context headers found, using default HR user for testing");
             return UserContext.hrUser(1L);
         }
-        return UserContext.fromHeaders(userId, username, roles);
+        return UserContext.fromHeaders(userId, username, roles, houseId);
     }
 }

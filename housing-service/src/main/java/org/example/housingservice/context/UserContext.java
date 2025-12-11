@@ -26,6 +26,7 @@ public class UserContext {
     private Long userId;
     private String username;
     private List<String> roles;
+    private Long houseId;
 
     /**
      * Check if user has HR role
@@ -70,7 +71,8 @@ public class UserContext {
      * @param username Username from X-Username header
      * @param rolesHeader Comma-separated roles from X-User-Roles header
      */
-    public static UserContext fromHeaders(Long userId, String username, String rolesHeader) {
+    // NEW: Updated method with houseId
+    public static UserContext fromHeaders(Long userId, String username, String rolesHeader, Long houseId) {
         List<String> roles = Collections.emptyList();
         if (rolesHeader != null && !rolesHeader.isEmpty()) {
             roles = Arrays.stream(rolesHeader.split(","))
@@ -83,6 +85,7 @@ public class UserContext {
                 .userId(userId)
                 .username(username)
                 .roles(roles)
+                .houseId(houseId)
                 .build();
     }
 
