@@ -1,6 +1,6 @@
 package org.example.applicationservice.controller;
 
-import com.example.common.Result;
+import org.example.applicationservice.utils.*;
 import org.example.applicationservice.domain.DigitalDocument;
 import org.example.applicationservice.dto.DigitalDocumentDTO;
 import org.example.applicationservice.dto.UploadDocumentRequest;
