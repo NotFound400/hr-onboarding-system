@@ -100,4 +100,76 @@ public class JwtTokenProvider {
                 .parseClaimsJws(token)
                 .getBody();
     }
+
+    /**
+     * Create a JWT token with employee info (houseId, employeeId).
+     * Used during login to include employee-specific claims.
+     *
+     * @param username  User's username
+     * @param userId    User's database ID
+     * @param roles     User's roles
+     * @param houseId   Employee's assigned house ID (can be null for HR)
+     * @param employeeId Employee's MongoDB ObjectId (can be null)
+     * @return JWT token string
+     */
+    public String createToken(String username, Long userId, List<String> roles, Long houseId, String employeeId) {
+        Date now = new Date();
+        Date expiry = new Date(now.getTime() + validityInMs);
+
+        var builder = Jwts.builder()
+                .setSubject(username)
+                .claim("userId", userId)
+                .claim("roles", roles)
+                .setIssuedAt(now)
+                .setExpiration(expiry);
+
+        // Add employee-specific claims if available
+        if (houseId != null) {
+            builder.claim("houseId", houseId);
+        }
+        if (employeeId != null) {
+            builder.claim("employeeId", employeeId);
+        }
+
+        return builder
+                .signWith(signingKey, SignatureAlgorithm.HS256)
+                .compact();
+    }
+
+    /**
+     * Extract houseId from JWT token.
+     *
+     * @param token JWT token
+     * @return houseId or null if not present
+     */
+    public Long getHouseIdFromToken(String token) {
+        try {
+            Claims claims = parseToken(token);
+            Object houseId = claims.get("houseId");
+            if (houseId instanceof Integer) {
+                return ((Integer) houseId).longValue();
+            } else if (houseId instanceof Long) {
+                return (Long) houseId;
+            }
+        } catch (Exception e) {
+            // Token doesn't have houseId claim
+        }
+        return null;
+    }
+
+    /**
+     * Extract employeeId from JWT token.
+     *
+     * @param token JWT token
+     * @return employeeId (MongoDB ObjectId) or null if not present
+     */
+    public String getEmployeeIdFromToken(String token) {
+        try {
+            Claims claims = parseToken(token);
+            return claims.get("employeeId", String.class);
+        } catch (Exception e) {
+            // Token doesn't have employeeId claim
+        }
+        return null;
+    }
 }

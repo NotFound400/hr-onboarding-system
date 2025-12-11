@@ -36,4 +36,16 @@ public class LoginResponse {
      * All roles (for backend flexibility, frontend may not use this)
      */
     private List<String> roles;
+
+    /**
+     * Employee's assigned house ID.
+     * Null for HR users or users without employee records.
+     */
+    private Long houseId;
+
+    /**
+     * Employee's MongoDB ObjectId.
+     * Null for users without employee records.
+     */
+    private String employeeId;
 }
