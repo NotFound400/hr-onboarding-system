@@ -9,6 +9,7 @@ import org.example.applicationservice.domain.ApplicationWorkFlow;
 import org.example.applicationservice.dto.ApplicationFlowDTO;
 import org.example.applicationservice.dto.CreateApplicationDTO;
 import org.example.applicationservice.dto.HRRequestDTO;
+import org.example.applicationservice.dto.UpdateApplicationStatusDTO;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -128,7 +129,7 @@ class ApplicationServiceImplTest {
         HRRequestDTO request = new HRRequestDTO();
         request.setComment("Approved");
 
-        Result<Void> result = applicationService.approveApplication(1L, request);
+        Result<UpdateApplicationStatusDTO> result = applicationService.approveApplication(1L, request);
 
         assertTrue(result.isSuccess());
         verify(repository, times(1)).save(any(ApplicationWorkFlow.class));
@@ -142,7 +143,7 @@ class ApplicationServiceImplTest {
         HRRequestDTO request = new HRRequestDTO();
         request.setComment("Approved");
 
-        Result<Void> result = applicationService.approveApplication(1L, request);
+        Result<UpdateApplicationStatusDTO> result = applicationService.approveApplication(1L, request);
 
         assertFalse(result.isSuccess());
         assertTrue(result.getMessage().contains("Cannot approve application"));
@@ -158,7 +159,7 @@ class ApplicationServiceImplTest {
         HRRequestDTO request = new HRRequestDTO();
         request.setComment("Rejected");
 
-        Result<Void> result = applicationService.rejectApplication(1L, request);
+        Result<UpdateApplicationStatusDTO> result = applicationService.rejectApplication(1L, request);
 
         assertTrue(result.isSuccess());
         verify(repository, times(1)).save(any(ApplicationWorkFlow.class));
@@ -172,7 +173,7 @@ class ApplicationServiceImplTest {
         HRRequestDTO request = new HRRequestDTO();
         request.setComment("Rejected");
 
-        Result<Void> result = applicationService.rejectApplication(1L, request);
+        Result<UpdateApplicationStatusDTO> result = applicationService.rejectApplication(1L, request);
 
         assertFalse(result.isSuccess());
         assertTrue(result.getMessage().contains("Cannot reject application"));
