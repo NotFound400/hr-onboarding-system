@@ -27,12 +27,12 @@ spring:
       routes:
         # ==================== Auth Service (Standalone - Not in Eureka) ====================
         - id: auth-service
-          uri: http://auth-service
+          uri: http://localhost:8081
           predicates:
             - Path=/api/auth/**
           filters:
             # Rewrite path: /api/auth/** -> /**
-            - RewritePath=/api/auth/(?<segment>.*), /${segment}
+            #- RewritePath=/api/auth/(?<segment>.*), /${segment}
             # Circuit breaker for fault tolerance
             - name: CircuitBreaker
               args:
