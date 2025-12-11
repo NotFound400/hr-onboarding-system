@@ -8,6 +8,10 @@ export interface ApiResponse<T> {
   success: boolean;
   /** 后端返回的提示信息 (用于 Toast 展示) */
   message: string;
+  /** 发生错误时的错误列表 */
+  errors?: string[] | null;
+  /** 服务端生成响应的时间戳 */
+  timestamp?: string;
   /** 实际业务数据 Payload */
   data: T | null;
 }

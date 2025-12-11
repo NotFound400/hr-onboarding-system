@@ -111,6 +111,7 @@ export const MOCK_HOUSE_DETAIL: ApiResponse<HouseDetail> = {
     address: '123 Main Street',
     maxOccupant: 4,
     numberOfEmployees: 3,
+    landlordId: 1,
     landlord: MOCK_LANDLORD.data!,
     facilitySummary: {
       Bed: 4,
@@ -131,17 +132,17 @@ export const MOCK_HOUSE_EMPLOYEE_VIEW: ApiResponse<HouseEmployeeView> = {
     address: '123 Main Street, City, State 12345',
     residents: [
       {
-        employeeId: 100,
+        employeeID: 100,
         name: 'Em',
         phone: '555-123-4567',
       },
       {
-        employeeId: 1,
+        employeeID: 1,
         name: 'Alice Wang',
         phone: '111-222-3333',
       },
       {
-        employeeId: 2,
+        employeeID: 2,
         name: 'Bob Smith',
         phone: '444-555-6666',
       },
