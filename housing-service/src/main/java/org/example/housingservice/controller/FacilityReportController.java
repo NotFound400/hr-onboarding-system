@@ -29,7 +29,7 @@ import java.util.List;
  * - HR can add comments or update comments which are created by HR
  */
 @RestController
-@RequestMapping("/api/housing/facility-reports")
+@RequestMapping("/facility-reports")
 @RequiredArgsConstructor
 @Slf4j
 @Tag(name = "Facility Report Management", description = "Facility report management APIs")
@@ -228,6 +228,29 @@ public class FacilityReportController {
         Long employeeId = userId != null ? userId : 1L;
         
         List<FacilityReportDTO.ListItem> reports = reportService.getReportsByEmployeeId(employeeId);
+        return ResponseEntity.ok(ApiResponse.success(reports));
+    }
+
+    /**
+     * Get all facility reports for current employee's assigned house
+     *
+     * This allows employees to see all reports for their house (including roommates' reports)
+     * The house ID is extracted from JWT token via X-House-Id header
+     */
+    @GetMapping("/house/current")
+    @Operation(
+            summary = "Get reports for my house",
+            description = "Get all facility reports for current employee's assigned house (includes roommates' reports)"
+    )
+    public ResponseEntity<ApiResponse<List<FacilityReportDTO.ListItem>>> getReportsForCurrentHouse(
+            @RequestHeader(value = "X-House-Id", required = false) Long houseId) {
+
+        if (houseId == null) {
+            return ResponseEntity.ok(ApiResponse.success("You are not assigned to any house", List.of()));
+        }
+
+        log.info("Getting facility reports for current house: {}", houseId);
+        List<FacilityReportDTO.ListItem> reports = reportService.getReportsForCurrentHouse(houseId);
         return ResponseEntity.ok(ApiResponse.success(reports));
     }
 

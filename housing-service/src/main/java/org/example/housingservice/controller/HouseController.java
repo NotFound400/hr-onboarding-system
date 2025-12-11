@@ -30,7 +30,7 @@ import java.util.Map;
  * User role is extracted from X-User-Roles header set by API Gateway
  */
 @RestController
-@RequestMapping("/api/housing/houses")
+@RequestMapping("/houses")
 @RequiredArgsConstructor
 @Slf4j
 @Tag(name = "House Management", description = "House management APIs with role-based views")

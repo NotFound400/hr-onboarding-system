@@ -105,9 +105,30 @@ public class HouseServiceImpl implements HouseService {
             throw new BusinessException("House already exists at address: " + request.getAddress());
         }
 
-        // Get landlord
-        Landlord landlord = landlordRepository.findById(request.getLandlordId())
-                .orElseThrow(() -> new ResourceNotFoundException("Landlord", "id", request.getLandlordId()));
+        // Validate landlord info is provided
+        if (!request.hasLandlordInfo()) {
+            throw new BusinessException("Either landlordId or landlord object must be provided");
+        }
+
+        Landlord landlord;
+
+        // Option 1: Use existing landlord by ID
+        if (request.getLandlordId() != null) {
+            landlord = landlordRepository.findById(request.getLandlordId())
+                    .orElseThrow(() -> new ResourceNotFoundException("Landlord", "id", request.getLandlordId()));
+        }
+        // Option 2: Create new landlord inline
+        else {
+            LandlordDTO.CreateRequest landlordReq = request.getLandlord();
+            landlord = Landlord.builder()
+                    .firstName(landlordReq.getFirstName())
+                    .lastName(landlordReq.getLastName())
+                    .email(landlordReq.getEmail())
+                    .cellPhone(landlordReq.getCellPhone())
+                    .build();
+            landlord = landlordRepository.save(landlord);
+            log.info("Created new landlord with id: {} for house", landlord.getId());
+        }
 
         // Create house
         House house = House.builder()
@@ -453,9 +474,31 @@ public class HouseServiceImpl implements HouseService {
     private HouseDTO.EmployeeViewResponse buildEmployeeViewResponse(House house) {
         List<HouseDTO.ResidentInfo> roommates = getRoommates(house.getId());
 
+        Landlord landlord = house.getLandlord();
+        HouseDTO.LandlordContactInfo landlordContact = null;
+        if (landlord != null) {
+            landlordContact = HouseDTO.LandlordContactInfo.builder()
+                    .fullName(landlord.getFullName())
+                    .phone(landlord.getCellPhone())
+                    .email(landlord.getEmail())
+                    .build();
+        }
+
+        // Build facility summary
+        Map<String, Integer> facilitySummary = new HashMap<>();
+        if (house.getFacilities() != null) {
+            for (Facility facility : house.getFacilities()) {
+                facilitySummary.merge(facility.getType(),
+                        facility.getQuantity() != null ? facility.getQuantity() : 0,
+                        Integer::sum);
+            }
+        }
+
         return HouseDTO.EmployeeViewResponse.builder()
                 .id(house.getId())
                 .address(house.getAddress())
+                .landlordContact(landlordContact)
+                .facilitySummary(facilitySummary)
                 .residents(roommates)
                 .build();
     }
@@ -490,8 +533,8 @@ public class HouseServiceImpl implements HouseService {
 
         if (house.getFacilities() != null) {
             for (Facility facility : house.getFacilities()) {
-                facilitySummary.merge(facility.getType(), 
-                        facility.getQuantity() != null ? facility.getQuantity() : 0, 
+                facilitySummary.merge(facility.getType(),
+                        facility.getQuantity() != null ? facility.getQuantity() : 0,
                         Integer::sum);
 
                 facilityResponses.add(FacilityDTO.Response.builder()
@@ -514,6 +557,9 @@ public class HouseServiceImpl implements HouseService {
                 .cellPhone(landlord.getCellPhone())
                 .build();
 
+        // Get residents list for HR view
+        List<HouseDTO.ResidentInfo> residents = getRoommates(house.getId());
+
         return HouseDTO.DetailResponse.builder()
                 .id(house.getId())
                 .address(house.getAddress())
@@ -522,6 +568,7 @@ public class HouseServiceImpl implements HouseService {
                 .landlord(landlordResponse)
                 .facilitySummary(facilitySummary)
                 .facilities(facilityResponses)
+                .residents(residents)
                 .build();
     }
 }

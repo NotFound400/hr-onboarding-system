@@ -19,7 +19,7 @@ import java.util.List;
  * Landlord Management Controller (HR functionality)
  */
 @RestController
-@RequestMapping("/api/housing/landlords")
+@RequestMapping("/landlords")
 @RequiredArgsConstructor
 @Slf4j
 @Tag(name = "Landlord Management", description = "Landlord management APIs (HR)")

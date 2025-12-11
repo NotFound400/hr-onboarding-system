@@ -1,6 +1,7 @@
 package org.example.housingservice.dto;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
+import jakarta.validation.Valid;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -126,6 +127,9 @@ public class HouseDTO {
         
         // Facility List
         private List<FacilityDTO.Response> facilities;
+
+        // Current Residents List (for HR to view who lives in this house)
+        private List<ResidentInfo> residents;
     }
 
     /**
@@ -140,9 +144,28 @@ public class HouseDTO {
     public static class EmployeeViewResponse {
         private Long id;
         private String address;
-        
+
+        // Landlord Contact Info (for employees to contact when needed)
+        private LandlordContactInfo landlordContact;
+
+        // Facility Summary (Number of Beds, Mattress, Tables, Chairs)
+        private Map<String, Integer> facilitySummary;
+
         // Roommate List (Name, Phone)
         private List<ResidentInfo> residents;
+    }
+
+    /**
+     * Landlord Contact Info (simplified for Employee view)
+     */
+    @Data
+    @Builder
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class LandlordContactInfo {
+        private String fullName;
+        private String phone;
+        private String email;
     }
 
     /**
@@ -160,15 +183,25 @@ public class HouseDTO {
 
     /**
      * Create House Request DTO
+     *
+     * Supports two ways to specify landlord:
+     * 1. Provide landlordId to use existing landlord
+     * 2. Provide nested landlord object to create new landlord inline
+     *
+     * At least one of landlordId or landlord must be provided.
      */
     @Data
     @Builder
     @NoArgsConstructor
     @AllArgsConstructor
     public static class CreateRequest {
-        
-        @NotNull(message = "Landlord ID is required")
+
+        // Option 1: Use existing landlord by ID
         private Long landlordId;
+
+        // Option 2: Create new landlord inline (nested creation)
+        @Valid
+        private LandlordDTO.CreateRequest landlord;
 
         @NotBlank(message = "Address is required")
         @Size(max = 500, message = "Address cannot exceed 500 characters")
@@ -179,6 +212,13 @@ public class HouseDTO {
 
         // Optional: Add facilities when creating house
         private List<FacilityDTO.CreateRequest> facilities;
+
+        /**
+         * Check if landlord info is provided (either by ID or nested object)
+         */
+        public boolean hasLandlordInfo() {
+            return landlordId != null || landlord != null;
+        }
     }
 
     /**
@@ -189,7 +229,7 @@ public class HouseDTO {
     @NoArgsConstructor
     @AllArgsConstructor
     public static class UpdateRequest {
-        
+
         private Long landlordId;
 
         @Size(max = 500, message = "Address cannot exceed 500 characters")

@@ -19,7 +19,7 @@ import java.util.List;
  * Facility Management Controller (HR functionality)
  */
 @RestController
-@RequestMapping("/api/housing/facilities")
+@RequestMapping("/facilities")
 @RequiredArgsConstructor
 @Slf4j
 @Tag(name = "Facility Management", description = "Facility management APIs (HR)")

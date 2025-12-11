@@ -1,5 +1,6 @@
 package org.example.applicationservice.controller;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import org.example.applicationservice.utils.*;
 import org.example.applicationservice.domain.DigitalDocument;
 import org.example.applicationservice.dto.DigitalDocumentDTO;
@@ -10,7 +11,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
-import tools.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.IOException;
 import java.util.List;
 
@@ -67,7 +68,7 @@ public class DocumentController {
     @PostMapping("/upload")
     public ResponseEntity<Result<DigitalDocumentDTO>> uploadDocument(
             @RequestPart("file") MultipartFile file,
-            @RequestParam("metadata") String metadataJson) {
+            @RequestParam("metadata") String metadataJson) throws JsonProcessingException {
         UploadDocumentRequest request = new ObjectMapper().readValue(metadataJson, UploadDocumentRequest.class);
         DigitalDocumentDTO dto = documentService.uploadDocument(file, request);
         return ResponseEntity.ok(Result.success(dto));
