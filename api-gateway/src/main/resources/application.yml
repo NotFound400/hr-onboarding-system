@@ -5,13 +5,6 @@ spring:
   application:
     name: api-gateway
   
-  # Redis configuration (for rate limiting)
-  data:
-    redis:
-      host: localhost
-      port: 6379
-      timeout: 2000ms
-  
   cloud:
     gateway:
       # Global default filters
@@ -31,8 +24,12 @@ spring:
           predicates:
             - Path=/api/auth/**
           filters:
+<<<<<<< HEAD
             # Rewrite path: /api/auth/** -> /**
             #- RewritePath=/api/auth/(?<segment>.*), /${segment}
+=======
+            # No path rewrite - Auth Service uses /api/auth/** paths directly
+>>>>>>> dev
             # Circuit breaker for fault tolerance
             - name: CircuitBreaker
               args:
@@ -98,11 +95,6 @@ spring:
         connect-timeout: 5000
         response-timeout: 10s
 
-# Auth Service client configuration
-auth-service:
-  url: https://auth-service
-  timeout: 5000
-
 # Eureka client configuration
 eureka:
   instance:
@@ -150,10 +142,6 @@ resilience4j:
     instances:
       default:
         timeout-duration: 10s
-      authService:
-        timeout-duration: 5s
-      employeeService:
-        timeout-duration: 15s
 
 # Actuator configuration
 management:

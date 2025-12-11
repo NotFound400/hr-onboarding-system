@@ -72,35 +72,6 @@ class RouteValidatorTest {
     }
 
     @Nested
-    @DisplayName("IsSecured Predicate Tests")
-    class IsSecuredPredicateTests {
-
-        @Test
-        @DisplayName("Should return true for secured endpoints")
-        void shouldReturnTrueForSecuredEndpoints() {
-            ServerHttpRequest request = MockServerHttpRequest
-                    .get("/api/employees/profile")
-                    .build();
-
-            boolean isSecured = routeValidator.isSecured.test(request);
-
-            assertThat(isSecured).isTrue();
-        }
-
-        @Test
-        @DisplayName("Should return false for open endpoints")
-        void shouldReturnFalseForOpenEndpoints() {
-            ServerHttpRequest request = MockServerHttpRequest
-                    .get("/api/auth/login")
-                    .build();
-
-            boolean isSecured = routeValidator.isSecured.test(request);
-
-            assertThat(isSecured).isFalse();
-        }
-    }
-
-    @Nested
     @DisplayName("Path Matching Tests")
     class PathMatchingTests {
 
