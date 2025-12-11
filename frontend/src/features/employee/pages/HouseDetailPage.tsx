@@ -4,19 +4,22 @@
  */
 
 import { useEffect, useState } from 'react';
-import { Card, Descriptions, List, Tag, Space, Empty, message, Alert } from 'antd';
-import { HomeOutlined, TeamOutlined, PhoneOutlined, MailOutlined, ToolOutlined } from '@ant-design/icons';
+import { Card, Descriptions, List, Space, Empty, message, Alert, Avatar, Tag } from 'antd';
+import { HomeOutlined, TeamOutlined, PhoneOutlined, UserOutlined } from '@ant-design/icons';
 import { PageContainer } from '../../../components/common/PageContainer';
 import { getEmployeeByUserId, getHouseById } from '../../../services/api';
 import { useAppSelector } from '../../../store/hooks';
 import { selectUser } from '../../../store/slices/authSlice';
-import type { Employee, HouseDetail } from '../../../types';
+import type { Employee, HouseDetail, HouseDetailEmployee } from '../../../types';
+
+const isEmployeeHouseDetail = (detail: HouseDetail): detail is HouseDetailEmployee =>
+  detail.viewType === 'EMPLOYEE_VIEW';
 
 const HouseDetailPage: React.FC = () => {
   const currentUser = useAppSelector(selectUser);
   const [loading, setLoading] = useState(false);
   const [employee, setEmployee] = useState<Employee | null>(null);
-  const [houseDetail, setHouseDetail] = useState<HouseDetail | null>(null);
+  const [houseDetail, setHouseDetail] = useState<HouseDetailEmployee | null>(null);
 
   useEffect(() => {
     fetchHouseDetail();
@@ -33,7 +36,12 @@ const HouseDetailPage: React.FC = () => {
 
       if (empData.houseID) {
         const detail = await getHouseById(empData.houseID);
-        setHouseDetail(detail);
+        if (isEmployeeHouseDetail(detail)) {
+          setHouseDetail(detail);
+        } else {
+          setHouseDetail(null);
+          message.warning('Unable to load employee housing data. Please contact HR.');
+        }
       } else {
         setHouseDetail(null);
       }
@@ -72,64 +80,47 @@ const HouseDetailPage: React.FC = () => {
     return (
       <Space direction="vertical" size="large" style={{ width: '100%' }}>
         <Card title="House Information" extra={<HomeOutlined />}>
-          <Descriptions column={2} bordered>
-            <Descriptions.Item label="Address" span={2}>
+          <Descriptions column={1} bordered>
+            <Descriptions.Item label="Address">
               <strong>{houseDetail.address}</strong>
             </Descriptions.Item>
-            <Descriptions.Item label="Max Occupant">{houseDetail.maxOccupant}</Descriptions.Item>
-            <Descriptions.Item label="Current Residents">{houseDetail.numberOfEmployees}</Descriptions.Item>
-          </Descriptions>
-        </Card>
-
-        <Card title="Landlord Information" extra={<TeamOutlined />}>
-          <Descriptions column={2} bordered>
-            <Descriptions.Item label="Name">{houseDetail.landlord.fullName}</Descriptions.Item>
-            <Descriptions.Item label="Phone">
-              <PhoneOutlined style={{ marginRight: 8 }} />
-              {houseDetail.landlord.cellPhone}
-            </Descriptions.Item>
-            <Descriptions.Item label="Email" span={2}>
-              <MailOutlined style={{ marginRight: 8 }} />
-              {houseDetail.landlord.email}
+            <Descriptions.Item label="Total Occupants">
+              <Tag color="blue">{houseDetail.roommates.length}</Tag>
             </Descriptions.Item>
           </Descriptions>
         </Card>
 
-        <Card title="Facility Summary" extra={<ToolOutlined />}>
-          {houseDetail.facilitySummary && Object.keys(houseDetail.facilitySummary).length > 0 ? (
-            <Space size={[8, 8]} wrap>
-              {Object.entries(houseDetail.facilitySummary).map(([type, quantity]) => (
-                <Tag key={type} color="blue" style={{ fontSize: 14, padding: '4px 12px' }}>
-                  {type}: {quantity}
-                </Tag>
-              ))}
-            </Space>
-          ) : (
-            <Empty description="No facility summary" image={Empty.PRESENTED_IMAGE_SIMPLE} />
-          )}
-        </Card>
-
-        <Card title="Facilities" extra={<ToolOutlined />}>
-          {houseDetail.facilities.length === 0 ? (
-            <Empty description="No facility records" image={Empty.PRESENTED_IMAGE_SIMPLE} />
+        <Card title="Roommates" extra={<TeamOutlined />}>
+          {houseDetail.roommates.length === 0 ? (
+            <Empty description="No roommate information available" image={Empty.PRESENTED_IMAGE_SIMPLE} />
           ) : (
             <List
-              dataSource={houseDetail.facilities}
-              renderItem={(facility) => (
+              dataSource={houseDetail.roommates}
+              renderItem={(roommate) => (
                 <List.Item>
                   <List.Item.Meta
-                    title={
+                    avatar={<Avatar icon={<UserOutlined />} />}
+                    title={<span style={{ fontWeight: 600 }}>{roommate.name}</span>}
+                    description={
                       <Space>
-                        <Tag color="green">{facility.type}</Tag>
-                        <span>{facility.description}</span>
+                        <PhoneOutlined />
+                        <span>{roommate.phone || 'N/A'}</span>
                       </Space>
                     }
-                    description={`Quantity: ${facility.quantity}`}
                   />
                 </List.Item>
               )}
             />
           )}
+        </Card>
+
+        <Card>
+          <Alert
+            type="info"
+            showIcon
+            message="Need help with your housing assignment?"
+            description="Please reach out to HR if your roommate list or contact information looks incorrect."
+          />
         </Card>
       </Space>
     );

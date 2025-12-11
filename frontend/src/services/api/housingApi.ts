@@ -9,7 +9,10 @@ import * as HousingMocks from '../mocks/housingMocks';
 import type { 
   HouseListItem,
   HouseDetail,
+  HouseDetailHR,
   HouseEmployeeView,
+  HouseSummary,
+  HouseAvailability,
   Landlord,
   Facility,
   FacilityReportListItem,
@@ -23,8 +26,9 @@ import type {
   CreateFacilityReportRequest,
   UpdateFacilityReportStatusRequest,
   AddFacilityReportCommentRequest,
-  FacilityReportStatus
+  FacilityReportStatus as FacilityReportStatusType
 } from '../../types';
+import { FacilityReportStatus } from '../../types';
 
 // ==================== House APIs (HR) ====================
 
@@ -53,6 +57,25 @@ export const getAllHouses = async (): Promise<HouseListItem[]> => {
 };
 
 /**
+ * 获取可用房屋列表 (仅返回有空位的房屋)
+ * @returns Promise<HouseSummary[]>
+ */
+export const getAvailableHouses = async (): Promise<HouseSummary[]> => {
+  if (isMockMode()) {
+    await delay(300);
+    return HousingMocks.MOCK_HOUSE_SUMMARIES.data!.filter(
+      (house) => house.availableSpots > 0
+    );
+  }
+
+  const houses = (await axiosClient.get(
+    buildHousingPath('/houses/summaries')
+  )) as HouseSummary[];
+
+  return houses.filter((house) => house.availableSpots > 0);
+};
+
+/**
  * 根据 ID 获取房屋详情 (HR 视角)
  * @param id 房屋 ID
  * @returns Promise<HouseDetail>
@@ -68,18 +91,42 @@ export const getHouseById = async (id: number): Promise<HouseDetail> => {
 };
 
 /**
- * 获取员工的房屋信息 (员工视角)
- * @param employeeId 员工 ID
- * @returns Promise<HouseEmployeeView>
+ * 检查房屋可用状态
+ * @param houseId 房屋 ID
+ * @returns Promise<HouseAvailability>
  */
-export const getEmployeeHouse = async (employeeId: number): Promise<HouseEmployeeView> => {
+export const getHouseAvailability = async (
+  houseId: number
+): Promise<HouseAvailability> => {
+  if (isMockMode()) {
+    await delay(200);
+    return {
+      houseId,
+      address: `Mock Address ${houseId}`,
+      maxOccupant: 3,
+      currentOccupants: 1,
+      available: houseId % 2 === 1,
+    };
+  }
+
+  return axiosClient.get(
+    buildHousingPath(`/houses/${houseId}/availability`)
+  ) as Promise<HouseAvailability>;
+};
+
+/**
+ * 获取当前登录员工的房屋信息 (依赖 JWT)
+ * @returns Promise<HouseEmployeeView | null>
+ */
+export const getMyHouse = async (): Promise<HouseEmployeeView | null> => {
   if (isMockMode()) {
     await delay(300);
-    // return HousingMocks.MOCK_HOUSE_EMPLOYEE_VIEW.data!; // 🟢 默认员工视图
     return HousingMocks.MOCK_HOUSE_EMPLOYEE_VIEW.data!;
   }
   
-  return axiosClient.get(buildHousingPath(`/houses/employee/${employeeId}`)) as Promise<HouseEmployeeView>;
+  return axiosClient.get(
+    buildHousingPath('/houses/my-house')
+  ) as Promise<HouseEmployeeView | null>;
 };
 
 /**
@@ -105,13 +152,16 @@ export const createHouse = async (data: CreateHouseRequest): Promise<HouseDetail
     console.log('[Mock Request] createHouse:', data);
     await delay(500);
     // return HousingMocks.SCENARIO_HOUSE_HEAVY_LOAD; // 🔴 直接返回压力测试房屋
+    const baseHouse = HousingMocks.MOCK_HOUSE_DETAIL.data!;
     return {
-      ...HousingMocks.MOCK_HOUSE_DETAIL.data!,
+      ...baseHouse,
       id: Date.now(),
       address: data.address,
-      maxOccupant: data.maxOccupant || 4,
+      maxOccupant: data.maxOccupant || baseHouse.maxOccupant,
       numberOfEmployees: 0,
-    };
+      currentOccupant: 0,
+      viewType: 'HR_VIEW',
+    } as HouseDetailHR;
   }
   
   return axiosClient.post(buildHousingPath('/houses'), data) as Promise<HouseDetail>;
@@ -129,9 +179,10 @@ export const updateHouse = async (id: number, data: Partial<UpdateHouseRequest>)
     await delay(500);
     // return { ...HousingMocks.SCENARIO_HOUSE_HEAVY_LOAD, ...data, id }; // 🔴 检查分页后的房屋
     return {
-      ...HousingMocks.MOCK_HOUSE_DETAIL.data!,
+      ...(HousingMocks.MOCK_HOUSE_DETAIL.data! as HouseDetailHR),
       ...data,
       id,
+      viewType: 'HR_VIEW',
     };
   }
   
@@ -256,18 +307,17 @@ export const getFacilitiesByHouseId = async (houseId: number): Promise<Facility[
     return HousingMocks.MOCK_FACILITIES.data!;
   }
   
-  return axiosClient.get(buildHousingPath(`/houses/${houseId}/facilities`)) as Promise<Facility[]>;
+  return axiosClient.get(buildHousingPath(`/facilities/house/${houseId}`)) as Promise<Facility[]>;
 };
 
 /**
  * 创建设施
- * @param houseId 房屋 ID
  * @param data 设施数据
  * @returns Promise<Facility>
  */
-export const createFacility = async (houseId: number, data: CreateFacilityRequest): Promise<Facility> => {
+export const createFacility = async (data: CreateFacilityRequest): Promise<Facility> => {
   if (isMockMode()) {
-    console.log('[Mock Request] createFacility:', { houseId, data });
+    console.log('[Mock Request] createFacility:', data);
     await delay(500);
     return {
       id: Date.now(),
@@ -277,23 +327,21 @@ export const createFacility = async (houseId: number, data: CreateFacilityReques
     };
   }
   
-  return axiosClient.post(buildHousingPath(`/houses/${houseId}/facilities`), data) as Promise<Facility>;
+  return axiosClient.post(buildHousingPath('/facilities'), data) as Promise<Facility>;
 };
 
 /**
  * 更新设施
- * @param houseId 房屋 ID
  * @param facilityId 设施 ID
  * @param data 更新数据
  * @returns Promise<Facility>
  */
 export const updateFacility = async (
-  houseId: number,
   facilityId: number,
   data: Partial<UpdateFacilityRequest>
 ): Promise<Facility> => {
   if (isMockMode()) {
-    console.log('[Mock Request] updateFacility:', { houseId, facilityId, data });
+    console.log('[Mock Request] updateFacility:', { facilityId, data });
     await delay(500);
     // return HousingMocks.MOCK_FACILITIES.data![0]; // 🟢
     return {
@@ -303,23 +351,22 @@ export const updateFacility = async (
     };
   }
   
-  return axiosClient.put(buildHousingPath(`/houses/${houseId}/facilities/${facilityId}`), data) as Promise<Facility>;
+  return axiosClient.put(buildHousingPath(`/facilities/${facilityId}`), data) as Promise<Facility>;
 };
 
 /**
  * 删除设施
- * @param houseId 房屋 ID
  * @param facilityId 设施 ID
  * @returns Promise<void>
  */
-export const deleteFacility = async (houseId: number, facilityId: number): Promise<void> => {
+export const deleteFacility = async (facilityId: number): Promise<void> => {
   if (isMockMode()) {
-    console.log('[Mock Request] deleteFacility:', { houseId, facilityId });
+    console.log('[Mock Request] deleteFacility:', { facilityId });
     await delay(300);
     return;
   }
   
-  await axiosClient.delete(buildHousingPath(`/houses/${houseId}/facilities/${facilityId}`));
+  await axiosClient.delete(buildHousingPath(`/facilities/${facilityId}`));
 };
 
 // ==================== Facility Report APIs ====================
@@ -351,7 +398,7 @@ export const getAllFacilityReports = async (): Promise<FacilityReportListItem[]>
  * @returns Promise<FacilityReportListItem[]>
  */
 export const getFacilityReportsByStatus = async (
-  status: FacilityReportStatus
+  status: FacilityReportStatusType
 ): Promise<FacilityReportListItem[]> => {
   if (isMockMode()) {
     await delay(500);
@@ -390,24 +437,17 @@ export const getFacilityReportById = async (id: number): Promise<FacilityReportD
  * @param employeeId 员工 ID
  * @returns Promise<FacilityReportListItem[]>
  */
-export const getFacilityReportsByEmployeeId = async (
-  employeeId: number
-): Promise<FacilityReportListItem[]> => {
+export const getMyFacilityReports = async (): Promise<
+  FacilityReportListItem[]
+> => {
   if (isMockMode()) {
     await delay(300);
-    // return HousingMocks.SCENARIO_HOUSE_HEAVY_LOAD.reports
-    //   .filter(report => report.employeeId === employeeId)
-    //   .map(report => ({
-    //     id: report.id,
-    //     title: report.title,
-    //     createDate: report.createDate,
-    //     status: report.status,
-    //     statusDisplayName: report.statusDisplayName,
-    //   })); // 🔴 员工维度工单
     return HousingMocks.MOCK_FACILITY_REPORT_LIST.data!;
   }
-  
-  return axiosClient.get(buildHousingPath(`/facility-reports/employee/${employeeId}`)) as Promise<FacilityReportListItem[]>;
+
+  return axiosClient.get(
+    buildHousingPath('/facility-reports/my-reports')
+  ) as Promise<FacilityReportListItem[]>;
 };
 
 /**
@@ -427,7 +467,7 @@ export const createFacilityReport = async (
       id: Date.now(),
       title: data.title,
       description: data.description,
-      // facilityId: data.facilityId, // 不在 CreateFacilityReportRequest 中
+      facilityId: data.facilityId,
       createDate: new Date().toISOString(),
       status: 'Open',
       statusDisplayName: 'Open',
@@ -451,10 +491,10 @@ export const updateFacilityReportStatus = async (
   if (isMockMode()) {
     console.log('[Mock Request] updateFacilityReportStatus:', { id, data });
     await delay(500);
-    const statusDisplayNames: Record<FacilityReportStatus, string> = {
-      'Open': 'Open',
-      'In Progress': 'In Progress', // Key 必须与 Enum 一致
-      'Closed': 'Closed',
+    const statusDisplayNames: Record<FacilityReportStatusType, string> = {
+      [FacilityReportStatus.OPEN]: 'Open',
+      [FacilityReportStatus.IN_PROGRESS]: 'In Progress',
+      [FacilityReportStatus.CLOSED]: 'Closed',
     };
     return {
       ...HousingMocks.MOCK_FACILITY_REPORT_DETAIL.data!,
@@ -474,11 +514,10 @@ export const updateFacilityReportStatus = async (
  * @returns Promise<FacilityReportDetail>
  */
 export const addFacilityReportComment = async (
-  reportId: number,
   data: AddFacilityReportCommentRequest
 ): Promise<FacilityReportDetail> => {
   if (isMockMode()) {
-    console.log('[Mock Request] addFacilityReportComment:', { reportId, data });
+    console.log('[Mock Request] addFacilityReportComment:', data);
     await delay(500);
     const newComment: FacilityReportComment = {
       id: Date.now(),
@@ -495,7 +534,10 @@ export const addFacilityReportComment = async (
     };
   }
   
-  return axiosClient.post(buildHousingPath(`/facility-reports/${reportId}/comments`), data) as Promise<FacilityReportDetail>;
+  return axiosClient.post(
+    buildHousingPath('/facility-reports/comments'),
+    data
+  ) as Promise<FacilityReportDetail>;
 };
 
 /**
@@ -506,19 +548,18 @@ export const addFacilityReportComment = async (
  * @returns Promise<FacilityReportDetail>
  */
 export const updateFacilityReportComment = async (
-  reportId: number,
   commentId: number,
   comment: string
 ): Promise<FacilityReportDetail> => {
   if (isMockMode()) {
-    console.log('[Mock Request] updateFacilityReportComment:', { reportId, commentId, comment });
+    console.log('[Mock Request] updateFacilityReportComment:', { commentId, comment });
     await delay(500);
     // return HousingMocks.SCENARIO_HOUSE_HEAVY_LOAD.reports[0]; // 🔴 复用多评论工单
     return HousingMocks.MOCK_FACILITY_REPORT_DETAIL.data!;
   }
   
   return axiosClient.put(
-    buildHousingPath(`/facility-reports/${reportId}/comments/${commentId}`),
+    buildHousingPath(`/facility-reports/comments/${commentId}`),
     { comment }
   ) as Promise<FacilityReportDetail>;
 };

@@ -22,7 +22,6 @@ import {
   HomeOutlined,
   ToolOutlined,
   CommentOutlined,
-  ClockCircleOutlined,
 } from '@ant-design/icons';
 import type { ColumnsType } from 'antd/es/table';
 import { useParams, useNavigate } from 'react-router-dom';
@@ -35,8 +34,10 @@ import {
   updateFacilityReportComment,
   getAllEmployees,
 } from '../../../services/api';
+import { FacilityReportStatus } from '../../../types';
 import type {
   HouseDetail,
+  HouseDetailHR,
   FacilityReportDetail,
   FacilityReportComment,
   Employee,
@@ -95,9 +96,8 @@ const FacilityReportModal: React.FC<FacilityReportModalProps> = ({
     }
     try {
       setSubmittingComment(true);
-      await addFacilityReportComment(reportId, {
-        reportId,
-        employeeId: String(currentUserId || 0),
+      await addFacilityReportComment({
+        facilityReportId: reportId,
         comment: newComment.trim(),
       });
       message.success('Comment added');
@@ -119,7 +119,7 @@ const FacilityReportModal: React.FC<FacilityReportModalProps> = ({
     }
     try {
       setUpdatingComment(true);
-      await updateFacilityReportComment(reportId, editingComment.id, editingValue.trim());
+      await updateFacilityReportComment(editingComment.id, editingValue.trim());
       message.success('Comment updated');
       setEditingComment(null);
       setEditingValue('');
@@ -154,8 +154,8 @@ const FacilityReportModal: React.FC<FacilityReportModalProps> = ({
           <Space direction="vertical" size={4} style={{ width: '100%' }}>
             <Space>
               <Tag color={
-                reportDetail.status === 'Open' ? 'red' :
-                reportDetail.status === 'In Progress' ? 'orange' : 'green'
+                reportDetail.status === FacilityReportStatus.OPEN ? 'red' :
+                reportDetail.status === FacilityReportStatus.IN_PROGRESS ? 'orange' : 'green'
               }>
                 {reportDetail.statusDisplayName || reportDetail.status}
               </Tag>
@@ -278,13 +278,16 @@ const FacilityReportModal: React.FC<FacilityReportModalProps> = ({
   );
 };
 
+const isHouseDetailHR = (detail: HouseDetail): detail is HouseDetailHR =>
+  detail.viewType === 'HR_VIEW';
+
 const HouseDetailManagementPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const currentUser = useAppSelector(selectUser);
 
   const [loading, setLoading] = useState(false);
-  const [houseDetail, setHouseDetail] = useState<HouseDetail | null>(null);
+  const [houseDetail, setHouseDetail] = useState<HouseDetailHR | null>(null);
   const [facilityReports, setFacilityReports] = useState<FacilityReportDetail[]>([]);
   const [reportsLoading, setReportsLoading] = useState(false);
   const [residents, setResidents] = useState<Employee[]>([]);
@@ -305,7 +308,11 @@ const HouseDetailManagementPage: React.FC = () => {
     try {
       setLoading(true);
       const detail = await getHouseById(houseId);
-      setHouseDetail(detail);
+      if (isHouseDetailHR(detail)) {
+        setHouseDetail(detail);
+      } else {
+        throw new Error('Invalid house detail payload');
+      }
       fetchFacilityReports(houseId);
       fetchResidents(houseId);
     } catch (error: any) {
@@ -375,8 +382,8 @@ const HouseDetailManagementPage: React.FC = () => {
       width: '20%',
       render: (status: string, record) => (
         <Tag color={
-          status === 'Open' ? 'red' :
-          status === 'In Progress' ? 'orange' : 'green'
+          status === FacilityReportStatus.OPEN ? 'red' :
+          status === FacilityReportStatus.IN_PROGRESS ? 'orange' : 'green'
         }>
           {record.statusDisplayName || status}
         </Tag>

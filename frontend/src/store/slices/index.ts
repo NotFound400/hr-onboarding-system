@@ -14,6 +14,8 @@ export {
   selectUser,
   selectToken,
   selectRole,
+  selectRoles,
+  selectIsHR,
   selectIsAuthenticated,
   selectAuthLoading,
   selectAuthError,

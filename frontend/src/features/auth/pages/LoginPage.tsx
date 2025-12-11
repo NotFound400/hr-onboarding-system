@@ -66,7 +66,7 @@ const LoginPage: React.FC = () => {
           const applications: ApplicationWorkFlow[] = await getApplicationsByEmployeeId(employee.id);
           
           // 查找 Onboarding 类型的申请
-          const onboardingApp = applications.find(app => app.type === 'Onboarding');
+          const onboardingApp = applications.find(app => app.applicationType === 'Onboarding');
           
           if (!onboardingApp) {
             // 没有 Onboarding 申请记录，跳转到表单填写

@@ -24,7 +24,7 @@ export interface ApplicationWorkFlow {
   /** 备注 (拒绝原因或 HR 备注) */
   comment: string;
   /** 申请类型 */
-  type: ApplicationType;
+  applicationType: ApplicationType;
 }
 
 /** 数字文档 (系统要求的文档模板配置表) */

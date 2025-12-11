@@ -54,6 +54,10 @@ export interface RegistrationToken {
   createdByUserId?: string;
   /** 创建时间 */
   createDate: string;
+  /** 预分配的房屋 ID */
+  houseId?: number | null;
+  /** 预分配房屋地址 */
+  houseAddress?: string;
 }
 
 /** 登录响应 */
@@ -64,4 +68,6 @@ export interface LoginResponse {
   user: User;
   role: RoleType;
   roles: RoleType[];
+  houseId: number | null;
+  employeeId: string | null;
 }

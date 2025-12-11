@@ -13,10 +13,10 @@ import { Card, Descriptions, List, Avatar, Button, Empty, Space, Tag, message, A
 import { HomeOutlined, UserOutlined, ToolOutlined, PhoneOutlined } from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
 import { PageContainer } from '../../../components/common/PageContainer';
-import { getEmployeeByUserId, getEmployeeHouse } from '../../../services/api';
+import { getHouseById, getMyHouse } from '../../../services/api';
 import { useAppSelector } from '../../../store/hooks';
 import { selectUser } from '../../../store/slices/authSlice';
-import type { Employee, HouseEmployeeView } from '../../../types';
+import type { HouseDetail, HouseEmployeeView } from '../../../types';
 
 /**
  * HousingPage Component
@@ -24,37 +24,41 @@ import type { Employee, HouseEmployeeView } from '../../../types';
 const HousingPage: React.FC = () => {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
-  const [employee, setEmployee] = useState<Employee | null>(null);
   const [houseInfo, setHouseInfo] = useState<HouseEmployeeView | null>(null);
 
   // 获取当前登录用户
   const currentUser = useAppSelector(selectUser);
+  const assignedEmployeeId = useAppSelector((state) => state.auth.employeeId);
+  const assignedHouseId = useAppSelector((state) => state.auth.houseId);
 
   useEffect(() => {
     fetchHousingInfo();
-  }, []);
+  }, [currentUser?.id, assignedHouseId]);
 
   /**
    * 获取房屋信息
    */
   const fetchHousingInfo = async () => {
     if (!currentUser) return;
-    
+
     try {
       setLoading(true);
-      
-      // 先通过 User ID 获取 Employee 记录
-      const empData = await getEmployeeByUserId(String(currentUser.id));
-      setEmployee(empData);
+      let houseData: HouseEmployeeView | null = null;
 
-      // 如果有分配的房屋，获取房屋详情
-      if (empData.houseID) {
-        const houseData = await getEmployeeHouse(empData.userID);
-        setHouseInfo(houseData);
+      if (assignedHouseId) {
+        const detail: HouseDetail = await getHouseById(Number(assignedHouseId));
+        if ('roommates' in detail) {
+          houseData = detail as HouseEmployeeView;
+        } else {
+          houseData = await getMyHouse();
+        }
       } else {
-        setHouseInfo(null);
+        houseData = await getMyHouse();
       }
+
+      setHouseInfo(houseData);
     } catch (error: any) {
+      setHouseInfo(null);
       message.error(error.message || 'Failed to load housing information');
     } finally {
       setLoading(false);
@@ -97,14 +101,24 @@ const HousingPage: React.FC = () => {
   const renderHousingContent = () => {
     if (!houseInfo) return null;
 
-    // 过滤出当前用户
-    const currentResident = houseInfo.residents.find(
-      r => r.employeeID === employee?.userID
-    );
+    const candidateIds = [
+      assignedEmployeeId ?? undefined,
+      currentUser ? currentUser.id.toString() : undefined,
+    ]
+      .filter((value): value is string => Boolean(value))
+      .map((value) => value.toString());
+
+    const currentResident = houseInfo.roommates.find((roommate) => {
+      if (roommate.employeeId === undefined || roommate.employeeId === null) {
+        return false;
+      }
+      const roommateId = roommate.employeeId.toString();
+      return candidateIds.includes(roommateId);
+    });
     
     // 过滤出室友（排除当前用户）
-    const roommates = houseInfo.residents.filter(
-      r => r.employeeID !== employee?.userID
+    const roommates = houseInfo.roommates.filter(
+      (roommate) => roommate !== currentResident
     );
 
     return (
@@ -128,7 +142,8 @@ const HousingPage: React.FC = () => {
             </Descriptions.Item>
             <Descriptions.Item label="Total Residents">
               <Tag color="blue" style={{ fontSize: 14 }}>
-                {houseInfo.residents.length} {houseInfo.residents.length === 1 ? 'person' : 'people'}
+                {houseInfo.roommates.length}{' '}
+                {houseInfo.roommates.length === 1 ? 'person' : 'people'}
               </Tag>
             </Descriptions.Item>
           </Descriptions>
@@ -158,20 +173,20 @@ const HousingPage: React.FC = () => {
             <List
               itemLayout="horizontal"
               dataSource={roommates}
-              renderItem={(resident) => (
+              renderItem={(roommate) => (
                 <List.Item>
                   <List.Item.Meta
                     avatar={<Avatar icon={<UserOutlined />} size={48} />}
                     title={
                       <Space>
-                        <span style={{ fontSize: 16, fontWeight: 'bold' }}>{resident.name}</span>
+                        <span style={{ fontSize: 16, fontWeight: 'bold' }}>{roommate.name}</span>
                       </Space>
                     }
                     description={
                       <Space direction="vertical" size={2}>
                         <span>
                           <PhoneOutlined style={{ marginRight: 8 }} />
-                          {resident.phone}
+                          {roommate.phone}
                         </span>
                       </Space>
                     }
@@ -208,7 +223,7 @@ const HousingPage: React.FC = () => {
 
   return (
     <PageContainer title="Housing Details" loading={loading}>
-      {!employee?.houseID ? renderNoHousingAssigned() : renderHousingContent()}
+      {!houseInfo ? renderNoHousingAssigned() : renderHousingContent()}
     </PageContainer>
   );
 };

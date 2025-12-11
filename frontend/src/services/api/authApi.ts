@@ -13,6 +13,7 @@ import type {
   RegisterRequest,
   RegistrationToken,
   RegistrationTokenValidationResponse,
+  GenerateTokenRequest,
 } from '../../types';
 
 // ==================== API Functions ====================
@@ -65,6 +66,10 @@ export const login = async (credentials: LoginRequest): Promise<LoginResponse> =
       user: mockUser.user,
       role: mockUser.role,
       roles: mockUser.user.roles,
+      houseId: mockUser.user.roles.includes('Employee') ? 1 : null,
+      employeeId: mockUser.user.roles.includes('Employee')
+        ? `mock-employee-${mockUser.user.id}`
+        : null,
     };
   }
 
@@ -125,25 +130,27 @@ export const logout = async (): Promise<void> => {
 
 /**
  * HR 生成注册 Token (HR Section 5.a)
- * @param email 目标邮箱
- * @param name 可选名称
+ * @param data HR 生成 Token 请求数据
  * @returns Promise<RegistrationToken>
  */
-export const generateRegistrationToken = async (email: string): Promise<RegistrationToken> => {
+export const generateRegistrationToken = async (
+  data: GenerateTokenRequest
+): Promise<RegistrationToken> => {
   if (isMockMode()) {
-    console.log('[Mock Request] generateRegistrationToken:', { email });
+    console.log('[Mock Request] generateRegistrationToken:', data);
     await delay(500);
     // return AuthMocks.MOCK_REGISTRATION_TOKEN.data!; // 🟢 默认 Token
     // return { ...AuthMocks.MOCK_REGISTRATION_TOKEN.data!, email }; // 🔴 定制邮件
     return {
       ...AuthMocks.MOCK_REGISTRATION_TOKEN.data!,
-      email,
+      email: data.email,
       createDate: new Date().toISOString(),
-      token: `TOKEN_${Date.now()}_${Math.random().toString(36).substring(2, 15)}`
+      token: `TOKEN_${Date.now()}_${Math.random().toString(36).substring(2, 15)}`,
+      houseId: data.houseId,
     };
   }
   
-  return axiosClient.post('/auth/registration-token', { email }) as Promise<RegistrationToken>;
+  return axiosClient.post('/auth/registration-token', data) as Promise<RegistrationToken>;
 };
 
 /**
@@ -160,7 +167,18 @@ export const validateToken = async (token: string): Promise<RegistrationTokenVal
     if (token === 'invalid-token') {
       throw new Error('Invalid registration token');
     }
-    return AuthMocks.MOCK_REGISTRATION_TOKEN.data!;
+    const tokenData = AuthMocks.MOCK_REGISTRATION_TOKEN.data!;
+    return {
+      ...tokenData,
+      houseId: tokenData.houseId ?? null,
+      houseAddress: tokenData.houseAddress ?? null,
+      houseContext: tokenData.houseId
+        ? {
+            id: tokenData.houseId,
+            address: tokenData.houseAddress ?? undefined,
+          }
+        : null,
+    };
   }
   
   return axiosClient.get(`/auth/validate-token/${token}`) as Promise<RegistrationTokenValidationResponse>;

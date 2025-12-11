@@ -48,7 +48,7 @@ const OnboardingRejectedPage: React.FC = () => {
       
       // 3. 找到被拒绝的 Onboarding 申请
       const rejectedApp = applications.find(
-        app => app.type === 'Onboarding' && app.status === 'Rejected'
+        app => app.applicationType === 'Onboarding' && app.status === 'Rejected'
       );
       
       setApplication(rejectedApp || null);
@@ -157,7 +157,7 @@ const OnboardingRejectedPage: React.FC = () => {
           <Card title="Application Information">
             <Descriptions column={2} bordered>
               <Descriptions.Item label="Application Type">
-                <Tag color="blue">{application.type}</Tag>
+                <Tag color="blue">{application.applicationType}</Tag>
               </Descriptions.Item>
               <Descriptions.Item label="Status">
                 <Tag color="red">{application.status}</Tag>

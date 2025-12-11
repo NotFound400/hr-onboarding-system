@@ -104,7 +104,7 @@ export const createApplication = async (
       lastModificationDate: new Date().toISOString(),
       status: 'Pending' as ApplicationStatus,
       comment: data.comment || '',
-      type: data.type,
+      applicationType: data.applicationType,
     };
   }
   

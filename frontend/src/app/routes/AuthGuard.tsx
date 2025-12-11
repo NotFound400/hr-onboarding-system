@@ -5,7 +5,7 @@
 
 import { Navigate, useLocation } from 'react-router-dom';
 import { useAppSelector } from '../../store/hooks';
-import { selectIsAuthenticated, selectRole } from '../../store/slices/authSlice';
+import { selectIsAuthenticated, selectRole, selectIsHR } from '../../store/slices/authSlice';
 
 interface AuthGuardProps {
   children: React.ReactNode;
@@ -22,7 +22,9 @@ interface AuthGuardProps {
  */
 const AuthGuard: React.FC<AuthGuardProps> = ({ children, allowedRoles }) => {
   const isAuthenticated = useAppSelector(selectIsAuthenticated);
-  const role = useAppSelector(selectRole);
+  const isHR = useAppSelector(selectIsHR);
+  const storedRole = useAppSelector(selectRole);
+  const effectiveRole: 'HR' | 'Employee' = isHR ? 'HR' : storedRole ?? 'Employee';
   const location = useLocation();
 
   // 未登录，重定向到登录页并携带当前路径
@@ -31,9 +33,18 @@ const AuthGuard: React.FC<AuthGuardProps> = ({ children, allowedRoles }) => {
   }
 
   // 已登录但角色不匹配，重定向到对应的 Dashboard
-  if (allowedRoles && role && !allowedRoles.includes(role)) {
-    const redirectPath = role === 'HR' ? '/hr/home' : '/employee/home';
-    return <Navigate to={redirectPath} replace />;
+  if (allowedRoles && allowedRoles.length > 0) {
+    const matchesAllowedRole = allowedRoles.some((targetRole) => {
+      if (targetRole === 'HR') {
+        return isHR;
+      }
+      return effectiveRole === 'Employee';
+    });
+
+    if (!matchesAllowedRole) {
+      const redirectPath = effectiveRole === 'HR' ? '/hr/home' : '/employee/home';
+      return <Navigate to={redirectPath} replace />;
+    }
   }
 
   return <>{children}</>;

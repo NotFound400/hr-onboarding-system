@@ -29,7 +29,6 @@ axiosClient.interceptors.request.use(
     const token = localStorage.getItem('token');
     if (token && config.headers) {
       config.headers.Authorization = `Bearer ${token}`;
-      // TODO: Confirm if API Gateway injects X-User-Id/X-User-Roles or if we should mock them locally.
     }
     return config;
   },
@@ -73,6 +72,8 @@ axiosClient.interceptors.response.use(
           localStorage.removeItem('tokenType');
           localStorage.removeItem('tokenExpiresAt');
           localStorage.removeItem('roles');
+          localStorage.removeItem('houseId');
+          localStorage.removeItem('employeeId');
           // 可选: 跳转到登录页
           window.location.href = '/login';
           break;

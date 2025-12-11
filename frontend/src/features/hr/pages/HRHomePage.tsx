@@ -30,7 +30,9 @@ export const HRHomePage: React.FC = () => {
   const stats = {
     totalEmployees: 156,
     pendingOnboarding: applications.filter(a => a.status === 'Pending').length,
-    pendingVisaApplications: applications.filter(a => a.type === 'OPT' && a.status === 'Pending').length,
+    pendingVisaApplications: applications.filter(
+      a => a.applicationType === 'OPT' && a.status === 'Pending'
+    ).length,
     totalHouses: 12,
     availableRooms: 23,
   };
@@ -223,15 +225,17 @@ export const HRHomePage: React.FC = () => {
             },
             {
               title: 'Type of Application',
-              dataIndex: 'type',
-              key: 'type',
+              dataIndex: 'applicationType',
+              key: 'applicationType',
               filters: [
                 { text: 'Onboarding', value: 'Onboarding' },
                 { text: 'OPT', value: 'OPT' },
               ],
-              onFilter: (value, record) => record.type === value,
-              render: (type: string) => (
-                <Tag color={type === 'Onboarding' ? 'blue' : 'green'}>{type}</Tag>
+              onFilter: (value, record) => record.applicationType === value,
+              render: (applicationType: string) => (
+                <Tag color={applicationType === 'Onboarding' ? 'blue' : 'green'}>
+                  {applicationType}
+                </Tag>
               ),
             },
             {
@@ -262,9 +266,9 @@ export const HRHomePage: React.FC = () => {
                 <Button
                   type="link"
                   onClick={() => {
-                    if (record.type === 'Onboarding') {
+                    if (record.applicationType === 'Onboarding') {
                       navigate('/hr/hiring');
-                    } else if (record.type === 'OPT') {
+                    } else if (record.applicationType === 'OPT') {
                       navigate('/hr/visa');
                     }
                   }}
