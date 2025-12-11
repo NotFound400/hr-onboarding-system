@@ -39,7 +39,7 @@ spring:
           predicates:
             - Path=/api/employees/**
           filters:
-            - RewritePath=/api/employees/(?<segment>.*), /${segment}
+            - RewritePath=/api/(?<segment>.*), /${segment}
             - name: CircuitBreaker
               args:
                 name: employeeService
