@@ -214,6 +214,7 @@ class FacilityReportServiceTest {
                 .facilityReport(testReport)
                 .employeeId(100L)  // Createuseris 100
                 .comment("Original comment")
+                .createDate(LocalDateTime.now())
                 .build();
 
         when(commentRepository.findById(1L)).thenReturn(Optional.of(existingComment));

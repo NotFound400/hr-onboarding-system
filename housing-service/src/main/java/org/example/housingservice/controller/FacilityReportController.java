@@ -8,6 +8,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.example.housingservice.dto.ApiResponse;
 import org.example.housingservice.dto.FacilityReportDTO;
 import org.example.housingservice.dto.FacilityReportDetailDTO;
+import org.example.housingservice.exception.ForbiddenException;
 import org.example.housingservice.service.FacilityReportService;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -48,9 +49,12 @@ public class FacilityReportController {
     public ResponseEntity<ApiResponse<FacilityReportDTO.DetailResponse>> createReport(
             @Valid @RequestBody FacilityReportDTO.CreateRequest request,
             @RequestHeader(value = "X-User-Id", required = false) Long userId) {
-        
+
+        if (userId == null) {
+            throw new ForbiddenException("Only valid user can add facility");
+        }
         // If user ID not found in header, use default value or throw exception
-        Long employeeId = userId != null ? userId : 1L;
+        Long employeeId = userId;
         
         log.info("Creating facility report by employee: {}", employeeId);
         FacilityReportDTO.DetailResponse report = reportService.createReport(request, employeeId);
@@ -81,10 +85,15 @@ public class FacilityReportController {
     @GetMapping("/house/{houseId}")
     @Operation(summary = "Get house reports", description = "Get all facility reports for a house (paginated)")
     public ResponseEntity<ApiResponse<Page<FacilityReportDTO.ListItem>>> getReportsByHouseId(
+            @RequestHeader("X-User-Roles") String userRoles,
             @PathVariable Long houseId,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "5") int size) {  // Default 5 per page
-        
+
+        if (!userRoles.contains("HR")) {
+            throw new ForbiddenException("Only HR can review the reports of a house");
+        }
+
         Pageable pageable = PageRequest.of(page, size);
         Page<FacilityReportDTO.ListItem> reports = reportService.getReportsByHouseId(houseId, pageable);
         
@@ -97,8 +106,13 @@ public class FacilityReportController {
     @GetMapping("/house/{houseId}/all")
     @Operation(summary = "Get all house reports", description = "Get all facility reports for a house")
     public ResponseEntity<ApiResponse<List<FacilityReportDTO.ListItem>>> getAllReportsByHouseId(
+            @RequestHeader("X-User-Roles") String userRoles,
             @PathVariable Long houseId) {
-        
+
+        if (!userRoles.contains("HR")) {
+            throw new ForbiddenException("Only HR can review the reports of a house");
+        }
+
         List<FacilityReportDTO.ListItem> reports = reportService.getAllReportsByHouseId(houseId);
         return ResponseEntity.ok(ApiResponse.success(reports));
     }
@@ -111,9 +125,14 @@ public class FacilityReportController {
     @PatchMapping("/{id}/status")
     @Operation(summary = "Update report status", description = "HR updates report status")
     public ResponseEntity<ApiResponse<FacilityReportDTO.DetailResponse>> updateReportStatus(
+            @RequestHeader("X-User-Roles") String userRoles,
             @PathVariable Long id,
             @Valid @RequestBody FacilityReportDTO.UpdateStatusRequest request) {
-        
+
+        if (!userRoles.contains("HR")) {
+            throw new ForbiddenException("Only HR can update the report status");
+        }
+
         log.info("Updating report status: {}, newStatus: {}", id, request.getStatus());
         FacilityReportDTO.DetailResponse report = reportService.updateReportStatus(id, request);
         
