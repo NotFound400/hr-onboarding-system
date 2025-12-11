@@ -1,10 +1,12 @@
 package org.example.housingservice.service;
 
+import org.example.housingservice.client.EmployeeServiceClient;
 import org.example.housingservice.context.UserContext;
 import org.example.housingservice.dto.HouseDTO;
 import org.example.housingservice.exception.ForbiddenException;
 
 import java.util.List;
+import java.util.Map;
 
 /**
  * House Service Interface
@@ -92,6 +94,9 @@ public interface HouseService {
      */
     HouseDTO.EmployeeViewResponse getHouseForEmployee(Long houseId, Long employeeId);
 
+    Map<String, Object> checkHouseAvailability(Long houseId);
+
+    List<EmployeeServiceClient.EmployeeInfo> getEmployeesByHouseId(Long houseId);
     /**
      * Get employee's assigned house
      * 

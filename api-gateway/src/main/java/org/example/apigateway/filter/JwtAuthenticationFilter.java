@@ -28,6 +28,7 @@ public class JwtAuthenticationFilter implements GlobalFilter, Ordered {
     public static final String HEADER_USERNAME = "X-Username";
     public static final String HEADER_USER_ROLES = "X-User-Roles";
     public static final String HEADER_GATEWAY_REQUEST = "X-Gateway-Request";
+    public static final String HEADER_HOUSE_ID = "X-House-Id";
 
     @Override
     public Mono<Void> filter(ServerWebExchange exchange, GatewayFilterChain chain) {
@@ -67,15 +68,21 @@ public class JwtAuthenticationFilter implements GlobalFilter, Ordered {
             String username = jwtUtil.extractUsername(token);
             Long userId = jwtUtil.extractUserId(token);
             List<String> roles = jwtUtil.extractRoles(token);
+            Long houseId = jwtUtil.getHouseId(token);
 
-            ServerHttpRequest modifiedRequest = request.mutate()
+            ServerHttpRequest.Builder requestBuilder = request.mutate()
                     .header(HEADER_USER_ID, userId != null ? userId.toString() : "")
                     .header(HEADER_USERNAME, username != null ? username : "")
                     .header(HEADER_USER_ROLES, roles != null ? String.join(",", roles) : "")
-                    .header(HEADER_GATEWAY_REQUEST, "true")
-                    .build();
+                    .header(HEADER_GATEWAY_REQUEST, "true");
 
-            log.debug("Authenticated user: {} (id: {}) with roles: {}", username, userId, roles);
+            if (houseId != null) {
+                requestBuilder.header(HEADER_HOUSE_ID, String.valueOf(houseId));
+            }
+
+            ServerHttpRequest modifiedRequest = requestBuilder.build();
+
+            log.debug("Authenticated user: {} (id: {}) with roles: {} and house id: {}", username, userId, roles, houseId);
             
             return chain.filter(exchange.mutate().request(modifiedRequest).build());
         } catch (Exception e) {
