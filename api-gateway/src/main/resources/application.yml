@@ -63,7 +63,7 @@ spring:
           predicates:
             - Path=/api/housing/**
           filters:
-            # No path rewrite - housing-service uses /api/housing/** paths directly
+            - RewritePath=/api/housing/(?<segment>.*), /${segment}
             - name: CircuitBreaker
               args:
                 name: housingService
