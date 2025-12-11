@@ -17,6 +17,9 @@ const axiosClient: AxiosInstance = axios.create({
   },
 });
 
+export const buildHousingPath = (path: string): string =>
+  `/housing${path.startsWith('/') ? path : `/${path}`}`;
+
 /**
  * Request Interceptor
  * 自动添加 JWT Token 到请求头
@@ -26,6 +29,7 @@ axiosClient.interceptors.request.use(
     const token = localStorage.getItem('token');
     if (token && config.headers) {
       config.headers.Authorization = `Bearer ${token}`;
+      // TODO: Confirm if API Gateway injects X-User-Id/X-User-Roles or if we should mock them locally.
     }
     return config;
   },

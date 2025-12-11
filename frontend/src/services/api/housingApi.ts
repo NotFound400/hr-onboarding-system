@@ -3,7 +3,7 @@
  * 基于后端 HousingDTO 的 API 请求处理
  */
 
-import axiosClient from './axiosClient';
+import axiosClient, { buildHousingPath } from './axiosClient';
 import { isMockMode, delay } from '../../utils/mockUtils';
 import * as HousingMocks from '../mocks/housingMocks';
 import type { 
@@ -49,7 +49,7 @@ export const getAllHouses = async (): Promise<HouseListItem[]> => {
     return HousingMocks.MOCK_HOUSE_LIST.data!;
   }
   
-  return axiosClient.get('/houses') as Promise<HouseListItem[]>;
+  return axiosClient.get(buildHousingPath('/houses')) as Promise<HouseListItem[]>;
 };
 
 /**
@@ -64,7 +64,7 @@ export const getHouseById = async (id: number): Promise<HouseDetail> => {
     return HousingMocks.MOCK_HOUSE_DETAIL.data!;
   }
   
-  return axiosClient.get(`/houses/${id}`) as Promise<HouseDetail>;
+  return axiosClient.get(buildHousingPath(`/houses/${id}`)) as Promise<HouseDetail>;
 };
 
 /**
@@ -79,7 +79,7 @@ export const getEmployeeHouse = async (employeeId: number): Promise<HouseEmploye
     return HousingMocks.MOCK_HOUSE_EMPLOYEE_VIEW.data!;
   }
   
-  return axiosClient.get(`/houses/employee/${employeeId}`) as Promise<HouseEmployeeView>;
+  return axiosClient.get(buildHousingPath(`/houses/employee/${employeeId}`)) as Promise<HouseEmployeeView>;
 };
 
 /**
@@ -114,7 +114,7 @@ export const createHouse = async (data: CreateHouseRequest): Promise<HouseDetail
     };
   }
   
-  return axiosClient.post('/houses', data) as Promise<HouseDetail>;
+  return axiosClient.post(buildHousingPath('/houses'), data) as Promise<HouseDetail>;
 };
 
 /**
@@ -135,7 +135,7 @@ export const updateHouse = async (id: number, data: Partial<UpdateHouseRequest>)
     };
   }
   
-  return axiosClient.put(`/houses/${id}`, data) as Promise<HouseDetail>;
+  return axiosClient.put(buildHousingPath(`/houses/${id}`), data) as Promise<HouseDetail>;
 };
 
 /**
@@ -150,7 +150,7 @@ export const deleteHouse = async (id: number): Promise<void> => {
     return;
   }
   
-  await axiosClient.delete(`/houses/${id}`);
+  await axiosClient.delete(buildHousingPath(`/houses/${id}`));
 };
 
 // ==================== Landlord APIs ====================
@@ -166,7 +166,7 @@ export const getAllLandlords = async (): Promise<Landlord[]> => {
     return [HousingMocks.MOCK_LANDLORD.data!, HousingMocks.MOCK_LANDLORD_2.data!];
   }
   
-  return axiosClient.get('/landlords') as Promise<Landlord[]>;
+  return axiosClient.get(buildHousingPath('/landlords')) as Promise<Landlord[]>;
 };
 
 /**
@@ -181,7 +181,7 @@ export const getLandlordById = async (id: number): Promise<Landlord> => {
     return HousingMocks.MOCK_LANDLORD.data!;
   }
   
-  return axiosClient.get(`/landlords/${id}`) as Promise<Landlord>;
+  return axiosClient.get(buildHousingPath(`/landlords/${id}`)) as Promise<Landlord>;
 };
 
 /**
@@ -203,7 +203,7 @@ export const createLandlord = async (data: CreateLandlordRequest): Promise<Landl
     };
   }
   
-  return axiosClient.post('/landlords', data) as Promise<Landlord>;
+  return axiosClient.post(buildHousingPath('/landlords'), data) as Promise<Landlord>;
 };
 
 /**
@@ -224,7 +224,7 @@ export const updateLandlord = async (id: number, data: Partial<CreateLandlordReq
     };
   }
   
-  return axiosClient.put(`/landlords/${id}`, data) as Promise<Landlord>;
+  return axiosClient.put(buildHousingPath(`/landlords/${id}`), data) as Promise<Landlord>;
 };
 
 /**
@@ -239,7 +239,7 @@ export const deleteLandlord = async (id: number): Promise<void> => {
     return;
   }
   
-  await axiosClient.delete(`/landlords/${id}`);
+  await axiosClient.delete(buildHousingPath(`/landlords/${id}`));
 };
 
 // ==================== Facility APIs ====================
@@ -256,7 +256,7 @@ export const getFacilitiesByHouseId = async (houseId: number): Promise<Facility[
     return HousingMocks.MOCK_FACILITIES.data!;
   }
   
-  return axiosClient.get(`/houses/${houseId}/facilities`) as Promise<Facility[]>;
+  return axiosClient.get(buildHousingPath(`/houses/${houseId}/facilities`)) as Promise<Facility[]>;
 };
 
 /**
@@ -277,7 +277,7 @@ export const createFacility = async (houseId: number, data: CreateFacilityReques
     };
   }
   
-  return axiosClient.post(`/houses/${houseId}/facilities`, data) as Promise<Facility>;
+  return axiosClient.post(buildHousingPath(`/houses/${houseId}/facilities`), data) as Promise<Facility>;
 };
 
 /**
@@ -303,7 +303,7 @@ export const updateFacility = async (
     };
   }
   
-  return axiosClient.put(`/houses/${houseId}/facilities/${facilityId}`, data) as Promise<Facility>;
+  return axiosClient.put(buildHousingPath(`/houses/${houseId}/facilities/${facilityId}`), data) as Promise<Facility>;
 };
 
 /**
@@ -319,7 +319,7 @@ export const deleteFacility = async (houseId: number, facilityId: number): Promi
     return;
   }
   
-  await axiosClient.delete(`/houses/${houseId}/facilities/${facilityId}`);
+  await axiosClient.delete(buildHousingPath(`/houses/${houseId}/facilities/${facilityId}`));
 };
 
 // ==================== Facility Report APIs ====================
@@ -342,7 +342,7 @@ export const getAllFacilityReports = async (): Promise<FacilityReportListItem[]>
     return HousingMocks.MOCK_FACILITY_REPORT_LIST.data!;
   }
   
-  return axiosClient.get('/facility-reports') as Promise<FacilityReportListItem[]>;
+  return axiosClient.get(buildHousingPath('/facility-reports')) as Promise<FacilityReportListItem[]>;
 };
 
 /**
@@ -367,7 +367,7 @@ export const getFacilityReportsByStatus = async (
     return HousingMocks.MOCK_FACILITY_REPORT_LIST.data!.filter(report => report.status === status);
   }
   
-  return axiosClient.get(`/facility-reports?status=${status}`) as Promise<FacilityReportListItem[]>;
+  return axiosClient.get(buildHousingPath(`/facility-reports?status=${status}`)) as Promise<FacilityReportListItem[]>;
 };
 
 /**
@@ -382,7 +382,7 @@ export const getFacilityReportById = async (id: number): Promise<FacilityReportD
     return HousingMocks.MOCK_FACILITY_REPORT_DETAIL.data!;
   }
   
-  return axiosClient.get(`/facility-reports/${id}`) as Promise<FacilityReportDetail>;
+  return axiosClient.get(buildHousingPath(`/facility-reports/${id}`)) as Promise<FacilityReportDetail>;
 };
 
 /**
@@ -407,7 +407,7 @@ export const getFacilityReportsByEmployeeId = async (
     return HousingMocks.MOCK_FACILITY_REPORT_LIST.data!;
   }
   
-  return axiosClient.get(`/facility-reports/employee/${employeeId}`) as Promise<FacilityReportListItem[]>;
+  return axiosClient.get(buildHousingPath(`/facility-reports/employee/${employeeId}`)) as Promise<FacilityReportListItem[]>;
 };
 
 /**
@@ -435,7 +435,7 @@ export const createFacilityReport = async (
     };
   }
   
-  return axiosClient.post('/facility-reports', data) as Promise<FacilityReportDetail>;
+  return axiosClient.post(buildHousingPath('/facility-reports'), data) as Promise<FacilityReportDetail>;
 };
 
 /**
@@ -464,7 +464,7 @@ export const updateFacilityReportStatus = async (
     };
   }
   
-  return axiosClient.patch(`/facility-reports/${id}/status`, data) as Promise<FacilityReportDetail>;
+  return axiosClient.patch(buildHousingPath(`/facility-reports/${id}/status`), data) as Promise<FacilityReportDetail>;
 };
 
 /**
@@ -495,7 +495,7 @@ export const addFacilityReportComment = async (
     };
   }
   
-  return axiosClient.post(`/facility-reports/${reportId}/comments`, data) as Promise<FacilityReportDetail>;
+  return axiosClient.post(buildHousingPath(`/facility-reports/${reportId}/comments`), data) as Promise<FacilityReportDetail>;
 };
 
 /**
@@ -518,7 +518,7 @@ export const updateFacilityReportComment = async (
   }
   
   return axiosClient.put(
-    `/facility-reports/${reportId}/comments/${commentId}`,
+    buildHousingPath(`/facility-reports/${reportId}/comments/${commentId}`),
     { comment }
   ) as Promise<FacilityReportDetail>;
 };
@@ -542,7 +542,7 @@ export const deleteFacilityReportComment = async (
     };
   }
   
-  return axiosClient.delete(`/facility-reports/${reportId}/comments/${commentId}`) as Promise<FacilityReportDetail>;
+  return axiosClient.delete(buildHousingPath(`/facility-reports/${reportId}/comments/${commentId}`)) as Promise<FacilityReportDetail>;
 };
 
 /**
@@ -557,6 +557,6 @@ export const deleteFacilityReport = async (id: number): Promise<void> => {
     return;
   }
   
-  await axiosClient.delete(`/facility-reports/${id}`);
+  await axiosClient.delete(buildHousingPath(`/facility-reports/${id}`));
 };
 

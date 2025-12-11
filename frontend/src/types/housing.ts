@@ -55,7 +55,7 @@ export interface FacilitySummary {
 /** 住户信息 */
 export interface Resident {
   /** 员工 ID */
-  employeeId: number;
+  employeeID: number;
   /** 姓名 */
   name: string;
   /** 电话 */
@@ -103,6 +103,8 @@ export interface HouseDetail {
   maxOccupant: number;
   /** 当前入住员工数 */
   numberOfEmployees: number;
+  /** 房东 ID (用于请求/选择) */
+  landlordId: number;
   /** 房东信息 */
   landlord: Landlord;
   /** 设施汇总 */

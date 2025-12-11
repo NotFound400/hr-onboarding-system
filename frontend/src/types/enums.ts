@@ -57,6 +57,7 @@ export type AddressType = typeof AddressType[keyof typeof AddressType];
 export const FacilityReportStatus = {
   OPEN: 'Open',
   IN_PROGRESS: 'In Progress', // 注意：包含空格
+  IN_PROGRESS_API: 'InProgress', // 新版 API 返回/接收的值
   CLOSED: 'Closed'
 } as const;
 export type FacilityReportStatus = typeof FacilityReportStatus[keyof typeof FacilityReportStatus];

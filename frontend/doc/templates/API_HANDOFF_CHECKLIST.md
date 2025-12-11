@@ -468,18 +468,18 @@
 
 **前端调用位置:** `src/services/api/applicationApi.ts` - `getApplicationsByEmployeeId()`
 
-**状态:** ❌ 待后端填写
+**状态:** ✅ 已对齐
 
 #### 前端期望
 - **Endpoint:** `GET /applications/employee/{employeeId}`
 - **Path Parameter:** `employeeId` (String, MongoDB ObjectId)
-- **Response:**
+- **Response:** *(Axios 拦截器已剥离 `success/message` 外壳，前端收到 `data` 数组)*
 ```json
 [
   {
     "id": 1,
     "employeeId": "507f1f77bcf86cd799439011",
-    "type": "Onboarding",
+    "applicationType": "Onboarding",
     "status": "Pending",
     "comment": "",
     "createDate": "2024-01-01T00:00:00Z",
@@ -488,21 +488,31 @@
 ]
 ```
 
-#### 后端实际 (由后端填写)
+#### 后端实际
 
 **Endpoint:** `GET /applications/employee/{employeeId}`
 
 **Response Example:**
 ```json
-[
-  {
-    "_comment": "后端请粘贴实际的响应示例"
-  }
-]
+{
+  "data": [
+    {
+      "id": 1,
+      "employeeId": "1",
+      "createDate": "2025-12-06T12:46:11",
+      "lastModificationDate": "2025-12-07T22:15:35",
+      "status": "Pending",
+      "comment": "Approved, welcome aboard!",
+      "applicationType": "OPT"
+    }
+  ],
+  "message": "Success",
+  "success": true
+}
 ```
 
 **差异说明:**
-- [ ] 无差异
+- [x] 无差异
 - [ ] 有差异：_____________
 
 ---
@@ -511,40 +521,51 @@
 
 **前端调用位置:** `src/services/api/applicationApi.ts` - `createApplication()`
 
-**状态:** ❌ 待后端填写
+**状态:** ✅ 已对齐
 
 #### 前端期望
 - **Endpoint:** `POST /applications`
-- **Request:**
+- **Request:** *(Axios 发送 `applicationType` 字段)*
 ```json
 {
   "employeeId": "507f1f77bcf86cd799439011",
-  "type": "Onboarding",
-  "status": "Pending",
+  "applicationType": "Onboarding",
   "comment": ""
 }
 ```
 
-#### 后端实际 (由后端填写)
+#### 后端实际
 
 **Endpoint:** `POST /applications`
 
 **Request Body Example:**
 ```json
 {
-  "_comment": "后端请粘贴实际的请求示例"
+  "employeeId": "2",
+  "applicationType": "OPT",
+  "comment": "Start OPT STEM"
 }
 ```
 
-**Response Example:**
+**Response Example:** *(前端接收到已剥壳的 `data` 对象)*
 ```json
 {
-  "_comment": "后端请粘贴实际的响应示例"
+  "data": {
+    "id": 3,
+    "employeeId": "2",
+    "createDate": "2025-12-10T13:04:15.6434365",
+    "lastModificationDate": "2025-12-10T13:04:15.6434365",
+    "status": "Open",
+    "comment": "Start OPT STEM",
+    "applicationType": "OPT"
+  },
+  "message": "Success",
+  "success": true
 }
 ```
 
 **差异说明:**
-- [ ] 无差异
+- [x] 无差异
 - [ ] 有差异：_____________
 
 ---
@@ -553,11 +574,11 @@
 
 **前端调用位置:** `src/services/api/applicationApi.ts` - `updateApplicationStatus()`
 
-**状态:** ❌ 待后端填写
+**状态:** ⚠️ 待确认 (`status` 字段需后端澄清)
 
 #### 前端期望
 - **Endpoint:** `PUT /applications/{id}/status`
-- **Request:**
+- **Request:** *(若后端允许，应包含显式 `status`；若不支持请在差异说明注明)*
 ```json
 {
   "status": "Approved",
@@ -565,27 +586,29 @@
 }
 ```
 
-#### 后端实际 (由后端填写)
+#### 后端实际
 
 **Endpoint:** `PUT /applications/{id}/status`
 
 **Request Body Example:**
 ```json
 {
-  "_comment": "后端请粘贴实际的请求示例"
+  "comment": "Approved, welcome aboard!"
 }
 ```
 
 **Response Example:**
 ```json
 {
-  "_comment": "后端请粘贴实际的响应示例"
+  "data": null,
+  "message": "Success",
+  "success": true
 }
 ```
 
 **差异说明:**
 - [ ] 无差异
-- [ ] 有差异：_____________
+- [x] 有差异：后端示例未包含 `status` 字段，无法满足审批/拒绝流程，请确认是否需要补充 `status`。
 
 ---
 

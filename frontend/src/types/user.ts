@@ -16,16 +16,8 @@ export interface User {
   username: string;
   /** 邮箱 (唯一) */
   email: string;
-  /** 加密密码 */
-  password: string;
-  /** 账号是否启用 */
-  active: boolean;
   /** 用户角色集合 */
   roles: RoleType[];
-  /** 创建时间 */
-  createDate: string;
-  /** 最后修改时间 */
-  lastModificationDate: string;
 }
 
 /** 角色表 */
@@ -34,12 +26,6 @@ export interface Role {
   id: number;
   /** 角色名称 (e.g., 'HR', 'Employee') */
   roleName: RoleType;
-  /** 角色描述 */
-  roleDescription: string;
-  /** 创建时间 */
-  createDate: string;
-  /** 最后修改时间 */
-  lastModificationDate: string;
 }
 
 /** 用户角色映射表 */
@@ -50,12 +36,6 @@ export interface UserRole {
   userId: number;
   /** 角色 ID (Foreign Key -> Role.ID) */
   roleId: number;
-  /** 激活标志 */
-  activeFlag: boolean;
-  /** 创建时间 */
-  createDate: string;
-  /** 最后修改时间 */
-  lastModificationDate: string;
 }
 
 /** 注册 Token 表 */

@@ -99,12 +99,12 @@ const HousingPage: React.FC = () => {
 
     // 过滤出当前用户
     const currentResident = houseInfo.residents.find(
-      r => r.employeeId === employee?.userID
+      r => r.employeeID === employee?.userID
     );
     
     // 过滤出室友（排除当前用户）
     const roommates = houseInfo.residents.filter(
-      r => r.employeeId !== employee?.userID
+      r => r.employeeID !== employee?.userID
     );
 
     return (
