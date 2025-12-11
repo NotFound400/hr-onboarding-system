@@ -24,6 +24,8 @@ spring:
           predicates:
             - Path=/api/auth/**
           filters:
+            # Rewrite path: /api/auth/** -> /**
+            #- RewritePath=/api/auth/(?<segment>.*), /${segment}
             # No path rewrite - Auth Service uses /api/auth/** paths directly
             # Circuit breaker for fault tolerance
             - name: CircuitBreaker

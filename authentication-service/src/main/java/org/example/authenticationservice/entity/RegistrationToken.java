@@ -29,4 +29,11 @@ public class RegistrationToken {
     @ManyToOne(optional = false)
     @JoinColumn(name = "CreateBy", nullable = false)
     private User createdBy;
+
+    /**
+     * House ID assigned to the employee during token generation.
+     * References house.id in the Housing Service database.
+     */
+    @Column(name = "HouseId")
+    private Long houseId;
 }

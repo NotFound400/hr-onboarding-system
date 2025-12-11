@@ -37,4 +37,14 @@ public class RegistrationTokenDto {
      * Create date in ISO format
      */
     private String createDate;
+
+    /**
+     * Assigned house ID
+     */
+    private Long houseId;
+
+    /**
+     * Assigned house address (for display purposes)
+     */
+    private String houseAddress;
 }

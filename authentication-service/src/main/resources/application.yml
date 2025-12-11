@@ -48,6 +48,16 @@ email:
   frontend:
     registration-url: http://localhost:3000/register
 
+# Housing Service Configuration
+housing:
+  service:
+    url: http://localhost:8083
+
+# Employee Service Configuration
+employee:
+  service:
+    url: http://localhost:8082
+
 # Eureka - DISABLED (Auth Service is standalone)
 eureka:
   client:

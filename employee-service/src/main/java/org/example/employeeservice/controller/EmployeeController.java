@@ -7,6 +7,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PageableDefault;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -72,5 +73,47 @@ public class EmployeeController {
     public ResponseEntity<Void> deleteEmployee(@PathVariable String id) {
         employeeService.deleteEmployee(id);
         return ResponseEntity.ok().build();
+    }
+
+    /**
+     * Get employees by house ID
+     * Used by Housing Service to list roommates
+     */
+    @GetMapping("/api/employees/house/{houseId}")
+    public ResponseEntity<List<Employee>> getEmployeesByHouseId(@PathVariable("houseId") Long houseId) {
+        List<Employee> employees = employeeService.getEmployeesByHouseId(houseId);
+        return ResponseEntity.ok(employees);
+    }
+
+    /**
+     * Count employees by house ID
+     * Used by Housing Service to check house availability
+     */
+    @GetMapping("/api/employees/house/{houseId}/count")
+    public ResponseEntity<Integer> countEmployeesByHouseId(@PathVariable("houseId") Long houseId) {
+        int count = employeeService.countEmployeesByHouseId(houseId);
+        return ResponseEntity.ok(count);
+    }
+
+    /**
+     * Create employee (for registration flow)
+     * Used by Auth Service during user registration
+     * Creates employee only if not already exists
+     */
+    @PostMapping("/api/employees")
+    public ResponseEntity<Employee> createEmployee(@RequestBody Employee employee) {
+        Employee saved = employeeService.createEmployeeIfNotExists(employee);
+        return ResponseEntity.status(HttpStatus.CREATED).body(saved);
+    }
+
+    /**
+     * Get employee by userID (with /api prefix)
+     * Used by Auth Service
+     */
+    @GetMapping("/api/employees/user/{userID}")
+    public ResponseEntity<?> getEmployeeByUserIDApi(@PathVariable Long userID) {
+        Optional<Employee> employee = employeeService.getEmployeeByUserID(userID);
+        return employee.isPresent() ? ResponseEntity.ok(employee.get())
+                : ResponseEntity.notFound().build();
     }
 }
