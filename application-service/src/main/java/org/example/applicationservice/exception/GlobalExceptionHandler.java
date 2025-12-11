@@ -1,6 +1,6 @@
 package org.example.applicationservice.exception;
 
-import com.example.common.Result;
+import org.example.applicationservice.utils.*;
 import org.example.applicationservice.dto.DigitalDocumentDTO;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;

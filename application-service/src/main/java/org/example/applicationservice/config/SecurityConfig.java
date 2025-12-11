@@ -96,7 +96,7 @@ public class SecurityConfig {
     }
 
     @Bean
-    JwtAuthenticationConverter jwtAuthenticationConverter() {
+    JwtAuthenticationConverter jwtAuthenticationConverter() { //JWT as array "roles": ["HR", "ADMIN"]
         // Convert `roles` claim (e.g., ["USER","ADMIN"]) to ROLE_* authorities
         JwtAuthenticationConverter converter = new JwtAuthenticationConverter();
         converter.setJwtGrantedAuthoritiesConverter(jwt -> {
@@ -109,4 +109,20 @@ public class SecurityConfig {
         });
         return converter;
     }
+
+//    converter.setJwtGrantedAuthoritiesConverter(jwt -> { //JWT (or header) has roles as a string "HR,ADMIN":
+//        Collection<GrantedAuthority> authorities = new ArrayList<>();
+//
+//        String rolesString = jwt.getClaimAsString("roles");
+//        if (rolesString != null && !rolesString.isEmpty()) {
+//            Arrays.stream(rolesString.split(","))
+//                    .map(String::trim)
+//                    .map(r -> new SimpleGrantedAuthority("ROLE_" + r))
+//                    .forEach(authorities::add);
+//        }
+//
+//        return authorities;
+//    });
+
+
 }

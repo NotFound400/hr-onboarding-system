@@ -9,6 +9,11 @@ import org.example.applicationservice.domain.ApplicationWorkFlow;
 import org.example.applicationservice.dto.ApplicationFlowDTO;
 import org.example.applicationservice.dto.CreateApplicationDTO;
 import org.example.applicationservice.dto.HRRequestDTO;
+import org.example.applicationservice.dto.UpdateApplicationStatusDTO;
+<<<<<<< HEAD
+import org.example.applicationservice.service.impl.ApplicationServiceImpl;
+=======
+>>>>>>> 398e3cbc1dda6501b815867cafe8dc02dad13a8a
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -18,7 +23,6 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
-import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -128,7 +132,7 @@ class ApplicationServiceImplTest {
         HRRequestDTO request = new HRRequestDTO();
         request.setComment("Approved");
 
-        Result<Void> result = applicationService.approveApplication(1L, request);
+        Result<UpdateApplicationStatusDTO> result = applicationService.approveApplication(1L, request);
 
         assertTrue(result.isSuccess());
         verify(repository, times(1)).save(any(ApplicationWorkFlow.class));
@@ -142,7 +146,7 @@ class ApplicationServiceImplTest {
         HRRequestDTO request = new HRRequestDTO();
         request.setComment("Approved");
 
-        Result<Void> result = applicationService.approveApplication(1L, request);
+        Result<UpdateApplicationStatusDTO> result = applicationService.approveApplication(1L, request);
 
         assertFalse(result.isSuccess());
         assertTrue(result.getMessage().contains("Cannot approve application"));
@@ -158,7 +162,7 @@ class ApplicationServiceImplTest {
         HRRequestDTO request = new HRRequestDTO();
         request.setComment("Rejected");
 
-        Result<Void> result = applicationService.rejectApplication(1L, request);
+        Result<UpdateApplicationStatusDTO> result = applicationService.rejectApplication(1L, request);
 
         assertTrue(result.isSuccess());
         verify(repository, times(1)).save(any(ApplicationWorkFlow.class));
@@ -172,7 +176,7 @@ class ApplicationServiceImplTest {
         HRRequestDTO request = new HRRequestDTO();
         request.setComment("Rejected");
 
-        Result<Void> result = applicationService.rejectApplication(1L, request);
+        Result<UpdateApplicationStatusDTO> result = applicationService.rejectApplication(1L, request);
 
         assertFalse(result.isSuccess());
         assertTrue(result.getMessage().contains("Cannot reject application"));

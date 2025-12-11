@@ -1,7 +1,6 @@
 package org.example.applicationservice.controller;
 
-import com.example.common.ApplicationStatus;
-import com.example.common.Result;
+import org.example.applicationservice.utils.*;
 import org.example.applicationservice.dto.*;
 import org.example.applicationservice.service.ApplicationService;
 import org.springframework.http.ResponseEntity;
@@ -41,16 +40,6 @@ public class ApplicationFlowController {
         return ResponseEntity.ok(result);
     }
 
-//    @PreAuthorize("hasRole('EMPLOYEE')")
-//    @GetMapping("/employee/{employeeId}")
-//    public ResponseEntity<Result<List<ApplicationFlowDTO>>> getActiveApplication(
-//            @PathVariable String employeeId) {
-//        Result<List<ApplicationFlowDTO>> result = applicationService.getActiveApplications(employeeId);
-//        if (!result.isSuccess()) {
-//            return ResponseEntity.ok(result); // still return 200, frontend can handle empty case
-//        }
-//        return ResponseEntity.ok(result);
-//    }
     @PreAuthorize("hasRole('EMPLOYEE')")
     @GetMapping("/employee/{employeeId}")
     public ResponseEntity<Result<List<ApplicationListResponseDTO>>> getActiveApplication(
@@ -114,11 +103,11 @@ public class ApplicationFlowController {
 
     @PreAuthorize("hasRole('HR')")
     @PostMapping("/{applicationId}/reject")
-    public ResponseEntity<Result<Void>> rejectApplication(
+    public ResponseEntity<Result<UpdateApplicationStatusDTO>> rejectApplication(
             @PathVariable Long applicationId,
             @RequestBody HRRequestDTO request) {
 
-        Result<Void> result = applicationService.rejectApplication(applicationId, request);
+        Result<UpdateApplicationStatusDTO> result = applicationService.rejectApplication(applicationId, request);
         return result.isSuccess() ? ResponseEntity.ok(result) : ResponseEntity.badRequest().body(result);
     }
 

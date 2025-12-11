@@ -1,7 +1,6 @@
 package org.example.applicationservice.dto;
 
-import com.example.common.ApplicationStatus;
-import com.example.common.ApplicationType;
+import org.example.applicationservice.utils.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
