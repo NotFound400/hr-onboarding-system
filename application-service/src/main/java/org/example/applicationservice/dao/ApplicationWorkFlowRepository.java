@@ -1,6 +1,6 @@
 package org.example.applicationservice.dao;
 
-import com.example.common.ApplicationStatus;
+import org.example.applicationservice.utils.*;
 import org.example.applicationservice.domain.ApplicationWorkFlow;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;

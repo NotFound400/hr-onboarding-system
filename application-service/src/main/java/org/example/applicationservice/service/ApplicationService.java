@@ -1,9 +1,8 @@
 package org.example.applicationservice.service;
 
-import com.example.common.ApplicationStatus;
-import com.example.common.Result;
-import org.example.applicationservice.dto.*;
 
+import org.example.applicationservice.utils.*;
+import org.example.applicationservice.dto.*;
 import java.util.List;
 
 public interface ApplicationService {
@@ -16,7 +15,8 @@ public interface ApplicationService {
     Result<Void> submitApplication(Long applicationId);
 //    Result<Void> approveApplication(Long applicationId, HRRequestDTO request);
     Result<UpdateApplicationStatusDTO> approveApplication(Long applicationId, HRRequestDTO request);
-    Result<Void> rejectApplication(Long applicationId, HRRequestDTO request);
+//    Result<Void> rejectApplication(Long applicationId, HRRequestDTO request);
+    Result<UpdateApplicationStatusDTO> rejectApplication(Long applicationId, HRRequestDTO request);
     Result<List<ApplicationFlowDTO>> listOngoingApplications();
     Result<List<ApplicationFlowDTO>> getApplicationsByEmployeeId(String employeeID);
     Result<List<ApplicationFlowDTO>> getApplicationsByStatus(ApplicationStatus status);

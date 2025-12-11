@@ -1,8 +1,0 @@
-
-server:
-  port: 8083
-
-security:
-  jwt:
-    secret: dGhpc2lzYXZlcnlsb25nc2VjcmV0a2V5Zm9yaHJvbmJvYXJkaW5nc3lzdGVtand0dG9rZW4=
-    algorithm: HS256
