@@ -1,8 +1,8 @@
 package org.example.applicationservice.service;
 
+
 import org.example.applicationservice.utils.*;
 import org.example.applicationservice.dto.*;
-
 import java.util.List;
 
 public interface ApplicationService {

@@ -10,7 +10,10 @@ import org.example.applicationservice.dto.ApplicationFlowDTO;
 import org.example.applicationservice.dto.CreateApplicationDTO;
 import org.example.applicationservice.dto.HRRequestDTO;
 import org.example.applicationservice.dto.UpdateApplicationStatusDTO;
+<<<<<<< HEAD
 import org.example.applicationservice.service.impl.ApplicationServiceImpl;
+=======
+>>>>>>> 398e3cbc1dda6501b815867cafe8dc02dad13a8a
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
