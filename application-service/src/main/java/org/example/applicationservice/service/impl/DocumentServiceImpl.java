@@ -1,6 +1,7 @@
-package org.example.applicationservice.service;
+package org.example.applicationservice.service.impl;
 
-import com.example.common.Result;
+import org.example.applicationservice.service.DocumentService;
+import org.example.applicationservice.utils.*;
 import org.example.applicationservice.dao.ApplicationWorkFlowRepository;
 import org.example.applicationservice.dao.DigitalDocumentRepository;
 import org.example.applicationservice.domain.ApplicationWorkFlow;
@@ -8,6 +9,7 @@ import org.example.applicationservice.domain.DigitalDocument;
 import org.example.applicationservice.dto.DigitalDocumentDTO;
 import org.example.applicationservice.dto.UploadDocumentRequest;
 import org.example.applicationservice.exception.EntityNotFoundException;
+import org.example.applicationservice.utils.OwnershipValidator;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
@@ -18,6 +20,7 @@ import software.amazon.awssdk.services.s3.model.GetObjectRequest;
 import software.amazon.awssdk.services.s3.model.PutObjectRequest;
 import java.io.IOException;
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -27,15 +30,20 @@ public class DocumentServiceImpl implements DocumentService {
     private final DigitalDocumentRepository repository;
     private final S3Client s3Client;
     private final ApplicationWorkFlowRepository applicationRepository;
+    private final OwnershipValidator ownershipValidator;
     @Value("${aws.bucket.name}")
     private String bucketName;
     @Value("${cloud.aws.region}")
     private String region;
 
-    public DocumentServiceImpl(DigitalDocumentRepository repository, S3Client s3Client, ApplicationWorkFlowRepository applicationRepository) {
+    public DocumentServiceImpl(DigitalDocumentRepository repository,
+                               S3Client s3Client,
+                               ApplicationWorkFlowRepository applicationRepository,
+                               OwnershipValidator ownershipValidator) {
         this.repository = repository;
         this.s3Client = s3Client;
         this.applicationRepository = applicationRepository;
+        this.ownershipValidator = ownershipValidator;
     }
 
     @Override
@@ -116,6 +124,10 @@ public class DocumentServiceImpl implements DocumentService {
 
     @Override
     public DigitalDocumentDTO uploadDocument(MultipartFile file, UploadDocumentRequest request) {
+        ApplicationWorkFlow app = applicationRepository.findById(request.getApplicationId())
+                .orElseThrow(() -> new EntityNotFoundException("Application not found"));
+//        ownershipValidator.checkOwnership(app.getEmployeeId());
+
         try {
             // 1. Generate S3 key (filename in bucket)
             String key = "documents/" + request.getApplicationId() + "/" + UUID.randomUUID() + "-" + file.getOriginalFilename();
@@ -141,7 +153,11 @@ public class DocumentServiceImpl implements DocumentService {
             doc.setTitle(request.getTitle());
             doc.setDescription(request.getDescription());
             doc.setPath(s3Url);
-            doc.setIsRequired(false);
+            boolean isRequired = false;
+            if(isRequired(request.getType())) {
+                isRequired = true;
+            }
+            doc.setIsRequired(isRequired);
 
             DigitalDocument saved = repository.save(doc);
 
@@ -159,11 +175,30 @@ public class DocumentServiceImpl implements DocumentService {
         }
     }
 
+    private boolean isRequired(String type) {
+        if (type == null || type.trim().isEmpty()) return false;
+        String t = type.trim().toLowerCase();
+        Set<String> requiredExact = Set.of(
+                "passport",
+                "driver license",
+                "driver's license",
+                "i-20 form",
+                "driving licence",
+                "driving license"
+        );
+
+        if (requiredExact.contains(t)) {
+            return true;
+        }
+        return t.contains("visa");
+    }
+
     @Override
     public byte[] downloadDocumentById(Long documentId) {
         // 1. Fetch document entity
         DigitalDocument doc = repository.findById(documentId)
                 .orElseThrow(() -> new EntityNotFoundException("Document not found with id: " + documentId));
+//        ownershipValidator.checkOwnership(doc.getApplication().getEmployeeId());
 
         // 2. Extract S3 key from URL (assuming you stored full S3 URL in doc.getPath())
         String s3Url = doc.getPath();
@@ -188,6 +223,7 @@ public class DocumentServiceImpl implements DocumentService {
         // 1. Fetch entity
         DigitalDocument doc = repository.findById(documentId)
                 .orElseThrow(() -> new EntityNotFoundException("Document not found with id: " + documentId));
+//        ownershipValidator.checkOwnership(doc.getApplication().getEmployeeId());
 
         // 2. Extract S3 key
         String s3Url = doc.getPath();
@@ -209,6 +245,7 @@ public class DocumentServiceImpl implements DocumentService {
         // 1. Find existing document
         DigitalDocument doc = repository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Document not found: " + id));
+//        ownershipValidator.checkOwnership(doc.getApplication().getEmployeeId());
 
         // 2. Extract S3 key from existing path
         String s3Url = doc.getPath();

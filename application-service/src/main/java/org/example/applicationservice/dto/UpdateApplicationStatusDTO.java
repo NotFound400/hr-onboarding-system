@@ -1,6 +1,6 @@
 package org.example.applicationservice.dto;
 
-import com.example.common.ApplicationStatus;
+import org.example.applicationservice.utils.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -9,7 +9,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class UpdateApplicationStatusDTO {
-    private Long id;
+//    private Long id;
     private ApplicationStatus status;
     private String comment;
 }

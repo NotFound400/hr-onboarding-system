@@ -7,6 +7,8 @@ import org.example.applicationservice.domain.ApplicationWorkFlow;
 import org.example.applicationservice.domain.DigitalDocument;
 import org.example.applicationservice.dto.DigitalDocumentDTO;
 import org.example.applicationservice.dto.UploadDocumentRequest;
+import org.example.applicationservice.service.impl.DocumentServiceImpl;
+import org.example.applicationservice.utils.OwnershipValidator;
 import org.junit.jupiter.api.*;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
@@ -34,6 +36,8 @@ class DocumentServiceImplTest {
     private S3Client s3Client;
     @Mock
     private ApplicationWorkFlowRepository applicationRepository;
+    @Mock
+    private OwnershipValidator ownershipValidator;
 
     private DocumentServiceImpl service;
 
@@ -52,7 +56,7 @@ class DocumentServiceImplTest {
     @BeforeEach
     void setUp() {
         mocks = MockitoAnnotations.openMocks(this);
-        service = new DocumentServiceImpl(repository, s3Client, applicationRepository); // <-- inject mock manually
+        service = new DocumentServiceImpl(repository, s3Client, applicationRepository, ownershipValidator); // <-- inject mock manually
     }
 
     @AfterEach

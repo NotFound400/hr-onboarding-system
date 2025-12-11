@@ -1,11 +1,7 @@
 package org.example.applicationservice.controller;
 
-import com.example.common.ApplicationStatus;
-import com.example.common.Result;
-import org.example.applicationservice.dto.ApplicationFlowDTO;
-import org.example.applicationservice.dto.CreateApplicationDTO;
-import org.example.applicationservice.dto.HRRequestDTO;
-import org.example.applicationservice.dto.UpdateApplicationDTO;
+import org.example.applicationservice.utils.*;
+import org.example.applicationservice.dto.*;
 import org.example.applicationservice.service.ApplicationService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -34,10 +30,21 @@ public class ApplicationFlowController {
     }
 
     @PreAuthorize("hasRole('EMPLOYEE')")
-    @GetMapping("/employee/{employeeId}")
+    @GetMapping("/employee/latest/{employeeId}")
     public ResponseEntity<Result<ApplicationFlowDTO>> getLatestActiveApplication(
             @PathVariable String employeeId) {
         Result<ApplicationFlowDTO> result = applicationService.getLatestActiveApplication(employeeId);
+        if (!result.isSuccess()) {
+            return ResponseEntity.ok(result); // still return 200, frontend can handle empty case
+        }
+        return ResponseEntity.ok(result);
+    }
+
+    @PreAuthorize("hasRole('EMPLOYEE')")
+    @GetMapping("/employee/{employeeId}")
+    public ResponseEntity<Result<List<ApplicationListResponseDTO>>> getActiveApplication(
+            @PathVariable String employeeId) {
+        Result<List<ApplicationListResponseDTO>> result = applicationService.getActiveApplications(employeeId);
         if (!result.isSuccess()) {
             return ResponseEntity.ok(result); // still return 200, frontend can handle empty case
         }
@@ -81,11 +88,11 @@ public class ApplicationFlowController {
     @PostMapping("/{applicationId}/approve")
     @PreAuthorize("hasRole('HR')")
 //    @PreAuthorize("hasAuthority('ROLE_HR')")
-    public ResponseEntity<Result<Void>> approveApplication(
+    public ResponseEntity<Result<UpdateApplicationStatusDTO>> approveApplication(
             @PathVariable Long applicationId,
             @RequestBody HRRequestDTO request) {
 
-        Result<Void> result = applicationService.approveApplication(applicationId, request);
+        Result<UpdateApplicationStatusDTO> result = applicationService.approveApplication(applicationId, request);
 
         if (!result.isSuccess()) {
             return ResponseEntity.badRequest().body(result);
@@ -96,11 +103,11 @@ public class ApplicationFlowController {
 
     @PreAuthorize("hasRole('HR')")
     @PostMapping("/{applicationId}/reject")
-    public ResponseEntity<Result<Void>> rejectApplication(
+    public ResponseEntity<Result<UpdateApplicationStatusDTO>> rejectApplication(
             @PathVariable Long applicationId,
             @RequestBody HRRequestDTO request) {
 
-        Result<Void> result = applicationService.rejectApplication(applicationId, request);
+        Result<UpdateApplicationStatusDTO> result = applicationService.rejectApplication(applicationId, request);
         return result.isSuccess() ? ResponseEntity.ok(result) : ResponseEntity.badRequest().body(result);
     }
 
