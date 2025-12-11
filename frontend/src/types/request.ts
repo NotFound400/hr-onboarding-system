@@ -35,6 +35,7 @@ export interface RegisterRequest {
  */
 export interface GenerateTokenRequest {
   email: string;
+  houseId: number;
 }
 
 // ==================== Onboarding Request DTO ====================
@@ -163,7 +164,7 @@ export interface UpdateEmployeeRequest {
 /** 创建申请请求 (Section 3.e - Submit onboarding application) */
 export interface CreateApplicationRequest {
   employeeId: string;
-  type: ApplicationType;
+  applicationType: ApplicationType;
   comment?: string;
 }
 
@@ -222,8 +223,7 @@ export interface UpdateFacilityRequest {
 
 /** 创建报修工单请求 (Section 8.c - Report facility issue) */
 export interface CreateFacilityReportRequest {
-  houseId: number;
-  employeeId: string; // MongoDB ObjectId
+  facilityId: number;
   title: string;
   description: string;
 }
@@ -231,13 +231,12 @@ export interface CreateFacilityReportRequest {
 /** 更新报修状态请求 (HR Section 6.c.iii) */
 export interface UpdateFacilityReportStatusRequest {
   reportId: number;
-  status: 'Open' | 'In Progress' | 'Closed'; // 明确使用字符串字面量
+  status: 'Open' | 'InProgress' | 'Closed'; // 明确使用字符串字面量
 }
 
 /** 添加报修评论请求 (Section 8.c - Add comments) */
 export interface AddFacilityReportCommentRequest {
-  reportId: number;
-  employeeId: string; // MongoDB ObjectId
+  facilityReportId: number;
   comment: string;
 }
 

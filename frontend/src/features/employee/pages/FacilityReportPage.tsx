@@ -18,6 +18,7 @@ import {
   Alert,
   Typography,
   Spin,
+  Select,
 } from 'antd';
 import {
   HomeOutlined,
@@ -28,31 +29,35 @@ import {
 import dayjs from 'dayjs';
 import { PageContainer } from '../../../components/common/PageContainer';
 import {
-  getEmployeeByUserId,
-  getFacilityReportsByEmployeeId,
+  getMyFacilityReports,
   createFacilityReport,
   getFacilityReportById,
   addFacilityReportComment,
   updateFacilityReportComment,
+  getFacilitiesByHouseId,
 } from '../../../services/api';
 import { useAppSelector } from '../../../store/hooks';
 import { selectUser } from '../../../store/slices/authSlice';
+import { FacilityReportStatus } from '../../../types';
 import type {
-  Employee,
   FacilityReportListItem,
   FacilityReportDetail,
   FacilityReportComment,
+  Facility,
 } from '../../../types';
 
 const { TextArea } = Input;
 const { Paragraph, Text } = Typography;
+const { Option } = Select;
 
 const FacilityReportPage: React.FC = () => {
   const currentUser = useAppSelector(selectUser);
+  const assignedHouseId = useAppSelector((state) => state.auth.houseId);
   const [form] = Form.useForm();
-  const [employee, setEmployee] = useState<Employee | null>(null);
   const [houseId, setHouseId] = useState<number | null>(null);
   const [reports, setReports] = useState<FacilityReportListItem[]>([]);
+  const [facilities, setFacilities] = useState<Facility[]>([]);
+  const [facilityLoading, setFacilityLoading] = useState(false);
   const [loading, setLoading] = useState(false);
   const [reportsLoading, setReportsLoading] = useState(false);
   const [submittingReport, setSubmittingReport] = useState(false);
@@ -67,23 +72,22 @@ const FacilityReportPage: React.FC = () => {
   useEffect(() => {
     initialize();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [currentUser?.id]);
+  }, [assignedHouseId]);
 
   const initialize = async () => {
-    if (!currentUser) return;
-
     try {
       setLoading(true);
-      const empData = await getEmployeeByUserId(String(currentUser.id));
-      setEmployee(empData);
-
-      if (empData.houseID) {
-        setHouseId(empData.houseID);
-        fetchReports(empData.userID);
-      } else {
+      if (!assignedHouseId) {
         setHouseId(null);
         setReports([]);
+        setFacilities([]);
+        return;
       }
+
+      const normalizedHouseId = Number(assignedHouseId);
+      setHouseId(normalizedHouseId);
+      await fetchReports();
+      await fetchFacilities(normalizedHouseId);
     } catch (error: any) {
       message.error(error.message || 'Failed to load facility reports');
     } finally {
@@ -91,10 +95,10 @@ const FacilityReportPage: React.FC = () => {
     }
   };
 
-  const fetchReports = async (employeeUserId: number) => {
+  const fetchReports = async () => {
     try {
       setReportsLoading(true);
-      const list = await getFacilityReportsByEmployeeId(employeeUserId);
+      const list = await getMyFacilityReports();
       setReports(list);
     } catch (error: any) {
       message.error(error.message || 'Failed to fetch reports');
@@ -103,21 +107,36 @@ const FacilityReportPage: React.FC = () => {
     }
   };
 
+  const fetchFacilities = async (targetHouseId: number) => {
+    try {
+      setFacilityLoading(true);
+      const list = await getFacilitiesByHouseId(targetHouseId);
+      setFacilities(list);
+    } catch (error: any) {
+      message.error(error.message || 'Failed to load facilities');
+      setFacilities([]);
+    } finally {
+      setFacilityLoading(false);
+    }
+  };
+
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'Open':
+      case FacilityReportStatus.OPEN:
         return 'red';
-      case 'In Progress':
+      case FacilityReportStatus.IN_PROGRESS:
         return 'orange';
-      case 'Closed':
+      case FacilityReportStatus.CLOSED:
         return 'green';
       default:
         return 'default';
     }
   };
 
-  const handleCreateReport = async (values?: { title: string; description: string }) => {
-    if (!employee || !houseId) {
+  const handleCreateReport = async (
+    values?: { title: string; description: string; facilityId: number }
+  ) => {
+    if (!houseId) {
       message.warning('You need an assigned house before reporting an issue.');
       return;
     }
@@ -126,14 +145,13 @@ const FacilityReportPage: React.FC = () => {
       const formValues = values || (await form.validateFields());
       setSubmittingReport(true);
       await createFacilityReport({
-        houseId,
-        employeeId: employee.id,
+        facilityId: formValues.facilityId,
         title: formValues.title,
         description: formValues.description,
       });
       message.success('Facility issue reported successfully');
       form.resetFields();
-      fetchReports(employee.userID);
+      fetchReports();
     } catch (error: any) {
       if (error?.errorFields) {
         return;
@@ -176,7 +194,7 @@ const FacilityReportPage: React.FC = () => {
   };
 
   const handleAddComment = async () => {
-    if (!selectedReport || !employee) return;
+    if (!selectedReport) return;
     if (!newComment.trim()) {
       message.warning('Please enter a comment');
       return;
@@ -184,14 +202,14 @@ const FacilityReportPage: React.FC = () => {
 
     try {
       setCommentSubmitting(true);
-      await addFacilityReportComment(selectedReport.id, {
-        reportId: selectedReport.id,
-        employeeId: employee.id,
+      await addFacilityReportComment({
+        facilityReportId: selectedReport.id,
         comment: newComment.trim(),
       });
       message.success('Comment added');
       setNewComment('');
       refreshSelectedReport(selectedReport.id);
+      fetchReports();
     } catch (error: any) {
       message.error(error.message || 'Failed to add comment');
     } finally {
@@ -213,7 +231,6 @@ const FacilityReportPage: React.FC = () => {
     try {
       setCommentUpdating(true);
       await updateFacilityReportComment(
-        selectedReport.id,
         editingComment.id,
         editingComment.value.trim()
       );
@@ -228,12 +245,9 @@ const FacilityReportPage: React.FC = () => {
   };
 
   const isCommentOwner = (comment: FacilityReportComment) => {
-    if (!employee) return false;
-    const commentOwner =
-      typeof comment.employeeId === 'number'
-        ? comment.employeeId
-        : parseInt(String(comment.employeeId), 10);
-    return commentOwner === employee.userID;
+    if (!currentUser) return false;
+    const commentOwner = Number(comment.employeeId);
+    return commentOwner === Number(currentUser.id);
   };
 
   const renderNoHouse = () => (
@@ -431,6 +445,24 @@ const FacilityReportPage: React.FC = () => {
               style={{ marginBottom: 16 }}
             />
             <Form layout="vertical" form={form} onFinish={handleCreateReport} requiredMark={false}>
+              <Form.Item
+                label="Facility"
+                name="facilityId"
+                rules={[{ required: true, message: 'Please select a facility' }]}
+              >
+                <Select
+                  placeholder="Select the facility with an issue"
+                  loading={facilityLoading}
+                  disabled={!facilityLoading && facilities.length === 0}
+                  notFoundContent={facilityLoading ? <Spin size="small" /> : 'No facilities available'}
+                >
+                  {facilities.map((facility) => (
+                    <Option key={facility.id} value={facility.id}>
+                      {facility.type} ({facility.quantity}) - {facility.description}
+                    </Option>
+                  ))}
+                </Select>
+              </Form.Item>
               <Form.Item
                 label="Title"
                 name="title"

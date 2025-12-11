@@ -52,10 +52,28 @@ export interface FacilitySummary {
   [facilityType: string]: number;
 }
 
+/** 房屋概要信息 (用于 HR 招聘流程房源选择) */
+export interface HouseSummary {
+  id: number;
+  address: string;
+  maxOccupant: number;
+  currentOccupant: number;
+  availableSpots: number;
+}
+
+/** 房屋可用状态 */
+export interface HouseAvailability {
+  houseId: number;
+  address: string;
+  maxOccupant: number;
+  currentOccupants: number;
+  available: boolean;
+}
+
 /** 住户信息 */
 export interface Resident {
   /** 员工 ID */
-  employeeID: number;
+  employeeId: number | string;
   /** 姓名 */
   name: string;
   /** 电话 */
@@ -93,25 +111,35 @@ export interface HouseListItem {
 /** House 类型别名 (兼容) */
 export type House = HouseListItem;
 
-/** 房屋详情 (HR 视角) */
-export interface HouseDetail {
-  /** Primary Key */
+type HouseViewType = 'HR_VIEW' | 'EMPLOYEE_VIEW';
+
+interface HouseDetailBase {
   id: number;
-  /** 地址 */
   address: string;
-  /** 最大入住人数 */
+  viewType: HouseViewType;
+}
+
+/** 房屋详情 (HR 视角) */
+export interface HouseDetailHR extends HouseDetailBase {
+  viewType: 'HR_VIEW';
   maxOccupant: number;
-  /** 当前入住员工数 */
-  numberOfEmployees: number;
-  /** 房东 ID (用于请求/选择) */
-  landlordId: number;
-  /** 房东信息 */
+  /** 后端可能同时返回 numberOfEmployees 或 currentOccupant，两个字段都保留 */
+  numberOfEmployees?: number;
+  currentOccupant?: number;
   landlord: Landlord;
-  /** 设施汇总 */
-  facilitySummary: FacilitySummary;
-  /** 设施列表 */
+  landlordId?: number;
+  facilitySummary?: FacilitySummary;
   facilities: Facility[];
 }
+
+/** 房屋详情 (员工视角) */
+export interface HouseDetailEmployee extends HouseDetailBase {
+  viewType: 'EMPLOYEE_VIEW';
+  roommates: Resident[];
+}
+
+/** 房屋详情 (联邦类型) */
+export type HouseDetail = HouseDetailHR | HouseDetailEmployee;
 
 /** 房屋信息 (员工视角) */
 export interface HouseEmployeeView {
@@ -119,8 +147,8 @@ export interface HouseEmployeeView {
   id: number;
   /** 地址 */
   address: string;
-  /** 住户列表 */
-  residents: Resident[];
+  /** 室友列表 */
+  roommates: Resident[];
 }
 
 // ==================== Facility Report Types ====================

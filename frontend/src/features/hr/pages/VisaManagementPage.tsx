@@ -41,7 +41,7 @@ const VisaManagementPage: React.FC = () => {
       
       // 过滤出 OPT 类型的申请（签证相关）
       const visaApplications = data.filter(
-        app => app.type === 'OPT'
+        app => app.applicationType === 'OPT'
       );
       
       setApplications(visaApplications);
@@ -125,16 +125,16 @@ const VisaManagementPage: React.FC = () => {
     },
     {
       title: 'Work Authorization',
-      dataIndex: 'type',
-      key: 'type',
+      dataIndex: 'applicationType',
+      key: 'applicationType',
       filters: [
         { text: 'OPT', value: 'OPT' },
         { text: 'F1', value: 'F1' },
       ],
-      onFilter: (value, record) => record.type === value,
-      render: (type: string) => (
+      onFilter: (value, record) => record.applicationType === value,
+      render: (applicationType: string) => (
         <Tag color="blue">
-          {type}
+          {applicationType}
         </Tag>
       ),
     },
@@ -265,7 +265,7 @@ const VisaManagementPage: React.FC = () => {
           <strong>Employee:</strong> {selectedApplication?.employeeName}
         </p>
         <p style={{ marginBottom: 16 }}>
-          <strong>Type:</strong> {selectedApplication?.type}
+          <strong>Type:</strong> {selectedApplication?.applicationType}
         </p>
         <TextArea
           placeholder="Please provide a reason for rejection (required)"

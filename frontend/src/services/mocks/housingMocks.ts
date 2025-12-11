@@ -8,8 +8,9 @@ import type {
   Landlord,
   HouseListItem,
   Facility,
-  HouseDetail,
+  HouseDetailHR,
   HouseEmployeeView,
+  HouseSummary,
   FacilityReportListItem,
   FacilityReportComment,
   FacilityReportDetail,
@@ -103,14 +104,16 @@ export const MOCK_FACILITIES: ApiResponse<Facility[]> = {
 };
 
 /** Mock 房屋详情数据 */
-export const MOCK_HOUSE_DETAIL: ApiResponse<HouseDetail> = {
+export const MOCK_HOUSE_DETAIL: ApiResponse<HouseDetailHR> = {
   success: true,
   message: 'House detail retrieved successfully',
   data: {
+    viewType: 'HR_VIEW',
     id: 1,
     address: '123 Main Street',
     maxOccupant: 4,
     numberOfEmployees: 3,
+    currentOccupant: 3,
     landlordId: 1,
     landlord: MOCK_LANDLORD.data!,
     facilitySummary: {
@@ -130,24 +133,53 @@ export const MOCK_HOUSE_EMPLOYEE_VIEW: ApiResponse<HouseEmployeeView> = {
   data: {
     id: 1,
     address: '123 Main Street, City, State 12345',
-    residents: [
+    roommates: [
       {
-        employeeID: 100,
+        employeeId: 100,
         name: 'Em',
         phone: '555-123-4567',
       },
       {
-        employeeID: 1,
+        employeeId: 1,
         name: 'Alice Wang',
         phone: '111-222-3333',
       },
       {
-        employeeID: 2,
+        employeeId: 2,
         name: 'Bob Smith',
         phone: '444-555-6666',
       },
     ],
   },
+};
+
+/** Mock 房屋概要列表 (用于可选房屋) */
+export const MOCK_HOUSE_SUMMARIES: ApiResponse<HouseSummary[]> = {
+  success: true,
+  message: 'House summaries retrieved successfully',
+  data: [
+    {
+      id: 1,
+      address: '123 Main Street, City, State 12345',
+      maxOccupant: 3,
+      currentOccupant: 1,
+      availableSpots: 2,
+    },
+    {
+      id: 2,
+      address: '456 Oak Avenue, City, State 12345',
+      maxOccupant: 3,
+      currentOccupant: 3,
+      availableSpots: 0,
+    },
+    {
+      id: 3,
+      address: '789 Pine Road, City, State 12345',
+      maxOccupant: 4,
+      currentOccupant: 2,
+      availableSpots: 2,
+    },
+  ],
 };
 
 /** Mock 报修工单列表 */
@@ -166,7 +198,7 @@ export const MOCK_FACILITY_REPORT_LIST: ApiResponse<FacilityReportListItem[]> = 
       id: 2,
       title: 'Leaking faucet',
       createDate: '2024-01-16T14:20:00Z',
-      status: 'In Progress',
+      status: 'InProgress',
       statusDisplayName: 'In Progress',
     },
     {
@@ -220,7 +252,7 @@ export const MOCK_FACILITY_REPORT_DETAIL: ApiResponse<FacilityReportDetail> = {
     employeeId: 1,
     createdBy: 'Alice Smith',
     createDate: '2024-01-15T10:30:00Z',
-    status: 'In Progress',
+    status: 'InProgress',
     statusDisplayName: 'In Progress',
     comments: MOCK_COMMENTS.data!,
   },
@@ -231,7 +263,7 @@ export const MOCK_FACILITY_REPORT_DETAIL: ApiResponse<FacilityReportDetail> = {
  */
 const HEAVY_LOAD_REPORTS: FacilityReportDetail[] = Array.from({ length: 12 }).map((_, index) => {
   const id = index + 1;
-  const statusCycle = ['Open', 'In Progress', 'Closed'] as const;
+  const statusCycle = ['Open', 'InProgress', 'Closed'] as const;
   const status = statusCycle[index % statusCycle.length];
   const baseReport: FacilityReportDetail = {
     id: 800 + id,
@@ -286,12 +318,13 @@ const HEAVY_LOAD_REPORTS: FacilityReportDetail[] = Array.from({ length: 12 }).ma
   return baseReport;
 });
 
-export const SCENARIO_HOUSE_HEAVY_LOAD: (HouseDetail & { reports: FacilityReportDetail[] }) = {
+export const SCENARIO_HOUSE_HEAVY_LOAD: (HouseDetailHR & { reports: FacilityReportDetail[] }) = {
   ...MOCK_HOUSE_DETAIL.data!,
   id: 99,
   address: '999 Innovation Way, Boston, MA 02110',
   maxOccupant: 12,
   numberOfEmployees: 11,
+  currentOccupant: 11,
   facilities: [
     {
       id: 401,

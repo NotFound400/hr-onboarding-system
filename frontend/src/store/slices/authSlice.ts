@@ -8,6 +8,22 @@ import type { PayloadAction } from '@reduxjs/toolkit';
 import type { User, LoginRequest, RegisterRequest, LoginResponse, RoleType } from '../../types';
 import { login as loginApi, register as registerApi, logout as logoutApi, getUserProfile } from '../../services/api';
 
+const parseStoredRoles = (): RoleType[] => {
+  try {
+    const raw = localStorage.getItem('roles');
+    return raw ? (JSON.parse(raw) as RoleType[]) : [];
+  } catch {
+    return [];
+  }
+};
+
+const derivePrimaryRole = (roles: RoleType[], fallback: RoleType | null): RoleType | null => {
+  if (roles.includes('HR')) {
+    return 'HR';
+  }
+  return fallback;
+};
+
 // ==================== State Interface ====================
 
 interface AuthState {
@@ -25,6 +41,10 @@ interface AuthState {
   roles: RoleType[];
   /** 是否已认证 */
   isAuthenticated: boolean;
+  /** 当前用户关联房屋 ID */
+  houseId: number | null;
+  /** 当前用户关联员工 ID */
+  employeeId: string | null;
   /** 加载状态 */
   loading: boolean;
   /** 错误信息 */
@@ -33,13 +53,20 @@ interface AuthState {
 
 // ==================== Initial State ====================
 
+const initialRoles = parseStoredRoles();
+const storedRole = (localStorage.getItem('role') as RoleType | null) ?? null;
+
 const initialState: AuthState = {
   user: null,
   token: localStorage.getItem('token') || null,
   tokenType: localStorage.getItem('tokenType') || null,
   tokenExpiresAt: localStorage.getItem('tokenExpiresAt') || null,
-  role: (localStorage.getItem('role') as RoleType | null) ?? null,
-  roles: JSON.parse(localStorage.getItem('roles') || '[]') as RoleType[],
+  role: derivePrimaryRole(initialRoles, storedRole),
+  roles: initialRoles,
+  houseId: localStorage.getItem('houseId')
+    ? Number(localStorage.getItem('houseId'))
+    : null,
+  employeeId: localStorage.getItem('employeeId') || null,
   isAuthenticated: !!localStorage.getItem('token'),
   loading: false,
   error: null,
@@ -59,13 +86,30 @@ export const login = createAsyncThunk<
   async (credentials, { rejectWithValue }) => {
     try {
       const response = await loginApi(credentials);
+      const normalizedRole: RoleType =
+        response.roles.includes('HR') ? 'HR' : response.role;
+      const updatedResponse: LoginResponse = {
+        ...response,
+        role: normalizedRole,
+      };
+
       // 持久化 token 和 role
       localStorage.setItem('token', response.token);
       localStorage.setItem('tokenType', response.tokenType);
       localStorage.setItem('tokenExpiresAt', response.expiresAt);
-      localStorage.setItem('role', response.role);
+      localStorage.setItem('role', normalizedRole);
       localStorage.setItem('roles', JSON.stringify(response.roles));
-      return response;
+      if (response.houseId !== null && response.houseId !== undefined) {
+        localStorage.setItem('houseId', String(response.houseId));
+      } else {
+        localStorage.removeItem('houseId');
+      }
+      if (response.employeeId) {
+        localStorage.setItem('employeeId', response.employeeId);
+      } else {
+        localStorage.removeItem('employeeId');
+      }
+      return updatedResponse;
     } catch (error: any) {
       return rejectWithValue(error.message || 'Login failed');
     }
@@ -128,6 +172,8 @@ export const logout = createAsyncThunk<
       localStorage.removeItem('tokenType');
       localStorage.removeItem('tokenExpiresAt');
       localStorage.removeItem('roles');
+      localStorage.removeItem('houseId');
+      localStorage.removeItem('employeeId');
     } catch (error: any) {
       // 即使 API 调用失败，也要清除本地状态
       localStorage.removeItem('token');
@@ -135,6 +181,8 @@ export const logout = createAsyncThunk<
       localStorage.removeItem('tokenType');
       localStorage.removeItem('tokenExpiresAt');
       localStorage.removeItem('roles');
+      localStorage.removeItem('houseId');
+      localStorage.removeItem('employeeId');
       return rejectWithValue(error.message || 'Logout failed');
     }
   }
@@ -160,11 +208,14 @@ const authSlice = createSlice({
       const role = localStorage.getItem('role') as RoleType | null;
       if (token && role) {
         state.token = token;
-        state.role = role;
+        const storedRoles = parseStoredRoles();
+        state.role = derivePrimaryRole(storedRoles, role);
         state.tokenType = localStorage.getItem('tokenType');
         state.tokenExpiresAt = localStorage.getItem('tokenExpiresAt');
-        const storedRoles = localStorage.getItem('roles');
-        state.roles = storedRoles ? (JSON.parse(storedRoles) as RoleType[]) : [];
+        state.roles = storedRoles;
+        const storedHouseId = localStorage.getItem('houseId');
+        state.houseId = storedHouseId ? Number(storedHouseId) : null;
+        state.employeeId = localStorage.getItem('employeeId');
         state.isAuthenticated = true;
       }
     },
@@ -184,6 +235,8 @@ const authSlice = createSlice({
         state.tokenType = action.payload.tokenType;
         state.tokenExpiresAt = action.payload.expiresAt;
         state.roles = action.payload.roles;
+        state.houseId = action.payload.houseId ?? null;
+        state.employeeId = action.payload.employeeId ?? null;
         state.isAuthenticated = true;
         state.error = null;
       })
@@ -230,11 +283,15 @@ const authSlice = createSlice({
         state.tokenType = null;
         state.tokenExpiresAt = null;
         state.roles = [];
+        state.houseId = null;
+        state.employeeId = null;
         localStorage.removeItem('token');
         localStorage.removeItem('role');
         localStorage.removeItem('tokenType');
         localStorage.removeItem('tokenExpiresAt');
         localStorage.removeItem('roles');
+        localStorage.removeItem('houseId');
+        localStorage.removeItem('employeeId');
       });
 
     // ===== Logout =====
@@ -251,6 +308,8 @@ const authSlice = createSlice({
         state.tokenType = null;
         state.tokenExpiresAt = null;
         state.roles = [];
+        state.houseId = null;
+        state.employeeId = null;
         state.isAuthenticated = false;
         state.error = null;
       })
@@ -263,6 +322,8 @@ const authSlice = createSlice({
         state.tokenType = null;
         state.tokenExpiresAt = null;
         state.roles = [];
+        state.houseId = null;
+        state.employeeId = null;
         state.isAuthenticated = false;
         state.error = action.payload || 'Logout failed';
       });
@@ -274,6 +335,8 @@ const authSlice = createSlice({
 export const selectUser = (state: { auth: AuthState }) => state.auth.user;
 export const selectToken = (state: { auth: AuthState }) => state.auth.token;
 export const selectRole = (state: { auth: AuthState }) => state.auth.role;
+export const selectRoles = (state: { auth: AuthState }) => state.auth.roles;
+export const selectIsHR = (state: { auth: AuthState }) => state.auth.roles.includes('HR');
 export const selectIsAuthenticated = (state: { auth: AuthState }) => state.auth.isAuthenticated;
 export const selectAuthLoading = (state: { auth: AuthState }) => state.auth.loading;
 export const selectAuthError = (state: { auth: AuthState }) => state.auth.error;

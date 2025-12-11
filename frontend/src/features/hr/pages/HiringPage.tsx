@@ -8,12 +8,17 @@
  */
 
 import { useState, useEffect } from 'react';
-import { Table, Card, Input, Button, Space, Form, message, Tag, Descriptions } from 'antd';
+import { Table, Card, Input, Button, Space, Form, message, Tag, Descriptions, Select, Alert } from 'antd';
 import { UserAddOutlined, CopyOutlined, ReloadOutlined } from '@ant-design/icons';
 import type { ColumnsType } from 'antd/es/table';
 import { PageContainer } from '../../../components/common/PageContainer';
-import { getAllApplications, generateRegistrationToken } from '../../../services/api';
-import type { ApplicationDetail, ApplicationStatus } from '../../../types';
+import {
+  getAllApplications,
+  generateRegistrationToken,
+  getAvailableHouses,
+  getHouseAvailability,
+} from '../../../services/api';
+import type { ApplicationDetail, ApplicationStatus, HouseSummary } from '../../../types';
 
 /**
  * HiringPage Component
@@ -25,10 +30,14 @@ const HiringPage: React.FC = () => {
   const [generatedToken, setGeneratedToken] = useState('');
   const [tokenExpiry, setTokenExpiry] = useState('');
   const [generating, setGenerating] = useState(false);
+  const [houses, setHouses] = useState<HouseSummary[]>([]);
+  const [housesLoading, setHousesLoading] = useState(false);
+  const [assignedHouseAddress, setAssignedHouseAddress] = useState('');
 
   // 获取 Onboarding 申请列表
   useEffect(() => {
     fetchOnboardingApplications();
+    fetchAvailableHouses();
   }, []);
 
   const fetchOnboardingApplications = async () => {
@@ -37,7 +46,7 @@ const HiringPage: React.FC = () => {
       const data = await getAllApplications();
       
       // 过滤出 Onboarding 类型的申请
-      const onboardingApps = data.filter(app => app.type === 'Onboarding');
+      const onboardingApps = data.filter((app) => app.applicationType === 'Onboarding');
       
       setApplications(onboardingApps);
     } catch (error: any) {
@@ -47,18 +56,51 @@ const HiringPage: React.FC = () => {
     }
   };
 
+  const fetchAvailableHouses = async () => {
+    try {
+      setHousesLoading(true);
+      const summaries = await getAvailableHouses();
+      // 双重保险：前端再过滤一次 availableSpots <= 0
+      const available = summaries.filter((house) => house.availableSpots > 0);
+      setHouses(available);
+    } catch (error: any) {
+      message.error(error.message || 'Failed to load available houses');
+    } finally {
+      setHousesLoading(false);
+    }
+  };
+
   /**
    * 生成注册 Token
    */
-  const handleGenerateToken = async (values: { email: string; name?: string }) => {
+  const handleGenerateToken = async (values: { email: string; houseId: number }) => {
     try {
       setGenerating(true);
-      const tokenInfo = await generateRegistrationToken(values.email);
+      const houseId = Number(values.houseId);
+      const availability = await getHouseAvailability(houseId);
+
+      if (!availability.available) {
+        message.error(
+          `House "${availability.address}" is full (${availability.currentOccupants}/${availability.maxOccupant}). Please select another house.`
+        );
+        return;
+      }
+
+      const tokenInfo = await generateRegistrationToken({
+        email: values.email,
+        houseId,
+      });
 
       setGeneratedToken(tokenInfo.token);
       setTokenExpiry(new Date(tokenInfo.expirationDate).toLocaleString());
+      const assignedHouse = houses.find((house) => house.id === houseId);
+      setAssignedHouseAddress(
+        tokenInfo.houseAddress || assignedHouse?.address || ''
+      );
 
       message.success(`Token generated successfully for ${values.email}`);
+      fetchAvailableHouses();
+      form.resetFields(['houseId']);
     } catch (error: any) {
       message.error(error.message || 'Failed to generate token');
     } finally {
@@ -188,10 +230,24 @@ const HiringPage: React.FC = () => {
           </Form.Item>
           
           <Form.Item
-            name="name"
-            style={{ width: 200 }}
+            name="houseId"
+            rules={[{ required: true, message: 'Please select a house' }]}
+            style={{ width: 320 }}
           >
-            <Input placeholder="Name (optional)" size="large" />
+            <Select
+              placeholder="Select a house to assign"
+              size="large"
+              loading={housesLoading}
+              disabled={houses.length === 0}
+              showSearch
+              optionFilterProp="children"
+            >
+              {houses.map((house) => (
+                <Select.Option key={house.id} value={house.id}>
+                  {house.address} ({house.availableSpots} spots)
+                </Select.Option>
+              ))}
+            </Select>
           </Form.Item>
 
           <Form.Item>
@@ -200,12 +256,22 @@ const HiringPage: React.FC = () => {
               htmlType="submit"
               icon={<UserAddOutlined />}
               loading={generating}
+              disabled={houses.length === 0}
               size="large"
             >
               Generate Token
             </Button>
           </Form.Item>
         </Form>
+
+        {!housesLoading && houses.length === 0 && (
+          <Alert
+            type="warning"
+            showIcon
+            message="All houses are currently at full capacity"
+            description="Please add more housing capacity before generating new tokens."
+          />
+        )}
 
         {/* Token 显示区域 */}
         {generatedToken && (
@@ -234,6 +300,11 @@ const HiringPage: React.FC = () => {
             <Descriptions.Item label="Valid Until">
               <strong>{tokenExpiry}</strong> <span style={{ color: '#999' }}>(3 hours)</span>
             </Descriptions.Item>
+            {assignedHouseAddress && (
+              <Descriptions.Item label="Assigned House">
+                {assignedHouseAddress}
+              </Descriptions.Item>
+            )}
           </Descriptions>
         )}
       </Card>

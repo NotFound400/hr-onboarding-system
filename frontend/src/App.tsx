@@ -44,16 +44,6 @@ import {
 } from './features/employee';
 import './App.css';
 
-/**
- * 临时占位页面组件
- */
-const PlaceholderPage: React.FC<{ title: string }> = ({ title }) => (
-  <div style={{ padding: 24, textAlign: 'center' }}>
-    <h1>{title}</h1>
-    <p>This page is under construction.</p>
-  </div>
-);
-
 function App() {
   const dispatch = useAppDispatch();
 

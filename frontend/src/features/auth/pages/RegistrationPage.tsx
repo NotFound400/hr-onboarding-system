@@ -3,7 +3,11 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Form, Input, Button, Card, message, Spin, Alert } from 'antd';
 import { UserOutlined, LockOutlined, CheckCircleOutlined } from '@ant-design/icons';
 import { validateToken, registerUser } from '../../../services/api';
-import type { RegisterRequest, RegistrationTokenValidationResponse } from '../../../types';
+import type {
+  RegisterRequest,
+  RegistrationTokenValidationResponse,
+  RegistrationTokenHouseContext,
+} from '../../../types';
 
 /**
  * 注册页面
@@ -27,6 +31,8 @@ export const RegistrationPage: React.FC = () => {
   const [tokenValid, setTokenValid] = useState(false);
   const [email, setEmail] = useState('');
   const [errorMessage, setErrorMessage] = useState('');
+  const [assignedHouseId, setAssignedHouseId] = useState<number | null>(null);
+  const [houseContext, setHouseContext] = useState<RegistrationTokenHouseContext | null>(null);
 
   const token = searchParams.get('token');
 
@@ -52,12 +58,17 @@ export const RegistrationPage: React.FC = () => {
         setTokenValid(true);
         setEmail(tokenInfo.email);
         setErrorMessage('');
+        const houseId = tokenInfo.houseId ?? tokenInfo.houseContext?.id ?? null;
+        setAssignedHouseId(houseId);
+        setHouseContext(tokenInfo.houseContext ?? null);
       } else {
         setTokenValid(false);
         setErrorMessage('Token is invalid or expired. Please request a new registration link.');
       }
     } catch (error: any) {
       setTokenValid(false);
+      setAssignedHouseId(null);
+      setHouseContext(null);
       setErrorMessage(error.message || 'Failed to validate token. Please try again.');
       console.error('Token validation error:', error);
     } finally {
@@ -177,6 +188,19 @@ export const RegistrationPage: React.FC = () => {
           showIcon
           style={{ marginBottom: 24 }}
         />
+        {assignedHouseId !== null && (
+          <Alert
+            message="Housing Assignment"
+            description={
+              houseContext?.address
+                ? `您被分配到了 ${houseContext.address}`
+                : `House ID: ${assignedHouseId}`
+            }
+            type="info"
+            showIcon
+            style={{ marginBottom: 24 }}
+          />
+        )}
 
         <Form
           form={form}
