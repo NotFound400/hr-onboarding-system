@@ -19,4 +19,19 @@ public interface EmployeeRepository extends MongoRepository<Employee, String> {
     List<Employee> searchByName(String name);
 
     Optional<Employee> findByUserID(Long userID);
+
+    /**
+     * Find all employees assigned to a specific house
+     */
+    List<Employee> findByHouseID(Long houseID);
+
+    /**
+     * Count employees in a specific house
+     */
+    int countByHouseID(Long houseID);
+
+    /**
+     * Check if employee exists by userID
+     */
+    boolean existsByUserID(Long userID);
 }

@@ -3,10 +3,7 @@ package org.example.authenticationservice.service;
 import feign.FeignException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.example.authenticationservice.client.EmailServiceClient;
-import org.example.authenticationservice.client.HouseAvailabilityResponse;
-import org.example.authenticationservice.client.HousingServiceClient;
-import org.example.authenticationservice.client.RegistrationEmailRequest;
+import org.example.authenticationservice.client.*;
 import org.example.authenticationservice.dto.*;
 import org.example.authenticationservice.entity.RegistrationToken;
 import org.example.authenticationservice.entity.Role;
@@ -18,6 +15,7 @@ import org.example.authenticationservice.repository.UserRepository;
 import org.example.authenticationservice.repository.UserRoleRepository;
 import org.example.authenticationservice.security.JwtTokenProvider;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -40,7 +38,8 @@ public class AuthService {
     private final PasswordEncoder passwordEncoder;
     private final JwtTokenProvider jwtTokenProvider;
     private final EmailServiceClient emailServiceClient;
-    private final HousingServiceClient housingServiceClient;  // NEW
+    private final HousingServiceClient housingServiceClient;
+    private final EmployeeServiceClient employeeServiceClient;
 
     @Value("${registration.token.expiration-hours:3}")
     private int tokenExpirationHours;
@@ -144,6 +143,7 @@ public class AuthService {
 
     /**
      * Register a new user using a registration token.
+     * Creates User in MySQL and Employee in MongoDB with house assignment.
      */
     public UserDto register(RegisterRequest request) {
         validateRegistrationRequest(request);
@@ -157,7 +157,7 @@ public class AuthService {
             throw new IllegalArgumentException("Registration token has expired");
         }
 
-        // Create User
+        // Create User in MySQL
         User user = new User();
         user.setUsername(request.getUsername());
         user.setEmail(request.getEmail());
@@ -165,6 +165,7 @@ public class AuthService {
         user.setActiveFlag(true);
 
         user = userRepository.save(user);
+        log.info("User created in MySQL with ID: {}", user.getId());
 
         // Assign default role: Employee
         Role employeeRole = roleRepository.findByRoleName("Employee")
@@ -178,17 +179,44 @@ public class AuthService {
 
         userRoleRepository.save(userRole);
 
-        // Log house assignment for the new user
-        if (token.getHouseId() != null) {
-            log.info("User {} registered and assigned to house {}", user.getUsername(), token.getHouseId());
-            // TODO: Create Employee record in Employee Service with houseId
-            // This will be implemented in Phase 2
-        }
+        // ============ CREATE EMPLOYEE IN MONGODB ============
+        createEmployeeRecord(user.getId(), request.getEmail(), token.getHouseId());
+        // ====================================================
 
         // Consume token
         registrationTokenRepository.delete(token);
 
         return mapToUserDto(user, List.of(employeeRole.getRoleName()));
+    }
+
+    /**
+     * Create Employee record in Employee Service (MongoDB)
+     * This links the Auth User to an Employee profile with house assignment
+     */
+    private void createEmployeeRecord(Long userId, String email, Long houseId) {
+        try {
+            CreateEmployeeRequest employeeRequest = CreateEmployeeRequest.builder()
+                    .userID(userId)
+                    .email(email)
+                    .houseID(houseId)
+                    .build();
+
+            log.info("Creating employee record for userId: {}, email: {}, houseId: {}",
+                    userId, email, houseId);
+
+            ResponseEntity<EmployeeResponse> response = employeeServiceClient.createEmployee(employeeRequest);
+
+            if (response.getStatusCode().is2xxSuccessful() && response.getBody() != null) {
+                log.info("Employee record created successfully. MongoDB ID: {}, houseId: {}",
+                        response.getBody().getId(), houseId);
+            } else {
+                log.warn("Employee creation returned non-success status: {}", response.getStatusCode());
+            }
+        } catch (Exception e) {
+            // Log error but don't fail registration
+            // Employee record can be created later during onboarding if needed
+            log.error("Failed to create employee record for userId {}: {}", userId, e.getMessage());
+        }
     }
 
     /**
