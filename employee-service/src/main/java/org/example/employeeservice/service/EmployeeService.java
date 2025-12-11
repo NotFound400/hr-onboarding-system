@@ -57,4 +57,43 @@ public class EmployeeService {
     public void deleteEmployee(String id) {
         employeeRepository.deleteById(id);
     }
+
+    /**
+     * Get all employees assigned to a specific house
+     */
+    public List<Employee> getEmployeesByHouseId(Long houseId) {
+        logger.info("Getting employees for house: {}", houseId);
+        return employeeRepository.findByHouseID(houseId);
+    }
+
+    /**
+     * Count employees in a specific house
+     */
+    public int countEmployeesByHouseId(Long houseId) {
+        int count = employeeRepository.countByHouseID(houseId);
+        logger.info("House {} has {} employees", houseId, count);
+        return count;
+    }
+
+    /**
+     * Check if employee exists by userID
+     */
+    public boolean existsByUserID(Long userID) {
+        return employeeRepository.existsByUserID(userID);
+    }
+
+    /**
+     * Create employee if not exists (for registration)
+     */
+    public Employee createEmployeeIfNotExists(Employee employee) {
+        if (employee.getUserID() != null) {
+            Optional<Employee> existing = employeeRepository.findByUserID(employee.getUserID());
+            if (existing.isPresent()) {
+                logger.info("Employee already exists for userID: {}", employee.getUserID());
+                return existing.get();
+            }
+        }
+        logger.info("Creating new employee for userID: {}", employee.getUserID());
+        return employeeRepository.save(employee);
+    }
 }
