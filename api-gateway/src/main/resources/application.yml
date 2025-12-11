@@ -1,0 +1,166 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: api-gateway
+  
+  cloud:
+    gateway:
+      # Global default filters
+      default-filters:
+        # Add gateway request marker header
+        - AddRequestHeader=X-Gateway-Request, true
+        # Add gateway response marker header
+        - AddResponseHeader=X-Gateway-Response, true
+        # Remove sensitive response headers
+        - RemoveResponseHeader=X-Powered-By
+      
+      # Route configurations
+      routes:
+        # ==================== Auth Service (Standalone - Not in Eureka) ====================
+        - id: auth-service
+          uri: http://localhost:8081
+          predicates:
+            - Path=/api/auth/**
+          filters:
+            # Rewrite path: /api/auth/** -> /**
+            #- RewritePath=/api/auth/(?<segment>.*), /${segment}
+            # No path rewrite - Auth Service uses /api/auth/** paths directly
+            # Circuit breaker for fault tolerance
+            - name: CircuitBreaker
+              args:
+                name: authService
+                fallbackUri: forward:/fallback/auth
+
+        # ==================== Employee Service ====================
+        - id: employee-service
+          uri: lb://employee-service
+          predicates:
+            - Path=/api/employees/**
+          filters:
+            - RewritePath=/api/employees/(?<segment>.*), /${segment}
+            - name: CircuitBreaker
+              args:
+                name: employeeService
+                fallbackUri: forward:/fallback/employee
+
+        # ==================== Application Service ====================
+        - id: application-service
+          uri: lb://application-service
+          predicates:
+            - Path=/api/applications/**
+          filters:
+            - RewritePath=/api/applications/(?<segment>.*), /${segment}
+            - name: CircuitBreaker
+              args:
+                name: applicationService
+                fallbackUri: forward:/fallback/application
+
+        # ==================== Housing Service ====================
+        - id: housing-service
+          uri: lb://housing-service
+          predicates:
+            - Path=/api/housing/**
+          filters:
+            # No path rewrite - housing-service uses /api/housing/** paths directly
+            - name: CircuitBreaker
+              args:
+                name: housingService
+                fallbackUri: forward:/fallback/housing
+
+        # ==================== Email Service ====================
+        - id: email-service
+          uri: lb://email-service
+          predicates:
+            - Path=/api/email/**
+          filters:
+            - RewritePath=/api/email/(?<segment>.*), /${segment}
+            - name: CircuitBreaker
+              args:
+                name: emailService
+                fallbackUri: forward:/fallback/email
+
+      # Service discovery configuration
+      discovery:
+        locator:
+          enabled: true
+          lower-case-service-id: true
+
+      # Global HTTP client configuration
+      httpclient:
+        connect-timeout: 5000
+        response-timeout: 10s
+
+# Eureka client configuration
+eureka:
+  instance:
+    prefer-ip-address: true
+    lease-renewal-interval-in-seconds: 10
+    lease-expiration-duration-in-seconds: 30
+  client:
+    service-url:
+      defaultZone: http://eureka:eureka123@localhost:8761/eureka/
+    register-with-eureka: true
+    fetch-registry: true
+    registry-fetch-interval-seconds: 10
+
+# JWT configuration (must match Auth Service)
+jwt:
+  secret: dGhpc2lzYXZlcnlsb25nc2VjcmV0a2V5Zm9yaHJvbmJvYXJkaW5nc3lzdGVtand0dG9rZW4=
+  expiration: 86400000
+
+# Resilience4j circuit breaker configuration
+resilience4j:
+  circuitbreaker:
+    instances:
+      default:
+        sliding-window-type: COUNT_BASED
+        sliding-window-size: 10
+        minimum-number-of-calls: 5
+        failure-rate-threshold: 50
+        wait-duration-in-open-state: 30s
+        permitted-number-of-calls-in-half-open-state: 3
+        automatic-transition-from-open-to-half-open-enabled: true
+        register-health-indicator: true
+      authService:
+        sliding-window-size: 5
+        failure-rate-threshold: 40
+        wait-duration-in-open-state: 20s
+      employeeService:
+        sliding-window-type: TIME_BASED
+        sliding-window-size: 60
+        failure-rate-threshold: 50
+      housingService:
+        sliding-window-size: 10
+        failure-rate-threshold: 50
+        wait-duration-in-open-state: 30s
+  timelimiter:
+    instances:
+      default:
+        timeout-duration: 10s
+
+# Actuator configuration
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,gateway,circuitbreakers
+  endpoint:
+    health:
+      show-details: always
+    gateway:
+      enabled: true
+  health:
+    circuitbreakers:
+      enabled: true
+
+# Logging configuration
+logging:
+  level:
+    org.springframework.cloud.gateway: INFO
+    org.springframework.security: INFO
+    io.github.resilience4j: INFO
+    org.example.apigateway: DEBUG
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
