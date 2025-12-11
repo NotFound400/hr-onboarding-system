@@ -8,6 +8,7 @@ import org.example.applicationservice.domain.DigitalDocument;
 import org.example.applicationservice.dto.DigitalDocumentDTO;
 import org.example.applicationservice.dto.UploadDocumentRequest;
 import org.example.applicationservice.exception.EntityNotFoundException;
+import org.example.applicationservice.utils.OwnershipValidator;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
@@ -28,15 +29,20 @@ public class DocumentServiceImpl implements DocumentService {
     private final DigitalDocumentRepository repository;
     private final S3Client s3Client;
     private final ApplicationWorkFlowRepository applicationRepository;
+    private final OwnershipValidator ownershipValidator;
     @Value("${aws.bucket.name}")
     private String bucketName;
     @Value("${cloud.aws.region}")
     private String region;
 
-    public DocumentServiceImpl(DigitalDocumentRepository repository, S3Client s3Client, ApplicationWorkFlowRepository applicationRepository) {
+    public DocumentServiceImpl(DigitalDocumentRepository repository,
+                               S3Client s3Client,
+                               ApplicationWorkFlowRepository applicationRepository,
+                               OwnershipValidator ownershipValidator) {
         this.repository = repository;
         this.s3Client = s3Client;
         this.applicationRepository = applicationRepository;
+        this.ownershipValidator = ownershipValidator;
     }
 
     @Override
@@ -117,6 +123,10 @@ public class DocumentServiceImpl implements DocumentService {
 
     @Override
     public DigitalDocumentDTO uploadDocument(MultipartFile file, UploadDocumentRequest request) {
+        ApplicationWorkFlow app = applicationRepository.findById(request.getApplicationId())
+                .orElseThrow(() -> new EntityNotFoundException("Application not found"));
+//        ownershipValidator.checkOwnership(app.getEmployeeId());
+
         try {
             // 1. Generate S3 key (filename in bucket)
             String key = "documents/" + request.getApplicationId() + "/" + UUID.randomUUID() + "-" + file.getOriginalFilename();
@@ -187,6 +197,7 @@ public class DocumentServiceImpl implements DocumentService {
         // 1. Fetch document entity
         DigitalDocument doc = repository.findById(documentId)
                 .orElseThrow(() -> new EntityNotFoundException("Document not found with id: " + documentId));
+//        ownershipValidator.checkOwnership(doc.getApplication().getEmployeeId());
 
         // 2. Extract S3 key from URL (assuming you stored full S3 URL in doc.getPath())
         String s3Url = doc.getPath();
@@ -211,6 +222,7 @@ public class DocumentServiceImpl implements DocumentService {
         // 1. Fetch entity
         DigitalDocument doc = repository.findById(documentId)
                 .orElseThrow(() -> new EntityNotFoundException("Document not found with id: " + documentId));
+//        ownershipValidator.checkOwnership(doc.getApplication().getEmployeeId());
 
         // 2. Extract S3 key
         String s3Url = doc.getPath();
@@ -232,6 +244,7 @@ public class DocumentServiceImpl implements DocumentService {
         // 1. Find existing document
         DigitalDocument doc = repository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Document not found: " + id));
+//        ownershipValidator.checkOwnership(doc.getApplication().getEmployeeId());
 
         // 2. Extract S3 key from existing path
         String s3Url = doc.getPath();
