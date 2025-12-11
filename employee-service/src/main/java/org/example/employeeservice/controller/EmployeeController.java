@@ -9,6 +9,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -25,11 +26,13 @@ public class EmployeeController {
         this.employeeService = employeeService;
     }
 
+    @PreAuthorize("hasRole('HR')")
     @GetMapping("/employees")
     public ResponseEntity<List<Employee>> getAllEmployees() {
         return ResponseEntity.ok(employeeService.getAllEmployees());
     }
 
+    @PreAuthorize("hasRole('HR')")
     @GetMapping("/employees/page")
     public ResponseEntity<Page<Employee>> getAllEmployees(
             @PageableDefault(size = 3, sort = "lastName", direction = Sort.Direction.ASC)
@@ -51,12 +54,6 @@ public class EmployeeController {
                 : ResponseEntity.notFound().build();
     }
 
-    @PostMapping("/employees")
-    public ResponseEntity<Employee> saveEmployee(@RequestBody Employee employee) {
-        Employee saved = employeeService.saveEmployee(employee);
-        return ResponseEntity.ok(saved);
-    }
-
     @PutMapping("/employees/{id}")
     public ResponseEntity<Employee> updateEmployee(@RequestBody Employee employee, @PathVariable String id)  {
         employee.setId(id);
@@ -64,6 +61,7 @@ public class EmployeeController {
         return ResponseEntity.ok(saved);
     }
 
+    @PreAuthorize("hasRole('HR')")
     @GetMapping("/employees/search")
     public ResponseEntity<List<Employee>> searchEmployees(@RequestParam String name) {
         return ResponseEntity.ok(employeeService.searchEmployeesByName(name));
@@ -79,7 +77,8 @@ public class EmployeeController {
      * Get employees by house ID
      * Used by Housing Service to list roommates
      */
-    @GetMapping("/api/employees/house/{houseId}")
+    @PreAuthorize("hasRole('HR')")
+    @GetMapping("/employees/house/{houseId}")
     public ResponseEntity<List<Employee>> getEmployeesByHouseId(@PathVariable("houseId") Long houseId) {
         List<Employee> employees = employeeService.getEmployeesByHouseId(houseId);
         return ResponseEntity.ok(employees);
@@ -89,7 +88,8 @@ public class EmployeeController {
      * Count employees by house ID
      * Used by Housing Service to check house availability
      */
-    @GetMapping("/api/employees/house/{houseId}/count")
+    @PreAuthorize("hasRole('HR')")
+    @GetMapping("/employees/house/{houseId}/count")
     public ResponseEntity<Integer> countEmployeesByHouseId(@PathVariable("houseId") Long houseId) {
         int count = employeeService.countEmployeesByHouseId(houseId);
         return ResponseEntity.ok(count);
@@ -100,20 +100,10 @@ public class EmployeeController {
      * Used by Auth Service during user registration
      * Creates employee only if not already exists
      */
-    @PostMapping("/api/employees")
+    @PostMapping("employees")
     public ResponseEntity<Employee> createEmployee(@RequestBody Employee employee) {
         Employee saved = employeeService.createEmployeeIfNotExists(employee);
         return ResponseEntity.status(HttpStatus.CREATED).body(saved);
     }
 
-    /**
-     * Get employee by userID (with /api prefix)
-     * Used by Auth Service
-     */
-    @GetMapping("/api/employees/user/{userID}")
-    public ResponseEntity<?> getEmployeeByUserIDApi(@PathVariable Long userID) {
-        Optional<Employee> employee = employeeService.getEmployeeByUserID(userID);
-        return employee.isPresent() ? ResponseEntity.ok(employee.get())
-                : ResponseEntity.notFound().build();
-    }
 }
