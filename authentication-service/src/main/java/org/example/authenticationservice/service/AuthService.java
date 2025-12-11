@@ -1,8 +1,11 @@
 package org.example.authenticationservice.service;
 
+import feign.FeignException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.example.authenticationservice.client.EmailServiceClient;
+import org.example.authenticationservice.client.HouseAvailabilityResponse;
+import org.example.authenticationservice.client.HousingServiceClient;
 import org.example.authenticationservice.client.RegistrationEmailRequest;
 import org.example.authenticationservice.dto.*;
 import org.example.authenticationservice.entity.RegistrationToken;
@@ -37,6 +40,7 @@ public class AuthService {
     private final PasswordEncoder passwordEncoder;
     private final JwtTokenProvider jwtTokenProvider;
     private final EmailServiceClient emailServiceClient;
+    private final HousingServiceClient housingServiceClient;  // NEW
 
     @Value("${registration.token.expiration-hours:3}")
     private int tokenExpirationHours;
@@ -48,32 +52,79 @@ public class AuthService {
 
     /**
      * HR generates a registration token for a new user.
+     * Validates house availability before creating token.
      */
     public RegistrationTokenDto generateRegistrationToken(GenerateRegistrationTokenRequest request, Long creatorUserId) {
+        // Validate email
         if (request.getEmail() == null || request.getEmail().isBlank()) {
             throw new IllegalArgumentException("Email is required to generate registration token");
         }
 
+        // Validate house ID
+        if (request.getHouseId() == null) {
+            throw new IllegalArgumentException("House ID is required - employee must be assigned to a house");
+        }
+
+        // Validate house availability via Housing Service
+        HouseAvailabilityResponse houseInfo = validateHouseAssignment(request.getHouseId());
+
+        // Get creator user
         User creator = userRepository.findById(creatorUserId)
                 .orElseThrow(() -> new IllegalArgumentException("Creator user not found"));
 
+        // Create registration token with house assignment
         RegistrationToken token = new RegistrationToken();
         token.setToken(UUID.randomUUID().toString());
         token.setEmail(request.getEmail());
         token.setExpirationDate(LocalDateTime.now().plusHours(tokenExpirationHours));
         token.setCreatedBy(creator);
+        token.setHouseId(request.getHouseId());  // Assign house
 
         token = registrationTokenRepository.save(token);
 
-        sendRegistrationEmail(request.getEmail(), token.getToken());
+        // Send registration email with house info
+        sendRegistrationEmail(request.getEmail(), token.getToken(), houseInfo.getAddress());
 
-        return mapToRegistrationTokenDto(token);
+        return mapToRegistrationTokenDto(token, houseInfo.getAddress());
     }
 
     /**
-     * Send registration email via Email Service
+     * Validate house exists and has availability.
+     * Calls Housing Service to check house capacity.
      */
-    private void sendRegistrationEmail(String email, String token) {
+    private HouseAvailabilityResponse validateHouseAssignment(Long houseId) {
+        try {
+            var response = housingServiceClient.checkHouseAvailability(houseId);
+
+            if (response == null || !response.isSuccess() || response.getData() == null) {
+                throw new IllegalArgumentException("House not found with ID: " + houseId);
+            }
+
+            HouseAvailabilityResponse houseInfo = response.getData();
+
+            // Use 'available' field (matches Housing Service response)
+            if (houseInfo.getAvailable() == null || !houseInfo.getAvailable()) {
+                throw new IllegalArgumentException(
+                        String.format("House at '%s' is at full capacity (%d/%d occupants). Please select a different house.",
+                                houseInfo.getAddress(),
+                                houseInfo.getCurrentOccupants(),
+                                houseInfo.getMaxOccupant())
+                );
+            }
+
+            log.info("House {} validated - {} available spots", houseId, houseInfo.getAvailableSpots());
+            return houseInfo;
+
+        } catch (FeignException e) {
+            log.error("Failed to validate house {}: {}", houseId, e.getMessage());
+            throw new IllegalArgumentException("Unable to validate house assignment. Housing service unavailable.");
+        }
+    }
+
+    /**
+     * Send registration email via Email Service (with house address)
+     */
+    private void sendRegistrationEmail(String email, String token, String houseAddress) {
         try {
             String registrationLink = frontendRegistrationUrl + "?token=" + token;
 
@@ -83,12 +134,10 @@ public class AuthService {
                     .registrationLink(registrationLink)
                     .build();
 
-            // Use async endpoint to queue email (non-blocking)
             emailServiceClient.sendRegistrationEmailAsync(emailRequest);
-            log.info("Registration email queued for: {}", email);
+            log.info("Registration email queued for: {} (assigned to house: {})", email, houseAddress);
 
         } catch (Exception e) {
-            // Log error but don't fail the token generation
             log.error("Failed to send registration email to {}: {}", email, e.getMessage());
         }
     }
@@ -128,6 +177,13 @@ public class AuthService {
         userRole.setActiveFlag(true);
 
         userRoleRepository.save(userRole);
+
+        // Log house assignment for the new user
+        if (token.getHouseId() != null) {
+            log.info("User {} registered and assigned to house {}", user.getUsername(), token.getHouseId());
+            // TODO: Create Employee record in Employee Service with houseId
+            // This will be implemented in Phase 2
+        }
 
         // Consume token
         registrationTokenRepository.delete(token);
@@ -242,7 +298,6 @@ public class AuthService {
         if (request.getPassword() == null || request.getPassword().isBlank()) {
             throw new IllegalArgumentException("Password is required");
         }
-        // Only validate confirmPassword if it's provided
         if (request.getConfirmPassword() != null && !request.getConfirmPassword().isBlank()) {
             if (!request.getPassword().equals(request.getConfirmPassword())) {
                 throw new IllegalArgumentException("Password and confirm password do not match");
@@ -284,25 +339,42 @@ public class AuthService {
                 .collect(Collectors.toList());
     }
 
-    /**
-     * Map User entity to UserDto with ID and date fields.
-     */
     private UserDto mapToUserDto(User user, List<String> roleNames) {
         UserDto dto = new UserDto();
         dto.setId(user.getId());
         dto.setUsername(user.getUsername());
         dto.setEmail(user.getEmail());
-        dto.setPassword(""); // Never expose password
+        dto.setPassword("");
         dto.setActive(user.isActiveFlag());
         dto.setRoles(roleNames);
 
-        // Format dates as ISO strings
         if (user.getCreateDate() != null) {
             dto.setCreateDate(user.getCreateDate().format(ISO_FORMATTER));
         }
         if (user.getLastModificationDate() != null) {
             dto.setLastModificationDate(user.getLastModificationDate().format(ISO_FORMATTER));
         }
+
+        return dto;
+    }
+
+    /**
+     * Map RegistrationToken entity to DTO with house address.
+     */
+    private RegistrationTokenDto mapToRegistrationTokenDto(RegistrationToken token, String houseAddress) {
+        RegistrationTokenDto dto = new RegistrationTokenDto();
+        dto.setId(token.getId());
+        dto.setToken(token.getToken());
+        dto.setEmail(token.getEmail());
+        dto.setExpirationDate(token.getExpirationDate());
+
+        String creatorId = String.valueOf(token.getCreatedBy().getId());
+        dto.setCreatedByUserId(creatorId);
+        dto.setCreateBy(creatorId);
+        dto.setCreateDate(LocalDateTime.now().format(ISO_FORMATTER));
+
+        dto.setHouseId(token.getHouseId());
+        dto.setHouseAddress(houseAddress);
 
         return dto;
     }
@@ -319,10 +391,10 @@ public class AuthService {
 
         String creatorId = String.valueOf(token.getCreatedBy().getId());
         dto.setCreatedByUserId(creatorId);
-        dto.setCreateBy(creatorId); // Alias for frontend compatibility
-
-        // Set createDate if available
+        dto.setCreateBy(creatorId);
         dto.setCreateDate(LocalDateTime.now().format(ISO_FORMATTER));
+
+        dto.setHouseId(token.getHouseId());
 
         return dto;
     }
