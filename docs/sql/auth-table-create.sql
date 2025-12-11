@@ -43,13 +43,14 @@ CREATE TABLE `UserRole` (
     CONSTRAINT `UQ_UserRole_User_Role` UNIQUE (`UserID`, `RoleID`)
 ) ENGINE=InnoDB;
 
--- RegistrationToken table
+-- RegistrationToken table (UPDATED with HouseId)
 CREATE TABLE `RegistrationToken` (
     `ID` BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
     `Token` VARCHAR(64) NOT NULL,
     `Email` VARCHAR(100) NOT NULL,
     `ExpirationDate` DATETIME NOT NULL,
     `CreateBy` BIGINT UNSIGNED NOT NULL,
+    `HouseId` BIGINT NULL COMMENT 'House ID assigned to employee during token generation',
 
     CONSTRAINT `PK_RegistrationToken` PRIMARY KEY (`ID`),
 
@@ -63,5 +64,14 @@ CREATE TABLE `RegistrationToken` (
     CONSTRAINT `FK_RegistrationToken_CreateBy_User` FOREIGN KEY (`CreateBy`)
         REFERENCES `User`(`ID`)
         ON DELETE RESTRICT
-        ON UPDATE CASCADE
+        ON UPDATE CASCADE,
+
+    -- house assignment: FK to house(id)
+    CONSTRAINT `FK_RegistrationToken_House` FOREIGN KEY (`HouseId`)
+        REFERENCES `house`(`id`)
+        ON DELETE SET NULL
+        ON UPDATE CASCADE,
+
+    -- index for faster house lookups
+    INDEX `idx_RegistrationToken_HouseId` (`HouseId`)
 ) ENGINE=InnoDB;
