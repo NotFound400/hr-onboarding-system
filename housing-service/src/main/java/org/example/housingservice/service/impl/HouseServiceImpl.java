@@ -232,15 +232,16 @@ public class HouseServiceImpl implements HouseService {
     // ==================== Employee Specific Methods ====================
 
     @Override
-    public HouseDTO.EmployeeViewResponse getHouseForEmployee(Long houseId, Long employeeId) {
-        log.debug("Getting house info for employee: {}, houseId: {}", employeeId, houseId);
+    public HouseDTO.EmployeeViewResponse getHouseForEmployee(Long houseId, UserContext userContext) {
+        log.debug("Getting house info for id: {}, user: {}, roles: {}, userHouseId: {}",
+                houseId, userContext.getUserId(), userContext.getRoles(), userContext.getHouseId());
 
         House house = houseRepository.findById(houseId)
                 .orElseThrow(() -> new ResourceNotFoundException("House", "id", houseId));
 
         // Validate employee access if employeeId is provided
-        if (employeeId != null) {
-            validateEmployeeHouseAccess(employeeId, houseId);
+        if (userContext.getHouseId() != null) {
+            validateEmployeeHouseAccess(userContext.getHouseId(), houseId);
         }
 
         return buildEmployeeViewResponse(house);
