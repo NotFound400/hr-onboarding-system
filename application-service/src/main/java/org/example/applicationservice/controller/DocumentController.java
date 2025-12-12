@@ -1,5 +1,7 @@
 package org.example.applicationservice.controller;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.example.applicationservice.utils.*;
 import org.example.applicationservice.domain.DigitalDocument;
 import org.example.applicationservice.dto.DigitalDocumentDTO;
@@ -14,6 +16,7 @@ import tools.jackson.databind.ObjectMapper;
 import java.io.IOException;
 import java.util.List;
 
+@Tag(name = "Document Management", description = "APIs for managing documents related to applications")
 @RestController
 @RequestMapping("/documents")
 public class DocumentController {
@@ -25,6 +28,7 @@ public class DocumentController {
     }
 
     //get documents by applicationId
+    @Operation(summary = "Get documents by application ID", description = "Retrieve all documents for a specific application")
     @PreAuthorize("hasRole('Employee')")
     @GetMapping("/application/{applicationId}")
     public ResponseEntity<Result<List<DigitalDocumentDTO>>> getDocumentsByApplication(
@@ -35,6 +39,7 @@ public class DocumentController {
     }
 
     //get documents by employeeId
+    @Operation(summary = "Get documents by employee ID", description = "Retrieve all documents uploaded by a specific employee")
     @PreAuthorize("hasRole('Employee')")
     @GetMapping("/employee/{employeeId}")
     public ResponseEntity<Result<List<DigitalDocumentDTO>>> getDocumentsByEmployee(
@@ -45,6 +50,7 @@ public class DocumentController {
     }
 
     //get documents by type
+    @Operation(summary = "Get documents by type", description = "Retrieve all documents of a given type")
     @PreAuthorize("hasRole('Employee')")
     @GetMapping("/type/{type}")
     public ResponseEntity<Result<List<DigitalDocumentDTO>>> getDocumentsByType(
@@ -55,6 +61,7 @@ public class DocumentController {
     }
 
     //get required documents
+    @Operation(summary = "Get required documents", description = "Retrieve all required documents for submission")
     @PreAuthorize("hasRole('Employee')")
     @GetMapping("/required")
     public ResponseEntity<Result<List<DigitalDocumentDTO>>> getRequiredDocuments() {
@@ -63,6 +70,7 @@ public class DocumentController {
     }
 
     //upload document
+    @Operation(summary = "Upload a document", description = "Upload a document with metadata")
     @PreAuthorize("hasRole('Employee')")
     @PostMapping("/upload")
     public ResponseEntity<Result<DigitalDocumentDTO>> uploadDocument(
@@ -74,6 +82,7 @@ public class DocumentController {
     }
 
     //download by documentId
+    @Operation(summary = "Download a document", description = "Download a document by document ID")
     @PreAuthorize("hasRole('Employee')")
     @GetMapping("/download/{id}")
     public ResponseEntity<byte[]> downloadDocument(@PathVariable Long id) {
@@ -87,6 +96,7 @@ public class DocumentController {
     }
 
     //delete document by documentId
+    @Operation(summary = "Delete a document", description = "Delete a document by document ID")
     @PreAuthorize("hasRole('Employee')")
     @DeleteMapping("/delete/{id}")
     public ResponseEntity<Result<String>> deleteDocument(@PathVariable Long id) {
@@ -95,6 +105,7 @@ public class DocumentController {
     }
 
     //update document
+    @Operation(summary = "Update a document", description = "Update a document file and/or metadata by document ID")
     @PreAuthorize("hasRole('Employee')")
     @PutMapping("/update/{id}")
     public ResponseEntity<Result<DigitalDocumentDTO>> updateDocument(
