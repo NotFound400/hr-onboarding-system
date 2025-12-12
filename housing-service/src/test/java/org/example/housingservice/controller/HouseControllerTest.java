@@ -70,12 +70,12 @@ class HouseControllerTest {
                 .address("123 Main St")
                 .roommates(List.of(
                         HouseDTO.ResidentInfo.builder()
-                                .employeeId(101L)
+                                .userID(101L)
                                 .name("Mike")
                                 .phone("555-0001")
                                 .build(),
                         HouseDTO.ResidentInfo.builder()
-                                .employeeId(102L)
+                                .userID(102L)
                                 .name("Sarah")
                                 .phone("555-0002")
                                 .build()
@@ -99,7 +99,7 @@ class HouseControllerTest {
                 .address("123 Main St")
                 .roommates(List.of(
                         HouseDTO.ResidentInfo.builder()
-                                .employeeId(101L)
+                                .userID(101L)
                                 .name("Mike")
                                 .phone("555-0001")
                                 .build()
@@ -315,7 +315,7 @@ class HouseControllerTest {
                     .address("123 Main St")
                     .residents(List.of(
                             HouseDTO.ResidentInfo.builder()
-                                    .employeeId(101L)
+                                    .userID(101L)
                                     .name("Mike")
                                     .phone("555-0001")
                                     .build()

@@ -103,7 +103,7 @@ class FacilityReportServiceTest {
 
         when(facilityRepository.findById(1L)).thenReturn(Optional.of(testFacility));
         when(reportRepository.save(any(FacilityReport.class))).thenReturn(testReport);
-        when(employeeServiceClient.getEmployeeById(anyLong()))
+        when(employeeServiceClient.getEmployeeByUserID(anyLong()))
                 .thenReturn(new EmployeeServiceClient.EmployeeInfo(100L, "Test", "User", null, null, null, 1L));
 
         // When
@@ -143,7 +143,7 @@ class FacilityReportServiceTest {
 
         when(reportRepository.findById(1L)).thenReturn(Optional.of(testReport));
         when(reportRepository.save(any(FacilityReport.class))).thenReturn(testReport);
-        when(employeeServiceClient.getEmployeeById(anyLong()))
+        when(employeeServiceClient.getEmployeeByUserID(anyLong()))
                 .thenReturn(new EmployeeServiceClient.EmployeeInfo(100L, "Test", "User", null, null, null, 1L));
 
         // When
@@ -189,7 +189,7 @@ class FacilityReportServiceTest {
 
         when(reportRepository.findById(1L)).thenReturn(Optional.of(testReport));
         when(commentRepository.save(any(FacilityReportDetail.class))).thenReturn(savedComment);
-        when(employeeServiceClient.getEmployeeById(anyLong()))
+        when(employeeServiceClient.getEmployeeByUserID(anyLong()))
                 .thenReturn(new EmployeeServiceClient.EmployeeInfo(100L, "Test", "User", null, null, null, 1L));
 
         // When

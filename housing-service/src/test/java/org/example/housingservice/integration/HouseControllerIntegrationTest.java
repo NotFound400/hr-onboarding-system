@@ -117,7 +117,7 @@ class HouseControllerIntegrationTest {
         @DisplayName("Employee should see only their assigned house with roommates")
         void getAllHouses_asEmployee_returnsLimitedInfo() throws Exception {
             // Mock employee lookup
-            when(employeeServiceClient.getEmployeeById(101L)).thenReturn(
+            when(employeeServiceClient.getEmployeeByUserID(101L)).thenReturn(
                     new EmployeeServiceClient.EmployeeInfo(
                             101L, "Mike", "Johnson", "Mike", "555-0001", "mike@test.com", testHouse.getId()
                     )
@@ -153,7 +153,7 @@ class HouseControllerIntegrationTest {
         @Test
         @DisplayName("Employee should see roommates when viewing their assigned house")
         void getHouseDetail_asEmployee_returnsRoommates() throws Exception {
-            when(employeeServiceClient.getEmployeeById(101L)).thenReturn(
+            when(employeeServiceClient.getEmployeeByUserID(101L)).thenReturn(
                     new EmployeeServiceClient.EmployeeInfo(
                             101L, "Mike", "Johnson", "Mike", "555-0001", "mike@test.com", testHouse.getId()
                     )
@@ -180,7 +180,7 @@ class HouseControllerIntegrationTest {
         @DisplayName("Employee cannot access house they are not assigned to")
         void getHouseDetail_asEmployee_wrongHouse_returns403() throws Exception {
             // Employee 102 is assigned to a different house
-            when(employeeServiceClient.getEmployeeById(102L)).thenReturn(
+            when(employeeServiceClient.getEmployeeByUserID(102L)).thenReturn(
                     new EmployeeServiceClient.EmployeeInfo(
                             102L, "Sarah", "Chen", null, "555-0002", "sarah@test.com", 999L  // Different house
                     )
@@ -197,7 +197,7 @@ class HouseControllerIntegrationTest {
         @Test
         @DisplayName("Employee without assigned house sees empty list")
         void getAllHouses_asEmployee_noAssignment_returnsEmpty() throws Exception {
-            when(employeeServiceClient.getEmployeeById(103L)).thenReturn(
+            when(employeeServiceClient.getEmployeeByUserID(103L)).thenReturn(
                     new EmployeeServiceClient.EmployeeInfo(
                             103L, "Tom", "Wilson", null, "555-0003", "tom@test.com", null  // No house
                     )
@@ -309,7 +309,7 @@ class HouseControllerIntegrationTest {
         @Test
         @DisplayName("Employee can get their assigned house via my-house endpoint")
         void getMyHouse_success() throws Exception {
-            when(employeeServiceClient.getEmployeeById(101L)).thenReturn(
+            when(employeeServiceClient.getEmployeeByUserID(101L)).thenReturn(
                     new EmployeeServiceClient.EmployeeInfo(
                             101L, "Mike", "Johnson", "Mike", "555-0001", "mike@test.com", testHouse.getId()
                     )
@@ -328,7 +328,7 @@ class HouseControllerIntegrationTest {
         @Test
         @DisplayName("Employee without house gets appropriate message")
         void getMyHouse_noHouse_returnsMessage() throws Exception {
-            when(employeeServiceClient.getEmployeeById(103L)).thenReturn(
+            when(employeeServiceClient.getEmployeeByUserID(103L)).thenReturn(
                     new EmployeeServiceClient.EmployeeInfo(
                             103L, "Tom", "Wilson", null, "555-0003", "tom@test.com", null
                     )
