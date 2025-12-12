@@ -7,13 +7,12 @@ import org.springframework.web.bind.annotation.RequestParam;
 
 import java.util.List;
 
-
-@FeignClient(name = "employee-service", fallback = EmployeeServiceClientFallback.class)
+@FeignClient(name = "employee-service")
 public interface EmployeeServiceClient {
 
 
-    @GetMapping("/employees/{id}")
-    EmployeeInfo getEmployeeById(@PathVariable("id") Long id);
+    @GetMapping("/employees/user/{userID}")
+    EmployeeInfo getEmployeeByUserID(@PathVariable("userID") Long id);
 
     @GetMapping("/employees/house/{houseId}")
     List<EmployeeInfo> getEmployeesByHouseId(@PathVariable("houseId") Long houseId);
@@ -25,13 +24,13 @@ public interface EmployeeServiceClient {
     List<EmployeeInfo> getEmployeesByIds(@RequestParam("ids") List<Long> ids);
 
     record EmployeeInfo(
-            Long id,
+            Long userID,
             String firstName,
             String lastName,
             String preferredName,
             String cellPhone,
             String email,
-            Long houseId
+            Long houseID
     ) {
         public String getDisplayName() {
             if (preferredName != null && !preferredName.isEmpty()) {

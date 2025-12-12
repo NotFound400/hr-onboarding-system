@@ -25,6 +25,7 @@ public class SecurityConfig {
                         // Internal service-to-service calls (no auth required)
                         .requestMatchers("/employees/user/**").permitAll()
                         .requestMatchers("/employees/house/**").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/employees/*").permitAll()
                         .requestMatchers(HttpMethod.POST, "/employees").permitAll()
                         // Everything else requires authentication
                         .anyRequest().authenticated()
