@@ -49,8 +49,8 @@ public class HouseServiceImpl implements HouseService {
 
     @Override
     public HouseDTO.UnifiedDetailResponse getHouseDetail(Long houseId, UserContext userContext) {
-        log.debug("Getting house detail for id: {}, user: {}, roles: {}", 
-                houseId, userContext.getUserId(), userContext.getRoles());
+        log.debug("Getting house detail for id: {}, user: {}, roles: {}, userHouseId: {}",
+                houseId, userContext.getUserId(), userContext.getRoles(), userContext.getHouseId());
 
         House house = houseRepository.findByIdWithDetails(houseId)
                 .orElseThrow(() -> new ResourceNotFoundException("House", "id", houseId));
@@ -59,16 +59,16 @@ public class HouseServiceImpl implements HouseService {
             // HR View: Full information
             return buildHRDetailView(house);
         } else {
-            // Employee View: Must be assigned to this house
-            validateEmployeeHouseAccess(userContext.getUserId(), houseId);
+            // Employee View: Use houseId from JWT (via X-House-Id header)
+            validateEmployeeHouseAccess(userContext.getHouseId(), houseId);
             return buildEmployeeDetailView(house);
         }
     }
 
     @Override
     public List<HouseDTO.UnifiedListResponse> getAllHouses(UserContext userContext) {
-        log.debug("Getting all houses for user: {}, roles: {}", 
-                userContext.getUserId(), userContext.getRoles());
+        log.debug("Getting all houses for user: {}, roles: {}, userHouseId: {}",
+                userContext.getUserId(), userContext.getRoles(), userContext.getHouseId());
 
         if (userContext.isHR() || userContext.isAdmin()) {
             // HR View: All houses with full info
@@ -77,18 +77,18 @@ public class HouseServiceImpl implements HouseService {
                     .map(this::buildHRListView)
                     .collect(Collectors.toList());
         } else {
-            // Employee View: Only their assigned house
-            Long employeeHouseId = getEmployeeHouseId(userContext.getUserId());
+            // Employee View: Use houseId from JWT header
+            Long employeeHouseId = userContext.getHouseId();
             if (employeeHouseId == null) {
                 return Collections.emptyList();
             }
-            
+
             House house = houseRepository.findById(employeeHouseId)
                     .orElse(null);
             if (house == null) {
                 return Collections.emptyList();
             }
-            
+
             return List.of(buildEmployeeListView(house));
         }
     }
@@ -105,9 +105,30 @@ public class HouseServiceImpl implements HouseService {
             throw new BusinessException("House already exists at address: " + request.getAddress());
         }
 
-        // Get landlord
-        Landlord landlord = landlordRepository.findById(request.getLandlordId())
-                .orElseThrow(() -> new ResourceNotFoundException("Landlord", "id", request.getLandlordId()));
+        // Validate landlord info is provided
+        if (!request.hasLandlordInfo()) {
+            throw new BusinessException("Either landlordId or landlord object must be provided");
+        }
+
+        Landlord landlord;
+
+        // Option 1: Use existing landlord by ID
+        if (request.getLandlordId() != null) {
+            landlord = landlordRepository.findById(request.getLandlordId())
+                    .orElseThrow(() -> new ResourceNotFoundException("Landlord", "id", request.getLandlordId()));
+        }
+        // Option 2: Create new landlord inline
+        else {
+            LandlordDTO.CreateRequest landlordReq = request.getLandlord();
+            landlord = Landlord.builder()
+                    .firstName(landlordReq.getFirstName())
+                    .lastName(landlordReq.getLastName())
+                    .email(landlordReq.getEmail())
+                    .cellPhone(landlordReq.getCellPhone())
+                    .build();
+            landlord = landlordRepository.save(landlord);
+            log.info("Created new landlord with id: {} for house", landlord.getId());
+        }
 
         // Create house
         House house = House.builder()
@@ -310,15 +331,15 @@ public class HouseServiceImpl implements HouseService {
     // ==================== Private Helper Methods ====================
 
     /**
-     * Validate that an employee is assigned to the specified house
+     * Validate employee can access the requested house.
+     * Uses houseId from JWT token (passed via X-House-Id header).
      */
-    private void validateEmployeeHouseAccess(Long employeeId, Long houseId) {
-        Long employeeHouseId = getEmployeeHouseId(employeeId);
-        if (employeeHouseId == null || !employeeHouseId.equals(houseId)) {
-            log.warn("Employee {} attempted to access house {} but is assigned to house {}", 
-                    employeeId, houseId, employeeHouseId);
-            throw new ForbiddenException("house", 
-                    "You can only view the house you are assigned to");
+    private void validateEmployeeHouseAccess(Long houseIdFromJwt, Long requestedHouseId) {
+        if (houseIdFromJwt == null || !houseIdFromJwt.equals(requestedHouseId)) {
+            log.warn("Employee attempted to access house {} but is assigned to house {}",
+                    requestedHouseId, houseIdFromJwt);
+            throw new ForbiddenException("house",
+                    "Access to house denied: You can only view the house you are assigned to");
         }
     }
 
@@ -453,9 +474,31 @@ public class HouseServiceImpl implements HouseService {
     private HouseDTO.EmployeeViewResponse buildEmployeeViewResponse(House house) {
         List<HouseDTO.ResidentInfo> roommates = getRoommates(house.getId());
 
+        Landlord landlord = house.getLandlord();
+        HouseDTO.LandlordContactInfo landlordContact = null;
+        if (landlord != null) {
+            landlordContact = HouseDTO.LandlordContactInfo.builder()
+                    .fullName(landlord.getFullName())
+                    .phone(landlord.getCellPhone())
+                    .email(landlord.getEmail())
+                    .build();
+        }
+
+        // Build facility summary
+        Map<String, Integer> facilitySummary = new HashMap<>();
+        if (house.getFacilities() != null) {
+            for (Facility facility : house.getFacilities()) {
+                facilitySummary.merge(facility.getType(),
+                        facility.getQuantity() != null ? facility.getQuantity() : 0,
+                        Integer::sum);
+            }
+        }
+
         return HouseDTO.EmployeeViewResponse.builder()
                 .id(house.getId())
                 .address(house.getAddress())
+                .landlordContact(landlordContact)
+                .facilitySummary(facilitySummary)
                 .residents(roommates)
                 .build();
     }
@@ -490,8 +533,8 @@ public class HouseServiceImpl implements HouseService {
 
         if (house.getFacilities() != null) {
             for (Facility facility : house.getFacilities()) {
-                facilitySummary.merge(facility.getType(), 
-                        facility.getQuantity() != null ? facility.getQuantity() : 0, 
+                facilitySummary.merge(facility.getType(),
+                        facility.getQuantity() != null ? facility.getQuantity() : 0,
                         Integer::sum);
 
                 facilityResponses.add(FacilityDTO.Response.builder()
@@ -514,6 +557,9 @@ public class HouseServiceImpl implements HouseService {
                 .cellPhone(landlord.getCellPhone())
                 .build();
 
+        // Get residents list for HR view
+        List<HouseDTO.ResidentInfo> residents = getRoommates(house.getId());
+
         return HouseDTO.DetailResponse.builder()
                 .id(house.getId())
                 .address(house.getAddress())
@@ -522,6 +568,7 @@ public class HouseServiceImpl implements HouseService {
                 .landlord(landlordResponse)
                 .facilitySummary(facilitySummary)
                 .facilities(facilityResponses)
+                .residents(residents)
                 .build();
     }
 }

@@ -11,6 +11,6 @@ public interface HousingServiceClient {
      * Check house availability by ID.
      * Returns house info including current occupancy.
      */
-    @GetMapping("/api/housing/houses/{houseId}/availability")
+    @GetMapping("/houses/{houseId}/availability")
     ApiResponse<HouseAvailabilityResponse> checkHouseAvailability(@PathVariable("houseId") Long houseId);
 }

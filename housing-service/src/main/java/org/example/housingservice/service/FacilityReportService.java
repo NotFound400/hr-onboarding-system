@@ -93,4 +93,14 @@ public interface FacilityReportService {
      * employeeviewGet reportsDetail
      */
     FacilityReportDTO.EmployeeViewResponse getReportForEmployee(Long reportId, Long employeeId);
+
+    /**
+     * Get all facility reports for current employee's assigned house
+     *
+     * This allows employees to see all reports for their house (including roommates' reports)
+     *
+     * @param houseId The house ID from JWT (X-House-Id header)
+     * @return List of all reports for the house
+     */
+    List<FacilityReportDTO.ListItem> getReportsForCurrentHouse(Long houseId);
 }
