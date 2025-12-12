@@ -1,5 +1,9 @@
 package org.example.applicationservice.controller;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.example.applicationservice.utils.*;
 import org.example.applicationservice.dto.*;
 import org.example.applicationservice.service.ApplicationService;
@@ -8,8 +12,10 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
+@Tag(name = "Application Work Flow API",
+        description = "APIs for creating, updating, submitting, and retrieving onboarding applications")
 @RestController
-@RequestMapping("/applications")
+@RequestMapping()
 public class ApplicationFlowController {
     private final ApplicationService applicationService;
 
@@ -17,8 +23,14 @@ public class ApplicationFlowController {
         this.applicationService = applicationService;
     }
 
+    @Operation(summary = "Create a new application",
+            description = "Employee starts a new onboarding application")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Application created successfully"),
+            @ApiResponse(responseCode = "400", description = "Invalid request payload")
+    })
     @PostMapping
-    @PreAuthorize("hasRole('ROLE_EMPLOYEE')")
+    @PreAuthorize("hasRole('Employee')")
     public ResponseEntity<Result<ApplicationFlowDTO>> createApplication(
             @RequestBody CreateApplicationDTO request) {
 
@@ -29,7 +41,9 @@ public class ApplicationFlowController {
         return ResponseEntity.ok(result);
     }
 
-    @PreAuthorize("hasRole('EMPLOYEE')")
+    @Operation(summary = "Get latest active application",
+            description = "Retrieve the most recent active application for an employee")
+    @PreAuthorize("hasRole('Employee')")
     @GetMapping("/employee/latest/{employeeId}")
     public ResponseEntity<Result<ApplicationFlowDTO>> getLatestActiveApplication(
             @PathVariable String employeeId) {
@@ -40,7 +54,9 @@ public class ApplicationFlowController {
         return ResponseEntity.ok(result);
     }
 
-    @PreAuthorize("hasRole('EMPLOYEE')")
+    @Operation(summary = "Get all active applications for employee",
+            description = "Return a list of active applications the employee is working on")
+    @PreAuthorize("hasRole('Employee')")
     @GetMapping("/employee/{employeeId}")
     public ResponseEntity<Result<List<ApplicationListResponseDTO>>> getActiveApplication(
             @PathVariable String employeeId) {
@@ -51,7 +67,9 @@ public class ApplicationFlowController {
         return ResponseEntity.ok(result);
     }
 
-    @PreAuthorize("hasRole('EMPLOYEE')")
+    @Operation(summary = "Get application details",
+            description = "Retrieve full onboarding application data by its ID")
+    @PreAuthorize("hasRole('Employee')")
     @GetMapping("/{applicationId}")
     public ResponseEntity<Result<ApplicationFlowDTO>> getApplicationById(
             @PathVariable Long applicationId) {
@@ -59,7 +77,9 @@ public class ApplicationFlowController {
         return ResponseEntity.ok(result);
     }
 
-    @PreAuthorize("hasRole('EMPLOYEE')")
+    @Operation(summary = "Update application",
+            description = "Employee updates their existing application before submission")
+    @PreAuthorize("hasRole('Employee')")
     @PutMapping("/{applicationId}")
     public ResponseEntity<Result<ApplicationFlowDTO>> updateApplication(
             @PathVariable Long applicationId,
@@ -73,7 +93,9 @@ public class ApplicationFlowController {
         return ResponseEntity.ok(result);
     }
 
-    @PreAuthorize("hasRole('EMPLOYEE')")
+    @Operation(summary = "Submit application",
+            description = "Employee submits completed application for HR review")
+    @PreAuthorize("hasRole('Employee')")
     @PostMapping("/{applicationId}/submit")
     public ResponseEntity<Result<Void>> submitApplication(@PathVariable Long applicationId) {
         Result<Void> result = applicationService.submitApplication(applicationId);
@@ -85,9 +107,9 @@ public class ApplicationFlowController {
         return ResponseEntity.ok(result);
     }
 
+    @Operation(summary = "Approve application", description = "HR approves an onboarding application")
     @PostMapping("/{applicationId}/approve")
     @PreAuthorize("hasRole('HR')")
-//    @PreAuthorize("hasAuthority('ROLE_HR')")
     public ResponseEntity<Result<UpdateApplicationStatusDTO>> approveApplication(
             @PathVariable Long applicationId,
             @RequestBody HRRequestDTO request) {
@@ -101,6 +123,7 @@ public class ApplicationFlowController {
         return ResponseEntity.ok(result);
     }
 
+    @Operation(summary = "Reject application", description = "HR rejects an onboarding application")
     @PreAuthorize("hasRole('HR')")
     @PostMapping("/{applicationId}/reject")
     public ResponseEntity<Result<UpdateApplicationStatusDTO>> rejectApplication(
@@ -111,14 +134,17 @@ public class ApplicationFlowController {
         return result.isSuccess() ? ResponseEntity.ok(result) : ResponseEntity.badRequest().body(result);
     }
 
-    @PreAuthorize("hasRole('ROLE_HR')")
+    @Operation(summary = "List ongoing applications", description = "HR retrieves all applications that are currently in progress")
+    @PreAuthorize("hasRole('HR')")
     @GetMapping("/ongoing")
     public ResponseEntity<Result<List<ApplicationFlowDTO>>> listOngoingApplications() {
         Result<List<ApplicationFlowDTO>> result = applicationService.listOngoingApplications();
         return ResponseEntity.ok(result);
     }
 
-    @PreAuthorize("hasRole('HR')")
+    @Operation(summary = "Get all applications by employee",
+            description = "HR or Employee can view all applications belonging to an employee")
+    @PreAuthorize("hasAnyRole('HR', 'EMPLOYEE')")
     @GetMapping("/employee/{employeeId}/all")
     public ResponseEntity<Result<List<ApplicationFlowDTO>>> getApplicationsByEmployee(
             @PathVariable String employeeId) {
@@ -127,6 +153,8 @@ public class ApplicationFlowController {
         return ResponseEntity.ok(result);
     }
 
+    @Operation(summary = "Get applications by status",
+            description = "HR filters all applications by their status")
     @PreAuthorize("hasRole('HR')")
     @GetMapping("/status/{status}")
     public ResponseEntity<Result<List<ApplicationFlowDTO>>> getApplicationsByStatus(
@@ -136,7 +164,9 @@ public class ApplicationFlowController {
         return ResponseEntity.ok(result);
     }
 
-    @PreAuthorize("hasRole('EMPLOYEE')")
+    @Operation(summary = "Delete application",
+            description = "Employee deletes their draft application")
+    @PreAuthorize("hasRole('Employee')")
     @DeleteMapping("/{applicationId}")
     public ResponseEntity<Result<Void>> deleteApplication(@PathVariable Long applicationId) {
         Result<Void> result = applicationService.deleteApplication(applicationId);
