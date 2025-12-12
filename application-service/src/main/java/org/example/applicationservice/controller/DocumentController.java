@@ -25,7 +25,7 @@ public class DocumentController {
     }
 
     //get documents by applicationId
-    @PreAuthorize("hasRole('EMPLOYEE')")
+    @PreAuthorize("hasRole('Employee')")
     @GetMapping("/application/{applicationId}")
     public ResponseEntity<Result<List<DigitalDocumentDTO>>> getDocumentsByApplication(
             @PathVariable Long applicationId) {
@@ -35,7 +35,7 @@ public class DocumentController {
     }
 
     //get documents by employeeId
-    @PreAuthorize("hasRole('EMPLOYEE')")
+    @PreAuthorize("hasRole('Employee')")
     @GetMapping("/employee/{employeeId}")
     public ResponseEntity<Result<List<DigitalDocumentDTO>>> getDocumentsByEmployee(
             @PathVariable String employeeId) {
@@ -45,7 +45,7 @@ public class DocumentController {
     }
 
     //get documents by type
-    @PreAuthorize("hasRole('EMPLOYEE')")
+    @PreAuthorize("hasRole('Employee')")
     @GetMapping("/type/{type}")
     public ResponseEntity<Result<List<DigitalDocumentDTO>>> getDocumentsByType(
             @PathVariable String type) {
@@ -55,7 +55,7 @@ public class DocumentController {
     }
 
     //get required documents
-    @PreAuthorize("hasRole('EMPLOYEE')")
+    @PreAuthorize("hasRole('Employee')")
     @GetMapping("/required")
     public ResponseEntity<Result<List<DigitalDocumentDTO>>> getRequiredDocuments() {
         Result<List<DigitalDocumentDTO>> result = documentService.getRequiredDocuments();
@@ -63,7 +63,7 @@ public class DocumentController {
     }
 
     //upload document
-    @PreAuthorize("hasRole('EMPLOYEE')")
+    @PreAuthorize("hasRole('Employee')")
     @PostMapping("/upload")
     public ResponseEntity<Result<DigitalDocumentDTO>> uploadDocument(
             @RequestPart("file") MultipartFile file,
@@ -74,7 +74,7 @@ public class DocumentController {
     }
 
     //download by documentId
-    @PreAuthorize("hasRole('EMPLOYEE')")
+    @PreAuthorize("hasRole('Employee')")
     @GetMapping("/download/{id}")
     public ResponseEntity<byte[]> downloadDocument(@PathVariable Long id) {
         byte[] data = documentService.downloadDocumentById(id);
@@ -87,7 +87,7 @@ public class DocumentController {
     }
 
     //delete document by documentId
-    @PreAuthorize("hasRole('EMPLOYEE')")
+    @PreAuthorize("hasRole('Employee')")
     @DeleteMapping("/delete/{id}")
     public ResponseEntity<Result<String>> deleteDocument(@PathVariable Long id) {
         documentService.deleteDocumentById(id);
@@ -95,7 +95,7 @@ public class DocumentController {
     }
 
     //update document
-    @PreAuthorize("hasRole('EMPLOYEE')")
+    @PreAuthorize("hasRole('Employee')")
     @PutMapping("/update/{id}")
     public ResponseEntity<Result<DigitalDocumentDTO>> updateDocument(
             @PathVariable Long id,
