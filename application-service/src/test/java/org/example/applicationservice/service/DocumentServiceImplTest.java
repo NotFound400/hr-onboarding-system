@@ -1,17 +1,14 @@
 package org.example.applicationservice.service;
 
-import com.example.common.Result;
 import org.example.applicationservice.dao.ApplicationWorkFlowRepository;
 import org.example.applicationservice.dao.DigitalDocumentRepository;
 import org.example.applicationservice.domain.ApplicationWorkFlow;
 import org.example.applicationservice.domain.DigitalDocument;
 import org.example.applicationservice.dto.DigitalDocumentDTO;
 import org.example.applicationservice.dto.UploadDocumentRequest;
-<<<<<<< HEAD
 import org.example.applicationservice.service.impl.DocumentServiceImpl;
-=======
->>>>>>> 398e3cbc1dda6501b815867cafe8dc02dad13a8a
 import org.example.applicationservice.utils.OwnershipValidator;
+import org.example.applicationservice.utils.Result;
 import org.junit.jupiter.api.*;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
