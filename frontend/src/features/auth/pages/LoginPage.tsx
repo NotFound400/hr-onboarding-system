@@ -10,7 +10,7 @@ import { UserOutlined, LockOutlined } from '@ant-design/icons';
 import { useAppDispatch, useAppSelector } from '../../../store/hooks';
 import { login, selectIsAuthenticated, selectAuthLoading, selectUser } from '../../../store/slices/authSlice';
 import { getApplicationsByEmployeeId, getEmployeeByUserId } from '../../../services/api';
-import type { LoginRequest, ApplicationWorkFlow } from '../../../types';
+import type { LoginRequest } from '../../../types';
 
 const { Title, Text } = Typography;
 
@@ -63,7 +63,7 @@ const LoginPage: React.FC = () => {
           const employee = await getEmployeeByUserId(String(user.id));
           
           // 2. 通过 Employee.id 查询 Application
-          const applications: ApplicationWorkFlow[] = await getApplicationsByEmployeeId(employee.id);
+          const applications = await getApplicationsByEmployeeId(employee.id);
           
           // 查找 Onboarding 类型的申请
           const onboardingApp = applications.find(app => app.applicationType === 'Onboarding');

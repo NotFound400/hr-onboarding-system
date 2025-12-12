@@ -16,12 +16,12 @@ import { ArrowLeftOutlined, DownloadOutlined, CommentOutlined } from '@ant-desig
 import type { ColumnsType } from 'antd/es/table';
 import dayjs from 'dayjs';
 import { PageContainer } from '../../../components/common/PageContainer';
-import { getEmployeeById, getApplicationsByEmployeeId } from '../../../services/api';
-import type { Employee, ApplicationDetail, DigitalDocument } from '../../../types';
+import { getEmployeeById, getActiveApplications } from '../../../services/api';
+import type { Employee, Application, ApplicationDocument } from '../../../types';
 
 // Type aliases for better readability
-type Application = ApplicationDetail;
-type Document = DigitalDocument & { filename?: string; uploadDate?: string; status?: string; comment?: string };
+type App = Application;
+type Document = ApplicationDocument & { filename?: string; uploadDate?: string; status?: string; comment?: string };
 
 const { TextArea } = Input;
 
@@ -69,16 +69,10 @@ export const EmployeeProfileDetailPage: React.FC = () => {
       setEmployee(empData);
 
       // 获取该员工的 Onboarding Application
-      const applications = await getApplicationsByEmployeeId(employeeId);
+      const applications = await getActiveApplications(employeeId);
       if (applications.length > 0) {
-        // 取最新的 application 并转换为 ApplicationDetail
-        const app = applications[0];
-        const appDetail: ApplicationDetail = {
-          ...app,
-          employeeName: empData.firstName + ' ' + empData.lastName,
-          employeeEmail: empData.email,
-        };
-        setApplication(appDetail);
+        // 取最新的 application
+        setApplication(applications[0]);
       }
     } catch (error) {
       message.error('Failed to load employee details');
@@ -390,7 +384,7 @@ export const EmployeeProfileDetailPage: React.FC = () => {
               <Descriptions.Item label="Relationship">
                 {emergencyContact.relationship || '-'}
               </Descriptions.Item>
-              <Descriptions.Item label="Phone">{emergencyContact.phone || '-'}</Descriptions.Item>
+              <Descriptions.Item label="Phone">{emergencyContact.cellPhone || '-'}</Descriptions.Item>
               <Descriptions.Item label="Email">{emergencyContact.email || '-'}</Descriptions.Item>
             </Descriptions>
           </Card>

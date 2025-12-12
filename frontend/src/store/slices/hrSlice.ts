@@ -5,9 +5,9 @@
 
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import type { PayloadAction } from '@reduxjs/toolkit';
-import type { Employee, ApplicationDetail, ApplicationWorkFlow, UpdateApplicationStatusRequest } from '../../types';
+import type { Employee, Application, ApproveApplicationRequest, RejectApplicationRequest } from '../../types';
 import { getAllEmployees } from '../../services/api';
-import { getAllApplications, updateApplicationStatus } from '../../services/api';
+import { getOngoingApplications, approveApplication, rejectApplication } from '../../services/api';
 
 // ==================== State Interface ====================
 
@@ -17,9 +17,9 @@ interface HRState {
   /** 当前选中的员工 */
   selectedEmployee: Employee | null;
   /** 申请列表 (Application ID 为 number - SQL) */
-  applications: ApplicationDetail[];
+  applications: Application[];
   /** 当前选中的申请 */
-  selectedApplication: ApplicationDetail | null;
+  selectedApplication: Application | null;
   /** 员工列表加载状态 */
   employeesLoading: boolean;
   /** 申请列表加载状态 */
@@ -68,14 +68,14 @@ export const fetchAllEmployees = createAsyncThunk<
  * 获取所有申请列表
  */
 export const fetchAllApplications = createAsyncThunk<
-  ApplicationDetail[],
+  Application[],
   void,
   { rejectValue: string }
 >(
   'hr/fetchAllApplications',
   async (_, { rejectWithValue }) => {
     try {
-      const applications = await getAllApplications();
+      const applications = await getOngoingApplications();
       return applications;
     } catch (error: any) {
       return rejectWithValue(error.message || 'Failed to fetch applications');
@@ -84,20 +84,39 @@ export const fetchAllApplications = createAsyncThunk<
 );
 
 /**
- * HR 审批申请 (批准/拒绝)
+ * HR 批准申请
  */
-export const reviewApplication = createAsyncThunk<
-  ApplicationWorkFlow,
-  UpdateApplicationStatusRequest,
+export const approveApplicationThunk = createAsyncThunk<
+  { status: string; comment: string },
+  { applicationId: number; data: ApproveApplicationRequest },
   { rejectValue: string }
 >(
-  'hr/reviewApplication',
-  async (data, { rejectWithValue }) => {
+  'hr/approveApplication',
+  async ({ applicationId, data }, { rejectWithValue }) => {
     try {
-      const updatedApplication = await updateApplicationStatus(data);
-      return updatedApplication;
+      const result = await approveApplication(applicationId, data);
+      return result;
     } catch (error: any) {
-      return rejectWithValue(error.message || 'Failed to review application');
+      return rejectWithValue(error.message || 'Failed to approve application');
+    }
+  }
+);
+
+/**
+ * HR 拒绝申请
+ */
+export const rejectApplicationThunk = createAsyncThunk<
+  { status: string; comment: string },
+  { applicationId: number; data: RejectApplicationRequest },
+  { rejectValue: string }
+>(
+  'hr/rejectApplication',
+  async ({ applicationId, data }, { rejectWithValue }) => {
+    try {
+      const result = await rejectApplication(applicationId, data);
+      return result;
+    } catch (error: any) {
+      return rejectWithValue(error.message || 'Failed to reject application');
     }
   }
 );
@@ -117,7 +136,7 @@ const hrSlice = createSlice({
     /**
      * 设置选中的申请
      */
-    setSelectedApplication: (state, action: PayloadAction<ApplicationDetail | null>) => {
+    setSelectedApplication: (state, action: PayloadAction<Application | null>) => {
       state.selectedApplication = action.payload;
     },
     /**
@@ -163,7 +182,7 @@ const hrSlice = createSlice({
         state.applicationsLoading = true;
         state.error = null;
       })
-      .addCase(fetchAllApplications.fulfilled, (state, action: PayloadAction<ApplicationDetail[]>) => {
+      .addCase(fetchAllApplications.fulfilled, (state, action: PayloadAction<Application[]>) => {
         state.applicationsLoading = false;
         state.applications = action.payload;
         state.error = null;
@@ -173,34 +192,34 @@ const hrSlice = createSlice({
         state.error = action.payload || 'Failed to fetch applications';
       });
 
-    // ===== Review Application =====
+    // ===== Approve Application =====
     builder
-      .addCase(reviewApplication.pending, (state) => {
+      .addCase(approveApplicationThunk.pending, (state) => {
         state.reviewLoading = true;
         state.error = null;
       })
-      .addCase(reviewApplication.fulfilled, (state, action: PayloadAction<ApplicationWorkFlow>) => {
+      .addCase(approveApplicationThunk.fulfilled, (state) => {
         state.reviewLoading = false;
-        // 更新申请列表中对应的申请状态
-        const index = state.applications.findIndex(app => app.id === action.payload.id);
-        if (index !== -1) {
-          state.applications[index] = {
-            ...state.applications[index],
-            ...action.payload,
-          };
-        }
-        // 如果当前选中的申请是被更新的申请，同步更新
-        if (state.selectedApplication?.id === action.payload.id) {
-          state.selectedApplication = {
-            ...state.selectedApplication,
-            ...action.payload,
-          };
-        }
         state.error = null;
       })
-      .addCase(reviewApplication.rejected, (state, action) => {
+      .addCase(approveApplicationThunk.rejected, (state, action) => {
         state.reviewLoading = false;
-        state.error = action.payload || 'Failed to review application';
+        state.error = action.payload || 'Failed to approve application';
+      });
+
+    // ===== Reject Application =====
+    builder
+      .addCase(rejectApplicationThunk.pending, (state) => {
+        state.reviewLoading = true;
+        state.error = null;
+      })
+      .addCase(rejectApplicationThunk.fulfilled, (state) => {
+        state.reviewLoading = false;
+        state.error = null;
+      })
+      .addCase(rejectApplicationThunk.rejected, (state, action) => {
+        state.reviewLoading = false;
+        state.error = action.payload || 'Failed to reject application';
       });
   },
 });

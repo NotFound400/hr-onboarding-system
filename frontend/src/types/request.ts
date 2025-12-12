@@ -112,67 +112,127 @@ export interface OnboardingFormDTO {
 
 /** 创建员工请求 (用于 Onboarding 表单提交 - Section 3) */
 export interface CreateEmployeeRequest {
-  userId: number;
+  userID: number;
   firstName: string;
   lastName: string;
   middleName?: string;
   preferredName?: string;
-  avatar?: string;
   email: string;
-  workEmail?: string;
   cellPhone: string;
-  workPhone?: string;
   alternatePhone?: string;
-  gender: Gender;
+  gender: string;
   SSN: string;
   DOB: string;
   startDate: string;
-  endDate?: string;
-  title?: string;
+  endDate?: string | null;
   driverLicense?: string;
   driverLicenseExpiration?: string;
+  houseID?: number;
   contact: Contact[];
   address: Address[];
   visaStatus: VisaStatus[];
+  personalDocument?: any[];
 }
 
 /** 更新员工请求 (Section 6.c - Edit Functionality) */
 export interface UpdateEmployeeRequest {
-  id: string; // MongoDB ObjectId
+  userID?: number;
   firstName?: string;
   lastName?: string;
   middleName?: string;
   preferredName?: string;
   email?: string;
-  workEmail?: string;
   cellPhone?: string;
-  workPhone?: string;
   alternatePhone?: string;
-  gender?: Gender;
+  gender?: string;
+  SSN?: string;
   DOB?: string;
+  startDate?: string;
+  endDate?: string | null;
   driverLicense?: string;
   driverLicenseExpiration?: string;
-  title?: string;
-  startDate?: string;
-  endDate?: string;
-  address?: Address[];
+  houseID?: number;
   contact?: Contact[];
+  address?: Address[];
+  visaStatus?: VisaStatus[];
+  personalDocument?: any[];
 }
 
 // ==================== Application Requests ====================
 
-/** 创建申请请求 (Section 3.e - Submit onboarding application) */
+/** 
+ * 创建申请请求 (POST /api)
+ * Section 3.e - Submit onboarding application
+ */
 export interface CreateApplicationRequest {
   employeeId: string;
-  applicationType: ApplicationType;
-  comment?: string;
+  applicationType: ApplicationType; // "ONBOARDING" or "OPT"
+  comment: string;
 }
 
-/** 更新申请状态请求 (HR Section 5.b.iv - Approve/Reject) */
+/** 
+ * 更新申请请求 (PUT /api/{applicationId})
+ * Employee 更新已存在的申请（提交前）
+ */
+export interface UpdateApplicationRequest {
+  comment?: string;
+  applicationType?: ApplicationType;
+}
+
+/** 
+ * 批准申请请求 (POST /api/{applicationId}/approve)
+ * HR 批准入职申请
+ */
+export interface ApproveApplicationRequest {
+  comment: string;
+}
+
+/** 
+ * 拒绝申请请求 (POST /api/{applicationId}/reject)
+ * HR 拒绝入职申请
+ */
+export interface RejectApplicationRequest {
+  comment: string; // Required: 拒绝原因
+}
+
+/** 
+ * @deprecated 使用 ApproveApplicationRequest 或 RejectApplicationRequest
+ * 保留用于向后兼容
+ */
 export interface UpdateApplicationStatusRequest {
   id: number;
   status: ApplicationStatus;
-  comment?: string; // Required when rejecting (HR Section 5.b.iv)
+  comment?: string;
+}
+
+// ==================== Document Management Requests ====================
+
+/** 
+ * 上传文档请求 (POST /api/documents/upload)
+ * Content-Type: multipart/form-data
+ */
+export interface UploadDocumentRequest {
+  file: File;
+  metadata: {
+    type: string;
+    title: string;
+    description: string;
+    applicationId: number;
+  };
+}
+
+/** 
+ * 更新文档请求 (PUT /api/documents/update/{id})
+ * Content-Type: multipart/form-data
+ */
+export interface UpdateDocumentRequest {
+  file?: File; // Optional: 新的文档文件
+  metadata: {
+    type?: string;
+    title?: string;
+    description?: string;
+    applicationId?: number;
+  };
 }
 
 // ==================== Housing Requests ====================
@@ -246,21 +306,6 @@ export interface UpdateFacilityReportCommentRequest {
   comment: string;
 }
 
-// ==================== Document Upload Request (Section 3.d + 7.b) ====================
-
-/**
- * 上传个人文档请求
- * Used for:
- * - Section 3.d: Upload completed and signed documents
- * - Section 7.b: Upload I-20, OPT STEM Receipt, OPT STEM EAD
- */
-export interface UploadDocumentRequest {
-  employeeId: string; // MongoDB ObjectId
-  file: File;
-  title: string; // e.g., 'Driver License', 'I-20', 'OPT Receipt'
-  comment?: string;
-}
-
 // ==================== Employee Search (HR Section 3.b.iii) ====================
 
 /**
@@ -269,3 +314,4 @@ export interface UploadDocumentRequest {
 export interface EmployeeSearchRequest {
   keyword: string; // Search by First Name OR Last Name OR Preferred Name
 }
+

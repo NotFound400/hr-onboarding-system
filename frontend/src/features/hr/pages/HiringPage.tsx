@@ -137,7 +137,7 @@ const HiringPage: React.FC = () => {
   /**
    * Onboarding 申请列表列定义
    */
-  const columns: ColumnsType<ApplicationDetail> = [
+  const columns: ColumnsType<Application> = [
     {
       title: 'Employee Name',
       dataIndex: 'employeeName',

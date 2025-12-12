@@ -13,8 +13,8 @@ import { Table, Button, Space, Modal, Input, message, Tag } from 'antd';
 import { CheckOutlined, CloseOutlined } from '@ant-design/icons';
 import type { ColumnsType } from 'antd/es/table';
 import { PageContainer } from '../../../components/common/PageContainer';
-import { getAllApplications, updateApplicationStatus } from '../../../services/api';
-import type { ApplicationDetail, ApplicationStatus } from '../../../types';
+import { getOngoingApplications, approveApplication, rejectApplication } from '../../../services/api';
+import type { Application } from '../../../types';
 
 const { TextArea } = Input;
 
@@ -23,9 +23,9 @@ const { TextArea } = Input;
  */
 const VisaManagementPage: React.FC = () => {
   const [loading, setLoading] = useState(false);
-  const [applications, setApplications] = useState<ApplicationDetail[]>([]);
+  const [applications, setApplications] = useState<Application[]>([]);
   const [rejectModalVisible, setRejectModalVisible] = useState(false);
-  const [selectedApplication, setSelectedApplication] = useState<ApplicationDetail | null>(null);
+  const [selectedApplication, setSelectedApplication] = useState<Application | null>(null);
   const [rejectReason, setRejectReason] = useState('');
   const [submitting, setSubmitting] = useState(false);
 
@@ -37,7 +37,7 @@ const VisaManagementPage: React.FC = () => {
   const fetchApplications = async () => {
     try {
       setLoading(true);
-      const data = await getAllApplications();
+      const data = await getOngoingApplications();
       
       // 过滤出 OPT 类型的申请（签证相关）
       const visaApplications = data.filter(
@@ -55,15 +55,14 @@ const VisaManagementPage: React.FC = () => {
   /**
    * 批准申请
    */
-  const handleApprove = async (application: ApplicationDetail) => {
+  const handleApprove = async (application: Application) => {
     try {
       setSubmitting(true);
-      await updateApplicationStatus({
-        id: application.id,
-        status: 'Approved' as ApplicationStatus,
+      await approveApplication(application.id, {
+        comment: 'Application approved by HR',
       });
       
-      message.success(`Application approved. Email notification sent to ${application.employeeEmail}`);
+      message.success('Application approved. Email notification sent to employee');
       fetchApplications(); // 刷新列表
     } catch (error: any) {
       message.error(error.message || 'Failed to approve application');
@@ -75,7 +74,7 @@ const VisaManagementPage: React.FC = () => {
   /**
    * 打开拒绝原因 Modal
    */
-  const handleRejectClick = (application: ApplicationDetail) => {
+  const handleRejectClick = (application: Application) => {
     setSelectedApplication(application);
     setRejectReason('');
     setRejectModalVisible(true);
@@ -94,13 +93,11 @@ const VisaManagementPage: React.FC = () => {
 
     try {
       setSubmitting(true);
-      await updateApplicationStatus({
-        id: selectedApplication.id,
-        status: 'Rejected' as ApplicationStatus,
+      await rejectApplication(selectedApplication.id, {
         comment: rejectReason,
       });
       
-      message.success(`Application rejected. Email notification sent to ${selectedApplication.employeeEmail}`);
+      message.success('Application rejected. Email notification sent to employee');
       setRejectModalVisible(false);
       setSelectedApplication(null);
       setRejectReason('');
@@ -116,7 +113,7 @@ const VisaManagementPage: React.FC = () => {
    * Section HR.4 - Visa Status Management Table Columns
    * Required fields: Name, Work Authorization, Expiration Date, Days Left, Active STEM OPT Application and Actions
    */
-  const columns: ColumnsType<ApplicationDetail> = [
+  const columns: ColumnsType<Application> = [
     {
       title: 'Name (Legal Full Name)',
       dataIndex: 'employeeName',

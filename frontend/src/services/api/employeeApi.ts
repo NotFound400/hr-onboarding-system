@@ -11,31 +11,57 @@ import type {
   Employee, 
   CreateEmployeeRequest, 
   UpdateEmployeeRequest,
-  Contact,
-  Address,
-  VisaStatus,
   PersonalDocument,
-  ContactType,
-  AddressType,
-  VisaStatusType,
-  Gender,
 } from '../../types';
+
+// ==================== Type Definitions ====================
+
+/** 分页响应结构 (Spring Data Page) */
+export interface PageResponse<T> {
+  content: T[];
+  pageable: {
+    sort: {
+      sorted: boolean;
+      unsorted: boolean;
+      empty: boolean;
+    };
+    pageNumber: number;
+    pageSize: number;
+    offset: number;
+    paged: boolean;
+    unpaged: boolean;
+  };
+  totalPages: number;
+  totalElements: number;
+  last: boolean;
+  first: boolean;
+  size: number;
+  number: number;
+  sort: {
+    sorted: boolean;
+    unsorted: boolean;
+    empty: boolean;
+  };
+  numberOfElements: number;
+  empty: boolean;
+}
+
+/** 分页查询参数 */
+export interface PageQueryParams {
+  page?: number;
+  size?: number;
+  sort?: string;
+}
 
 // ==================== API Functions ==
 
 /**
- * 获取所有员工列表
+ * 获取所有员工列表（无分页）
  * @returns Promise<Employee[]>
  */
 export const getAllEmployees = async (): Promise<Employee[]> => {
   if (isMockMode()) {
     await delay(500);
-    // return EmployeeMocks.MOCK_EMPLOYEE_LIST.data!; // 🟢 默认员工列表
-    // return [
-    //   EmployeeMocks.SCENARIO_USER_REJECTED,
-    //   EmployeeMocks.SCENARIO_USER_NO_AVATAR,
-    //   EmployeeMocks.SCENARIO_USER_VISA_STEP1,
-    // ]; // 🔴 场景：混合拒绝/缺头像/无签证文档
     return EmployeeMocks.MOCK_EMPLOYEE_LIST.data!;
   }
   
@@ -43,16 +69,65 @@ export const getAllEmployees = async (): Promise<Employee[]> => {
 };
 
 /**
+ * 获取员工列表（分页）
+ * Endpoint: GET /api/employees/page
+ * @param params 分页查询参数
+ * @returns Promise<PageResponse<Employee>>
+ */
+export const getEmployeesPage = async (params?: PageQueryParams): Promise<PageResponse<Employee>> => {
+  if (isMockMode()) {
+    await delay(500);
+    const page = params?.page || 0;
+    const size = params?.size || 3;
+    const allEmployees = EmployeeMocks.MOCK_EMPLOYEE_LIST.data!;
+    
+    const start = page * size;
+    const end = start + size;
+    const content = allEmployees.slice(start, end);
+    
+    return {
+      content,
+      pageable: {
+        sort: { sorted: true, unsorted: false, empty: false },
+        pageNumber: page,
+        pageSize: size,
+        offset: start,
+        paged: true,
+        unpaged: false,
+      },
+      totalPages: Math.ceil(allEmployees.length / size),
+      totalElements: allEmployees.length,
+      last: end >= allEmployees.length,
+      first: page === 0,
+      size,
+      number: page,
+      sort: { sorted: true, unsorted: false, empty: false },
+      numberOfElements: content.length,
+      empty: content.length === 0,
+    };
+  }
+  
+  const queryParams = new URLSearchParams();
+  if (params?.page !== undefined) queryParams.append('page', params.page.toString());
+  if (params?.size !== undefined) queryParams.append('size', params.size.toString());
+  if (params?.sort) queryParams.append('sort', params.sort);
+  
+  const queryString = queryParams.toString();
+  const url = queryString ? `/employees/page?${queryString}` : '/employees/page';
+  
+  return axiosClient.get(url) as Promise<PageResponse<Employee>>;
+};
+
+/**
  * 根据 ID 获取员工详情
- * @param id 员工 ID
+ * Endpoint: GET /api/employees/{id}
+ * @param id 员工 ID (MongoDB ObjectId)
  * @returns Promise<Employee>
  */
 export const getEmployeeById = async (id: string): Promise<Employee> => {
   if (isMockMode()) {
     await delay(300);
-    // 根据 ID 返回对应的员工数据
     const employee = EmployeeMocks.MOCK_EMPLOYEE_LIST.data!.find(emp => emp.id === id);
-    // return EmployeeMocks.SCENARIO_USER_REJECTED; // 🔴 快速切换到被拒 onboarding
     return employee || EmployeeMocks.MOCK_EMPLOYEE.data!;
   }
   
@@ -61,19 +136,18 @@ export const getEmployeeById = async (id: string): Promise<Employee> => {
 
 /**
  * 根据 User ID 获取员工详情
- * @param userId 用户 ID
+ * Endpoint: GET /api/employees/user/{userID}
+ * @param userId 用户 ID (Long)
  * @returns Promise<Employee>
  */
 export const getEmployeeByUserId = async (userId: string): Promise<Employee> => {
   if (isMockMode()) {
     await delay(300);
-    // 根据 userID 查找对应的员工
     const userIdNum = parseInt(userId, 10);
     const employee = EmployeeMocks.MOCK_EMPLOYEE_LIST.data!.find(emp => emp.userID === userIdNum);
     if (!employee) {
       throw new Error(`Employee not found for userId=${userId}`);
     }
-    // return EmployeeMocks.SCENARIO_USER_VISA_STEP1; // 🔴 没有签证文档时锁定流程
     return employee;
   }
   
@@ -81,8 +155,59 @@ export const getEmployeeByUserId = async (userId: string): Promise<Employee> => 
 };
 
 /**
+ * 搜索员工（按姓名）
+ * Endpoint: GET /api/employees/search?name={name}
+ * @param name 搜索关键词（First Name OR Last Name OR Preferred Name）
+ * @returns Promise<Employee[]>
+ */
+export const searchEmployees = async (name: string): Promise<Employee[]> => {
+  if (isMockMode()) {
+    await delay(400);
+    const searchTerm = name.toLowerCase();
+    return EmployeeMocks.MOCK_EMPLOYEE_LIST.data!.filter(emp => 
+      emp.firstName.toLowerCase().includes(searchTerm) ||
+      emp.lastName.toLowerCase().includes(searchTerm) ||
+      (emp.preferredName?.toLowerCase() || '').includes(searchTerm)
+    );
+  }
+  
+  return axiosClient.get(`/employees/search?name=${encodeURIComponent(name)}`) as Promise<Employee[]>;
+};
+
+/**
+ * 根据房屋ID获取员工列表（室友列表）
+ * Endpoint: GET /api/employees/house/{houseId}
+ * @param houseId 房屋 ID
+ * @returns Promise<Employee[]>
+ */
+export const getEmployeesByHouseId = async (houseId: number): Promise<Employee[]> => {
+  if (isMockMode()) {
+    await delay(300);
+    return EmployeeMocks.MOCK_EMPLOYEE_LIST.data!.filter(emp => emp.houseID === houseId);
+  }
+  
+  return axiosClient.get(`/employees/house/${houseId}`) as Promise<Employee[]>;
+};
+
+/**
+ * 统计房屋员工数量
+ * Endpoint: GET /api/employees/house/{houseId}/count
+ * @param houseId 房屋 ID
+ * @returns Promise<number>
+ */
+export const getEmployeeCountByHouseId = async (houseId: number): Promise<number> => {
+  if (isMockMode()) {
+    await delay(200);
+    const count = EmployeeMocks.MOCK_EMPLOYEE_LIST.data!.filter(emp => emp.houseID === houseId).length;
+    return count;
+  }
+  
+  return axiosClient.get(`/employees/house/${houseId}/count`) as Promise<number>;
+};
+
+/**
  * 创建员工 (Onboarding)
- * 注意: 此函数接收符合 DB 结构的嵌套数据
+ * Endpoint: POST /api/employees
  * @param data 创建员工请求数据
  * @returns Promise<Employee>
  */
@@ -90,7 +215,6 @@ export const createEmployee = async (data: CreateEmployeeRequest): Promise<Emplo
   if (isMockMode()) {
     console.log('[Mock Request] createEmployee:', data);
     await delay(800);
-    // return EmployeeMocks.SCENARIO_USER_NO_AVATAR; // 🔴 模拟缺少头像的 Onboarding 数据
     return {
       ...EmployeeMocks.MOCK_EMPLOYEE.data!,
       ...data,
@@ -103,22 +227,23 @@ export const createEmployee = async (data: CreateEmployeeRequest): Promise<Emplo
 
 /**
  * 更新员工信息
+ * Endpoint: PUT /api/employees/{id}
+ * @param id 员工 ID
  * @param data 更新员工请求数据
  * @returns Promise<Employee>
  */
-export const updateEmployee = async (data: UpdateEmployeeRequest): Promise<Employee> => {
+export const updateEmployee = async (id: string, data: UpdateEmployeeRequest): Promise<Employee> => {
   if (isMockMode()) {
-    console.log('[Mock Request] updateEmployee:', data);
+    console.log('[Mock Request] updateEmployee:', { id, data });
     await delay(500);
-    // return EmployeeMocks.SCENARIO_USER_REJECTED; // 🔴 强制返回带 feedback 的员工
     return {
       ...EmployeeMocks.MOCK_EMPLOYEE.data!,
       ...data,
-      id: data.id?.toString() || EmployeeMocks.MOCK_EMPLOYEE.data!.id,
+      id,
     };
   }
   
-  return axiosClient.put(`/employees/${data.id}`, data) as Promise<Employee>;
+  return axiosClient.put(`/employees/${id}`, data) as Promise<Employee>;
 };
 
 /**
@@ -138,9 +263,10 @@ export const deleteEmployee = async (id: string): Promise<void> => {
 
 /**
  * 上传员工个人文档
- * @param employeeId 员工 ID
+ * Endpoint: POST /api/employees/{employeeId}/documents
+ * @param employeeId 员工 ID (MongoDB ObjectId)
  * @param file 文件对象
- * @param title 文档标题
+ * @param title 文档标题 (如 "Passport", "I-94")
  * @param comment 备注
  * @returns Promise<PersonalDocument>
  */
@@ -154,8 +280,8 @@ export const uploadPersonalDocument = async (
     console.log('[Mock Request] uploadPersonalDocument:', { employeeId, fileName: file.name, title, comment });
     await delay(1000);
     return {
-      id: Date.now(),
-      path: `s3://bucket/documents/${file.name}`,
+      id: `d1e2f3g4-h5i6-${Date.now()}`,
+      path: `https://hr-onboarding-docs.s3.us-east-1.amazonaws.com/employees/${employeeId}/documents/${file.name}`,
       title,
       comment: comment || '',
       createDate: new Date().toISOString(),
@@ -180,8 +306,9 @@ export const uploadPersonalDocument = async (
 
 /**
  * 删除员工个人文档
- * @param employeeId 员工 ID
- * @param documentId 文档 ID
+ * Endpoint: DELETE /api/employees/{employeeId}/documents/{documentId}
+ * @param employeeId 员工 ID (MongoDB ObjectId)
+ * @param documentId 文档 ID (UUID)
  * @returns Promise<void>
  */
 export const deletePersonalDocument = async (
@@ -195,124 +322,4 @@ export const deletePersonalDocument = async (
   }
   
   await axiosClient.delete(`/employees/${employeeId}/documents/${documentId}`);
-};
-
-// ==================== 数据映射工具函数 ====================
-
-/**
- * 将扁平的 Onboarding 表单数据转换为符合 DB 设计的嵌套结构
- * 示例: 表单中的 refName, refPhone 等字段需要转换为 contacts 数组
- */
-export interface OnboardingFormData {
-  // Basic Info
-  firstName: string;
-  lastName: string;
-  middleName?: string;
-  preferredName?: string;
-  email: string;
-  cellPhone: string;
-  alternatePhone?: string;
-  gender: Gender;
-  ssn: string;
-  dob: string;
-  startDate: string;
-  
-  // Driver License
-  driverLicense: string;
-  driverLicenseExpiration: string;
-  
-  // Reference Contact (扁平字段)
-  refName: string;
-  refPhone: string;
-  refEmail: string;
-  refRelationship: string;
-  
-  // Emergency Contact (扁平字段)
-  emergencyName: string;
-  emergencyPhone: string;
-  emergencyEmail: string;
-  emergencyRelationship: string;
-  
-  // Address (扁平字段)
-  addressLine1: string;
-  addressLine2?: string;
-  city: string;
-  state: string;
-  zipCode: string;
-  
-  // Visa Status
-  visaType: VisaStatusType;
-  visaStartDate: string;
-  visaEndDate: string;
-}
-
-/**
- * 转换扁平表单数据为嵌套结构
- */
-export const mapOnboardingFormToEmployeeRequest = (
-  formData: OnboardingFormData,
-  userId: number
-): CreateEmployeeRequest => {
-  // 构建 contact 数组
-  const contact: Contact[] = [
-    {
-      type: 'Reference' as ContactType,
-      firstName: formData.refName.split(' ')[0] || formData.refName,
-      lastName: formData.refName.split(' ').slice(1).join(' ') || '',
-      phone: formData.refPhone,
-      email: formData.refEmail,
-      relationship: formData.refRelationship,
-    },
-    {
-      type: 'Emergency' as ContactType,
-      firstName: formData.emergencyName.split(' ')[0] || formData.emergencyName,
-      lastName: formData.emergencyName.split(' ').slice(1).join(' ') || '',
-      phone: formData.emergencyPhone,
-      email: formData.emergencyEmail,
-      relationship: formData.emergencyRelationship,
-    },
-  ];
-  
-  // 构建 address 数组
-  const address: Address[] = [
-    {
-      type: 'Primary' as AddressType,
-      addressLine1: formData.addressLine1,
-      addressLine2: formData.addressLine2 || '',
-      city: formData.city,
-      state: formData.state,
-      zipCode: formData.zipCode,
-    },
-  ];
-  
-  // 构建 visaStatus 数组
-  const visaStatus: VisaStatus[] = [
-    {
-      visaType: formData.visaType,
-      activeFlag: true,
-      startDate: formData.visaStartDate,
-      endDate: formData.visaEndDate,
-      lastModificationDate: new Date().toISOString(),
-    },
-  ];
-  
-  return {
-    userId,
-    firstName: formData.firstName,
-    lastName: formData.lastName,
-    middleName: formData.middleName,
-    preferredName: formData.preferredName,
-    email: formData.email,
-    cellPhone: formData.cellPhone,
-    alternatePhone: formData.alternatePhone,
-    gender: formData.gender,
-    SSN: formData.ssn,
-    DOB: formData.dob,
-    startDate: formData.startDate,
-    driverLicense: formData.driverLicense,
-    driverLicenseExpiration: formData.driverLicenseExpiration,
-    contact,
-    address,
-    visaStatus,
-  };
 };

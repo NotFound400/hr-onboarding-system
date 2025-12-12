@@ -1,18 +1,17 @@
-/**
+﻿/**
  * Application Mock Data
- * 将 applicationApi.ts 中的所有 mock 数据集中管理
+ * å°† applicationApi.ts ä¸­çš„æ‰€æœ‰ mock æ•°æ®é›†ä¸­ç®¡ç†
  */
 
 import type {
-  ApplicationWorkFlow,
-  ApplicationDetail,
+  Application,
   ApplicationStatus,
   ApplicationType,
   ApiResponse,
-  DigitalDocument,
+  ApplicationDocument,
 } from '../../types';
 
-export const MOCK_APPLICATION: ApiResponse<ApplicationWorkFlow> = {
+export const MOCK_APPLICATION: ApiResponse<Application> = {
   success: true,
   message: 'Application retrieved successfully',
   data: {
@@ -26,17 +25,13 @@ export const MOCK_APPLICATION: ApiResponse<ApplicationWorkFlow> = {
   },
 };
 
-export const MOCK_APPLICATION_DETAIL: ApiResponse<ApplicationDetail> = {
+export const MOCK_APPLICATION_DETAIL: ApiResponse<Application> = {
   success: true,
   message: 'Application detail retrieved successfully',
-  data: {
-    ...MOCK_APPLICATION.data!,
-    employeeName: 'John Doe',
-    employeeEmail: 'john.doe@example.com',
-  },
+  data: MOCK_APPLICATION.data!,
 };
 
-export const MOCK_APPLICATION_LIST: ApiResponse<ApplicationDetail[]> = {
+export const MOCK_APPLICATION_LIST: ApiResponse<Application[]> = {
   success: true,
   message: 'Application list retrieved successfully',
   data: [
@@ -44,8 +39,6 @@ export const MOCK_APPLICATION_LIST: ApiResponse<ApplicationDetail[]> = {
     {
       id: 200,
       employeeId: '200',
-      employeeName: 'New User',
-      employeeEmail: 'newuser@company.com',
       applicationType: 'Onboarding' as ApplicationType,
       status: 'Pending' as ApplicationStatus,
       comment: 'Waiting for employee to submit onboarding form',
@@ -55,8 +48,6 @@ export const MOCK_APPLICATION_LIST: ApiResponse<ApplicationDetail[]> = {
     {
       id: 100,
       employeeId: '507f1f77bcf86cd799439100',
-      employeeName: 'Emily Johnson',
-      employeeEmail: 'employee@company.com',
       applicationType: 'Onboarding' as ApplicationType,
       status: 'Approved' as ApplicationStatus,
       comment: 'All documents verified and approved',
@@ -68,8 +59,6 @@ export const MOCK_APPLICATION_LIST: ApiResponse<ApplicationDetail[]> = {
       ...MOCK_APPLICATION_DETAIL.data!,
       id: 2,
       employeeId: '2',
-      employeeName: 'Alice Johnson',
-      employeeEmail: 'alice.johnson@example.com',
       status: 'Approved' as ApplicationStatus,
       createDate: '2024-01-05T10:30:00Z',
       lastModificationDate: '2024-01-06T14:20:00Z',
@@ -78,8 +67,6 @@ export const MOCK_APPLICATION_LIST: ApiResponse<ApplicationDetail[]> = {
       ...MOCK_APPLICATION_DETAIL.data!,
       id: 3,
       employeeId: '3',
-      employeeName: 'Bob Smith',
-      employeeEmail: 'bob.smith@example.com',
       status: 'Rejected' as ApplicationStatus,
       comment: 'Incomplete documentation',
       createDate: '2024-01-08T09:15:00Z',
@@ -88,8 +75,6 @@ export const MOCK_APPLICATION_LIST: ApiResponse<ApplicationDetail[]> = {
     {
       id: 400,
       employeeId: '507f1f77bcf86cd799439200',
-      employeeName: 'RejectedUser',
-      employeeEmail: 'rejected_candidate@example.com',
       applicationType: 'Onboarding' as ApplicationType,
       status: 'Rejected' as ApplicationStatus,
       comment: 'Missing signed I-983 and OPT receipt. Please upload both documents before resubmitting.',
@@ -100,8 +85,6 @@ export const MOCK_APPLICATION_LIST: ApiResponse<ApplicationDetail[]> = {
     {
       id: 4,
       employeeId: '4',
-      employeeName: 'Chen Wei',
-      employeeEmail: 'chen.wei@example.com',
       applicationType: 'OPT' as ApplicationType,
       status: 'Pending' as ApplicationStatus,
       comment: '',
@@ -111,8 +94,6 @@ export const MOCK_APPLICATION_LIST: ApiResponse<ApplicationDetail[]> = {
     {
       id: 5,
       employeeId: '5',
-      employeeName: 'Maria Garcia',
-      employeeEmail: 'maria.garcia@example.com',
       applicationType: 'OPT' as ApplicationType,
       status: 'Pending' as ApplicationStatus,
       comment: '',
@@ -122,8 +103,6 @@ export const MOCK_APPLICATION_LIST: ApiResponse<ApplicationDetail[]> = {
     {
       id: 6,
       employeeId: '6',
-      employeeName: 'Raj Patel',
-      employeeEmail: 'raj.patel@example.com',
       applicationType: 'OPT' as ApplicationType,
       status: 'Approved' as ApplicationStatus,
       comment: 'All documents verified. OPT EAD card approved.',
@@ -133,8 +112,6 @@ export const MOCK_APPLICATION_LIST: ApiResponse<ApplicationDetail[]> = {
     {
       id: 7,
       employeeId: '7',
-      employeeName: 'Sarah Kim',
-      employeeEmail: 'sarah.kim@example.com',
       applicationType: 'OPT' as ApplicationType,
       status: 'Rejected' as ApplicationStatus,
       comment: 'I-20 expired. Please renew your student status first.',
@@ -144,8 +121,6 @@ export const MOCK_APPLICATION_LIST: ApiResponse<ApplicationDetail[]> = {
     {
       id: 8,
       employeeId: '8',
-      employeeName: 'Mohamed Ali',
-      employeeEmail: 'mohamed.ali@example.com',
       applicationType: 'OPT' as ApplicationType,
       status: 'Pending' as ApplicationStatus,
       comment: '',
@@ -155,8 +130,6 @@ export const MOCK_APPLICATION_LIST: ApiResponse<ApplicationDetail[]> = {
     {
       id: 9,
       employeeId: '9',
-      employeeName: 'Emily Chen',
-      employeeEmail: 'emily.chen@example.com',
       applicationType: 'OPT' as ApplicationType,
       status: 'Approved' as ApplicationStatus,
       comment: 'STEM OPT extension approved for 24 months.',
@@ -166,8 +139,6 @@ export const MOCK_APPLICATION_LIST: ApiResponse<ApplicationDetail[]> = {
     {
       id: 10,
       employeeId: '10',
-      employeeName: 'David Lee',
-      employeeEmail: 'david.lee@example.com',
       applicationType: 'OPT' as ApplicationType,
       status: 'Pending' as ApplicationStatus,
       comment: '',
@@ -177,7 +148,7 @@ export const MOCK_APPLICATION_LIST: ApiResponse<ApplicationDetail[]> = {
   ],
 };
 
-export const MOCK_DIGITAL_DOCUMENT: ApiResponse<DigitalDocument> = {
+export const MOCK_DIGITAL_DOCUMENT: ApiResponse<ApplicationDocument> = {
   success: true,
   message: 'Digital document retrieved successfully',
   data: {
@@ -187,10 +158,11 @@ export const MOCK_DIGITAL_DOCUMENT: ApiResponse<DigitalDocument> = {
     path: 's3://bucket/templates/i-983-template.pdf',
     description: 'Training Plan for STEM OPT Students',
     title: 'I-983 Form',
+    applicationId: 1,
   },
 };
 
-export const MOCK_DIGITAL_DOCUMENTS: ApiResponse<DigitalDocument[]> = {
+export const MOCK_DIGITAL_DOCUMENTS: ApiResponse<ApplicationDocument[]> = {
   success: true,
   message: 'Digital documents retrieved successfully',
   data: [
@@ -202,6 +174,7 @@ export const MOCK_DIGITAL_DOCUMENTS: ApiResponse<DigitalDocument[]> = {
       path: 's3://bucket/templates/i-20-template.pdf',
       description: 'Certificate of Eligibility for Nonimmigrant Student Status',
       title: 'I-20 Form',
+      applicationId: 1,
     },
   ],
 };

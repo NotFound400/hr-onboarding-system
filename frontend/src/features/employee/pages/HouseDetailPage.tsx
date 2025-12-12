@@ -104,7 +104,7 @@ const HouseDetailPage: React.FC = () => {
                     description={
                       <Space>
                         <PhoneOutlined />
-                        <span>{roommate.phone || 'N/A'}</span>
+                        <span>{roommate.cellPhone || 'N/A'}</span>
                       </Space>
                     }
                   />

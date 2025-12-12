@@ -77,7 +77,7 @@ export interface Resident {
   /** 姓名 */
   name: string;
   /** 电话 */
-  phone: string;
+  cellPhone: string;
 }
 
 // ==================== House Response Types ====================

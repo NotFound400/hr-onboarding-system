@@ -154,7 +154,7 @@ const HousingPage: React.FC = () => {
           <Card title="Your Information">
             <Descriptions column={2} bordered>
               <Descriptions.Item label="Name">{currentResident.name}</Descriptions.Item>
-              <Descriptions.Item label="Phone">{currentResident.phone}</Descriptions.Item>
+              <Descriptions.Item label="Phone">{currentResident.cellPhone}</Descriptions.Item>
             </Descriptions>
           </Card>
         )}
@@ -186,7 +186,7 @@ const HousingPage: React.FC = () => {
                       <Space direction="vertical" size={2}>
                         <span>
                           <PhoneOutlined style={{ marginRight: 8 }} />
-                          {roommate.phone}
+                          {roommate.cellPhone}
                         </span>
                       </Space>
                     }

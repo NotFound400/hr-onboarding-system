@@ -67,11 +67,11 @@ function App() {
           <Route path="/login" element={<LoginPage />} />
           <Route path="/register" element={<RegistrationPage />} />
 
-          {/* Employee 路由 */}
+          {/* Employee 路由 (HR 也可访问) */}
           <Route
             path="/employee"
             element={
-              <AuthGuard allowedRoles={['Employee']}>
+              <AuthGuard allowedRoles={['Employee', 'HR']}>
                 <MainLayout />
               </AuthGuard>
             }
@@ -107,11 +107,11 @@ function App() {
             <Route index element={<Navigate to="home" replace />} />
           </Route>
 
-          {/* Onboarding 路由 (需要 Employee 登录) */}
+          {/* Onboarding 路由 (HR 也可访问) */}
           <Route
             path="/onboarding"
             element={
-              <AuthGuard allowedRoles={['Employee']}>
+              <AuthGuard allowedRoles={['Employee', 'HR']}>
                 <div style={{ minHeight: '100vh', background: '#f0f2f5' }}>
                   {/* 使用 Outlet 渲染子路由 */}
                   <Outlet />

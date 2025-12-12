@@ -175,7 +175,7 @@ const PersonalInfoPage: React.FC = () => {
       }
 
       // Call API to update
-      await updateEmployee({ id: currentEmployeeId, ...updatePayload } as UpdateEmployeeRequest);
+      await updateEmployee(currentEmployeeId, updatePayload as UpdateEmployeeRequest);
       message.success('Information updated successfully');
 
       // Refresh data and exit edit mode

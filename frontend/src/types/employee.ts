@@ -3,39 +3,37 @@
  * 对应 MongoDB 文档存储，包含大量嵌套数组
  */
 
-import { ContactType, AddressType, VisaStatusType, Gender } from './enums';
-
 // Re-export request types
 export type { CreateEmployeeRequest, UpdateEmployeeRequest } from './request';
 
 /** 联系人 (包含 Reference 和 Emergency Contact) */
 export interface Contact {
-  /** 联系人类型 */
-  type: ContactType;
+  /** UUID */
+  id: string;
   /** 名 */
   firstName: string;
   /** 姓 */
   lastName: string;
-  /** 中间名 */
-  middleName?: string;
-  /** 电话 */
-  phone: string;
+  /** 手机号 */
+  cellPhone: string;
+  /** 备用电话 */
+  alternatePhone?: string;
   /** 邮箱 */
   email: string;
-  /** 关系 */
+  /** 关系 (Spouse/Parent/Sibling/Friend) */
   relationship: string;
-  /** 地址 (仅 Reference 需要) */
-  address?: string;
+  /** 联系人类型 (Emergency/Reference) */
+  type: string;
 }
 
 /** 地址 (包含 Primary 和 Secondary) */
 export interface Address {
-  /** 地址类型 */
-  type: AddressType;
+  /** UUID */
+  id: string;
   /** 地址行 1 */
   addressLine1: string;
   /** 地址行 2 */
-  addressLine2: string;
+  addressLine2?: string;
   /** 城市 */
   city: string;
   /** 州 */
@@ -46,10 +44,12 @@ export interface Address {
 
 /** 签证状态 */
 export interface VisaStatus {
-  /** 签证类型 */
-  visaType: VisaStatusType;
-  /** 激活标志 */
-  activeFlag: boolean;
+  /** UUID */
+  id: string;
+  /** 签证类型 (H1B/F1/L1/OPT) */
+  visaType: string;
+  /** 激活标志 ('Y'/'N') */
+  activeFlag: 'Y' | 'N';
   /** 开始日期 */
   startDate: string;
   /** 结束日期 */
@@ -60,11 +60,11 @@ export interface VisaStatus {
 
 /** 个人文档 */
 export interface PersonalDocument {
-  /** 文档 ID */
-  id: number;
+  /** 文档 ID (UUID) */
+  id: string;
   /** S3 URL 路径 */
   path: string;
-  /** 文档标题 (e.g., 'Driver License', 'OPT Receipt') */
+  /** 文档标题 (e.g., 'Passport', 'Driver License', 'I-94') */
   title: string;
   /** 备注 */
   comment: string;
@@ -74,51 +74,43 @@ export interface PersonalDocument {
 
 /** 员工实体 (MongoDB Document) */
 export interface Employee {
-  /** ObjectId (String) */
+  /** MongoDB ObjectId */
   id: string;
-  /** 用户 ID (Ref -> Auth.User.ID) */
+  /** 用户 ID (关联 Auth Service) */
   userID: number;
   /** 名 */
   firstName: string;
   /** 姓 */
   lastName: string;
   /** 中间名 */
-  middleName: string;
+  middleName?: string;
   /** 昵称/首选名 */
-  preferredName: string;
-  /** 个人邮箱 */
+  preferredName?: string;
+  /** 邮箱 */
   email: string;
-  /** 工作邮箱 (Section 6.b.iii) */
-  workEmail?: string;
   /** 手机号 */
   cellPhone: string;
   /** 备用电话 */
-  alternatePhone: string;
-  /** 工作电话 (Section 3.c.iv + Section 6.b.iii) */
-  workPhone?: string;
-  /** 性别 */
-  gender: Gender;
+  alternatePhone?: string;
+  /** 性别 (Male/Female/Other) */
+  gender: string;
   /** 社会安全号 */
   SSN: string;
-  /** 出生日期 */
+  /** 出生日期 (ISO 8601 格式) */
   DOB: string;
-  /** 入职日期 */
+  /** 入职日期 (ISO 8601 格式) */
   startDate: string;
-  /** 离职日期 */
-  endDate: string;
-  /** 职位 (Section 6.b.iv) */
-  title?: string;
-  /** 头像 URL (Section 3.c.ii + Section 6.b.i) */
-  avatar?: string;
+  /** 离职日期 (ISO 8601 格式，可为 null) */
+  endDate: string | null;
   /** 驾照号码 */
-  driverLicense: string;
-  /** 驾照过期日期 */
-  driverLicenseExpiration: string;
-  /** 房屋 ID (Ref -> HousingService.House.ID) */
-  houseID: number;
-  /** 联系人列表 (包含 Reference 和 Emergency，通过 type 区分) */
+  driverLicense?: string;
+  /** 驾照过期日期 (ISO 8601 格式) */
+  driverLicenseExpiration?: string;
+  /** 房屋 ID (关联 Housing Service) */
+  houseID?: number;
+  /** 联系人列表 (Emergency Contact 和 Reference) */
   contact: Contact[];
-  /** 地址列表 (包含 Primary 和 Secondary) */
+  /** 地址列表 */
   address: Address[];
   /** 签证状态列表 */
   visaStatus: VisaStatus[];

@@ -1,18 +1,16 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Card, Row, Col, Statistic, Button, Space, Typography, Table, Tag, message } from 'antd';
+import { Card, Button, Space, Typography, Table, Tag, message } from 'antd';
 import {
   UserOutlined,
   FileTextOutlined,
   HomeOutlined,
   SafetyCertificateOutlined,
   TeamOutlined,
-  CheckCircleOutlined,
-  ClockCircleOutlined,
 } from '@ant-design/icons';
 import { PageContainer } from '../../../components/common/PageContainer';
-import { getAllApplications } from '../../../services/api';
-import type { ApplicationDetail, ApplicationStatus } from '../../../types';
+import { getOngoingApplications } from '../../../services/api';
+import type { Application, ApplicationStatus } from '../../../types';
 import dayjs from 'dayjs';
 
 const { Title, Text } = Typography;
@@ -24,18 +22,7 @@ const { Title, Text } = Typography;
 export const HRHomePage: React.FC = () => {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
-  const [applications, setApplications] = useState<ApplicationDetail[]>([]);
-
-  // Mock 统计数据
-  const stats = {
-    totalEmployees: 156,
-    pendingOnboarding: applications.filter(a => a.status === 'Pending').length,
-    pendingVisaApplications: applications.filter(
-      a => a.applicationType === 'OPT' && a.status === 'Pending'
-    ).length,
-    totalHouses: 12,
-    availableRooms: 23,
-  };
+  const [applications, setApplications] = useState<Application[]>([]);
 
   useEffect(() => {
     fetchApplications();
@@ -48,7 +35,7 @@ export const HRHomePage: React.FC = () => {
   const fetchApplications = async () => {
     try {
       setLoading(true);
-      const data = await getAllApplications();
+      const data = await getOngoingApplications();
       // Filter for pending applications only (需要 HR action 的)
       const pendingApps = data.filter(app => app.status === 'Pending' || app.status === 'Open');
       setApplications(pendingApps);
@@ -65,113 +52,6 @@ export const HRHomePage: React.FC = () => {
         <Title level={2}>HR Dashboard</Title>
         <Text type="secondary">Welcome to HR Onboarding System</Text>
       </div>
-
-      {/* 统计卡片 */}
-      <Row gutter={[16, 16]} style={{ marginBottom: 32 }}>
-        <Col xs={24} sm={12} lg={8}>
-          <Card hoverable>
-            <Statistic
-              title="Total Employees"
-              value={stats.totalEmployees}
-              prefix={<TeamOutlined />}
-              valueStyle={{ color: '#1890ff' }}
-            />
-            <Button
-              type="link"
-              style={{ padding: 0, marginTop: 8 }}
-              onClick={() => navigate('/hr/employees')}
-            >
-              View All Employees →
-            </Button>
-          </Card>
-        </Col>
-
-        <Col xs={24} sm={12} lg={8}>
-          <Card hoverable>
-            <Statistic
-              title="Pending Onboarding"
-              value={stats.pendingOnboarding}
-              prefix={<ClockCircleOutlined />}
-              valueStyle={{ color: '#faad14' }}
-            />
-            <Button
-              type="link"
-              style={{ padding: 0, marginTop: 8 }}
-              onClick={() => navigate('/hr/hiring')}
-            >
-              Review Applications →
-            </Button>
-          </Card>
-        </Col>
-
-        <Col xs={24} sm={12} lg={8}>
-          <Card hoverable>
-            <Statistic
-              title="Pending Visa Applications"
-              value={stats.pendingVisaApplications}
-              prefix={<SafetyCertificateOutlined />}
-              valueStyle={{ color: '#52c41a' }}
-            />
-            <Button
-              type="link"
-              style={{ padding: 0, marginTop: 8 }}
-              onClick={() => navigate('/hr/visa')}
-            >
-              Manage Visas →
-            </Button>
-          </Card>
-        </Col>
-
-        <Col xs={24} sm={12} lg={8}>
-          <Card hoverable>
-            <Statistic
-              title="Total Houses"
-              value={stats.totalHouses}
-              prefix={<HomeOutlined />}
-              valueStyle={{ color: '#722ed1' }}
-            />
-            <Button
-              type="link"
-              style={{ padding: 0, marginTop: 8 }}
-              onClick={() => navigate('/hr/housing')}
-            >
-              Manage Housing →
-            </Button>
-          </Card>
-        </Col>
-
-        <Col xs={24} sm={12} lg={8}>
-          <Card hoverable>
-            <Statistic
-              title="Available Rooms"
-              value={stats.availableRooms}
-              prefix={<HomeOutlined />}
-              valueStyle={{ color: '#13c2c2' }}
-            />
-            <Button
-              type="link"
-              style={{ padding: 0, marginTop: 8 }}
-              onClick={() => navigate('/hr/housing')}
-            >
-              View Housing →
-            </Button>
-          </Card>
-        </Col>
-
-        <Col xs={24} sm={12} lg={8}>
-          <Card>
-            <Statistic
-              title="System Status"
-              value="Online"
-              prefix={<CheckCircleOutlined />}
-              valueStyle={{ color: '#52c41a' }}
-            />
-            <Text type="secondary" style={{ fontSize: 12, marginTop: 8, display: 'block' }}>
-              All services operational
-            </Text>
-          </Card>
-        </Col>
-      </Row>
 
       {/* 快捷操作 */}
       <Card title="Quick Actions" style={{ marginBottom: 24 }}>

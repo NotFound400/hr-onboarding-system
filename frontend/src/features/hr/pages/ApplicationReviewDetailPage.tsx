@@ -34,8 +34,8 @@ import {
 } from '@ant-design/icons';
 import { useParams, useNavigate } from 'react-router-dom';
 import { PageContainer } from '../../../components/common/PageContainer';
-import { getApplicationById, getEmployeeById } from '../../../services/api';
-import type { ApplicationDetail, Employee } from '../../../types';
+import { getApplicationById, getEmployeeById, approveApplication, rejectApplication } from '../../../services/api';
+import type { Application, Employee } from '../../../types';
 
 const { TextArea } = Input;
 
@@ -134,7 +134,7 @@ const ApplicationReviewDetailPage: React.FC = () => {
   const [approving, setApproving] = useState(false);
   const [rejecting, setRejecting] = useState(false);
   
-  const [application, setApplication] = useState<ApplicationDetail | null>(null);
+  const [application, setApplication] = useState<Application | null>(null);
   const [employee, setEmployee] = useState<Employee | null>(null);
   
   // 文档评论状态
@@ -165,14 +165,8 @@ const ApplicationReviewDetailPage: React.FC = () => {
       const empData = await getEmployeeById(appData.employeeId);
       setEmployee(empData);
       
-      // 初始化文档评论
-      const comments: Record<string, string> = {};
-      appData.documents?.forEach(doc => {
-        if (doc.comment) {
-          comments[doc.type] = doc.comment;
-        }
-      });
-      setDocumentComments(comments);
+      // Note: Document management is now separate from application
+      // Documents should be fetched using getDocumentsByApplicationId if needed
     } catch (error: any) {
       message.error(error.message || 'Failed to load application details');
     } finally {
@@ -204,9 +198,9 @@ const ApplicationReviewDetailPage: React.FC = () => {
         try {
           setApproving(true);
           
-          // TODO: 调用 API 批准申请
-          console.log('[Approve] Application ID:', id);
-          console.log('[Approve] Document Comments:', documentComments);
+          await approveApplication(parseInt(id!), {
+            comment: 'Application approved. Welcome to the team!',
+          });
           
           message.success('Application approved successfully');
           
@@ -240,10 +234,9 @@ const ApplicationReviewDetailPage: React.FC = () => {
     try {
       setRejecting(true);
       
-      // TODO: 调用 API 拒绝申请
-      console.log('[Reject] Application ID:', id);
-      console.log('[Reject] Reason:', rejectReason);
-      console.log('[Reject] Document Comments:', documentComments);
+      await rejectApplication(parseInt(id!), {
+        comment: rejectReason,
+      });
       
       message.success('Application rejected');
       
@@ -368,7 +361,7 @@ const ApplicationReviewDetailPage: React.FC = () => {
                   <Descriptions.Item label="Relationship">
                     {contact.relationship}
                   </Descriptions.Item>
-                  <Descriptions.Item label="Phone">{contact.phone}</Descriptions.Item>
+                  <Descriptions.Item label="Phone">{contact.cellPhone}</Descriptions.Item>
                   <Descriptions.Item label="Email">{contact.email}</Descriptions.Item>
                 </Descriptions>
               ))}

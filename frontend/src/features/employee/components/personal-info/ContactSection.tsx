@@ -31,9 +31,8 @@ const ContactSection: React.FC<ContactSectionProps> = ({ employee, form, isEditi
       
       form.setFieldsValue({
         email: personalContact?.email || employee.email || '',
-        cellPhone: personalContact?.phone || '',
-        workEmail: employee.workEmail || '',
-        workPhone: employee.workPhone || '',
+        cellPhone: personalContact?.cellPhone || employee.cellPhone || '',
+        alternatePhone: personalContact?.alternatePhone || employee.alternatePhone || '',
       });
     }
   }, [isEditing, employee, form]);
@@ -48,17 +47,14 @@ const ContactSection: React.FC<ContactSectionProps> = ({ employee, form, isEditi
 
     return (
       <Descriptions column={1} size="small" colon={false}>
-        <Descriptions.Item label="Personal Email">
+        <Descriptions.Item label="Email">
           <strong>{personalContact?.email || employee.email || 'N/A'}</strong>
         </Descriptions.Item>
-        <Descriptions.Item label="Work Email">
-          {employee.workEmail || 'N/A'}
-        </Descriptions.Item>
         <Descriptions.Item label="Cell Phone">
-          <strong>{personalContact?.phone || 'N/A'}</strong>
+          <strong>{personalContact?.cellPhone || employee.cellPhone || 'N/A'}</strong>
         </Descriptions.Item>
-        <Descriptions.Item label="Work Phone">
-          {employee.workPhone || 'N/A'}
+        <Descriptions.Item label="Alternate Phone">
+          {personalContact?.alternatePhone || employee.alternatePhone || 'N/A'}
         </Descriptions.Item>
       </Descriptions>
     );
@@ -71,25 +67,16 @@ const ContactSection: React.FC<ContactSectionProps> = ({ employee, form, isEditi
     return (
       <Form form={form} layout="vertical">
         <Row gutter={16}>
-          <Col span={12}>
+          <Col span={24}>
             <Form.Item
               name="email"
-              label="Personal Email"
+              label="Email"
               rules={[
-                { required: true, message: 'Personal email is required' },
+                { required: true, message: 'Email is required' },
                 { type: 'email', message: 'Invalid email format' },
               ]}
             >
-              <Input placeholder="personal@example.com" />
-            </Form.Item>
-          </Col>
-          <Col span={12}>
-            <Form.Item
-              name="workEmail"
-              label="Work Email"
-              rules={[{ type: 'email', message: 'Invalid email format' }]}
-            >
-              <Input placeholder="work@company.com (optional)" />
+              <Input placeholder="email@example.com" />
             </Form.Item>
           </Col>
         </Row>
@@ -101,10 +88,7 @@ const ContactSection: React.FC<ContactSectionProps> = ({ employee, form, isEditi
               label="Cell Phone"
               rules={[
                 { required: true, message: 'Cell phone is required' },
-                {
-                  pattern: /^\d{3}-\d{3}-\d{4}$/,
-                  message: 'Format: 123-456-7890',
-                },
+                { pattern: /^\+?1?-?\d{3}-\d{3}-\d{4}$/, message: 'Format: 123-456-7890 or +1-123-456-7890' },
               ]}
             >
               <Input placeholder="123-456-7890" />
@@ -112,13 +96,10 @@ const ContactSection: React.FC<ContactSectionProps> = ({ employee, form, isEditi
           </Col>
           <Col span={12}>
             <Form.Item
-              name="workPhone"
-              label="Work Phone"
+              name="alternatePhone"
+              label="Alternate Phone"
               rules={[
-                {
-                  pattern: /^\d{3}-\d{3}-\d{4}$/,
-                  message: 'Format: 123-456-7890',
-                },
+                { pattern: /^\+?1?-?\d{3}-\d{3}-\d{4}$/, message: 'Format: 123-456-7890 or +1-123-456-7890' },
               ]}
             >
               <Input placeholder="123-456-7890 (optional)" />
@@ -139,20 +120,21 @@ export const extractContactData = (formValues: any, employee: Employee) => {
   // Find existing personal contact to preserve other fields
   const existingPersonalContact = employee.contact?.find(c => c.type === ContactType.REFERENCE);
 
-  const personalContact = {
+  const personalContact: Contact = {
+    id: existingPersonalContact?.id || '',
     type: ContactType.REFERENCE,
     firstName: existingPersonalContact?.firstName || employee.firstName,
     lastName: existingPersonalContact?.lastName || employee.lastName,
-    middleName: existingPersonalContact?.middleName || employee.middleName || '',
-    phone: formValues.cellPhone,
+    cellPhone: formValues.cellPhone,
+    alternatePhone: formValues.alternatePhone || '',
     email: formValues.email,
     relationship: existingPersonalContact?.relationship || 'Self',
   };
 
   return {
     email: formValues.email,
-    workEmail: formValues.workEmail || '',
-    workPhone: formValues.workPhone || '',
+    cellPhone: formValues.cellPhone,
+    alternatePhone: formValues.alternatePhone || '',
     contact: [
       personalContact,
       ...(employee.contact?.filter(c => c.type !== ContactType.REFERENCE) || []),
