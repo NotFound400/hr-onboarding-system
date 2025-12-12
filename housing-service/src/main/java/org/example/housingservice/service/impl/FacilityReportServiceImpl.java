@@ -2,6 +2,7 @@ package org.example.housingservice.service.impl;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.EnumUtils;
 import org.example.housingservice.client.EmployeeServiceClient;
 import org.example.housingservice.dto.FacilityReportDTO;
 import org.example.housingservice.dto.FacilityReportDetailDTO;
@@ -91,7 +92,12 @@ public class FacilityReportServiceImpl implements FacilityReportService {
         log.info("Updating report status: {}, newStatus: {}", id, request.getStatus());
 
         FacilityReport report = findReportById(id);
+        if (report == null) {
+            throw new ResourceNotFoundException("FacilityReport", "id", id);
+        }
+
         report.setStatus(request.getStatus());
+
         FacilityReport updated = reportRepository.save(report);
 
         return mapToDetailResponse(updated, null);
@@ -234,7 +240,7 @@ public class FacilityReportServiceImpl implements FacilityReportService {
 
     private String getEmployeeName(Long employeeId) {
         try {
-            EmployeeServiceClient.EmployeeInfo employee = employeeServiceClient.getEmployeeById(employeeId);
+            EmployeeServiceClient.EmployeeInfo employee = employeeServiceClient.getEmployeeByUserID(employeeId);
             return employee.getDisplayName();
         } catch (Exception e) {
             log.warn("Failed to get employee name for id: {}", employeeId);

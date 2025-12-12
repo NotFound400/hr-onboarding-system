@@ -4,6 +4,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.example.housingservice.dto.ApiResponse;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -95,6 +96,25 @@ public class GlobalExceptionHandler {
                 ApiResponse.error("Internal server error. Please try again later."), 
                 HttpStatus.INTERNAL_SERVER_ERROR
         );
+    }
+
+    @ExceptionHandler(HttpMessageNotReadableException.class)
+    public ResponseEntity<ApiResponse<Void>> handleJsonErrors(HttpMessageNotReadableException ex) {
+
+        String message = ex.getMessage();
+
+        if (ex.getCause() != null && ex.getCause() instanceof com.fasterxml.jackson.databind.exc.ValueInstantiationException) {
+            Throwable rootCause = ex.getCause().getCause();
+            if (rootCause instanceof IllegalArgumentException) {
+                message = rootCause.getMessage();
+            }
+        } else {
+            message = "The request parameters are in the wrong format. Please check the input values.";
+        }
+
+        return ResponseEntity
+                .status(HttpStatus.BAD_REQUEST)
+                .body(ApiResponse.error(message));
     }
 
     private String formatFieldError(FieldError error) {
