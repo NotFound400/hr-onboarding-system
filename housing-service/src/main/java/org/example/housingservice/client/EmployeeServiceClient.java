@@ -12,16 +12,16 @@ import java.util.List;
 public interface EmployeeServiceClient {
 
 
-    @GetMapping("/api/employees/{id}")
+    @GetMapping("/employees/{id}")
     EmployeeInfo getEmployeeById(@PathVariable("id") Long id);
 
-    @GetMapping("/api/employees/house/{houseId}")
+    @GetMapping("/employees/house/{houseId}")
     List<EmployeeInfo> getEmployeesByHouseId(@PathVariable("houseId") Long houseId);
 
-    @GetMapping("/api/employees/house/{houseId}/count")
+    @GetMapping("/employees/house/{houseId}/count")
     Integer countEmployeesByHouseId(@PathVariable("houseId") Long houseId);
 
-    @GetMapping("/api/employees/batch")
+    @GetMapping("/employees/batch")
     List<EmployeeInfo> getEmployeesByIds(@RequestParam("ids") List<Long> ids);
 
     record EmployeeInfo(
