@@ -13,12 +13,12 @@ public interface EmployeeServiceClient {
     /**
      * Create a new employee record in MongoDB
      */
-    @PostMapping("/api/employees")
+    @PostMapping("/employees")
     ResponseEntity<EmployeeResponse> createEmployee(@RequestBody CreateEmployeeRequest request);
 
     /**
      * Get employee by user ID
      */
-    @GetMapping("/api/employees/user/{userID}")
+    @GetMapping("/employees/user/{userID}")
     ResponseEntity<EmployeeResponse> getEmployeeByUserID(@PathVariable("userID") Long userID);
 }
