@@ -21,11 +21,11 @@ public class SecurityUtils {
         return getJwt().getSubject();
     }
 
-//    public List<String> getCurrentUserRoles() {
-//        Jwt jwt = getJwt();
-//        // getClaimAsStringList returns List<String> or empty list if null
-//        return jwt.getClaimAsStringList("roles");
-//    }
+    public List<String> getCurrentUserRoles() {
+        Jwt jwt = getJwt();
+        // getClaimAsStringList returns List<String> or empty list if null
+        return jwt.getClaimAsStringList("roles");
+    }
 
     public List<String> parseRolesHeader(String rolesHeader) {
         if (rolesHeader == null || rolesHeader.isBlank()) {
@@ -47,8 +47,4 @@ public class SecurityUtils {
         return jwt;
     }
 }
-
-//@Autowired
-//SecurityUtils securityUtils;
-//String userId = securityUtils.getCurrentUserId();
 
