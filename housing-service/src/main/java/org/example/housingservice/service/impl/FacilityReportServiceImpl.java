@@ -209,6 +209,22 @@ public class FacilityReportServiceImpl implements FacilityReportService {
                 .build();
     }
 
+
+    @Override
+    public List<FacilityReportDTO.ListItem> getReportsForCurrentHouse(Long houseId) {
+        log.debug("Getting all facility reports for house: {}", houseId);
+
+        if (houseId == null) {
+            log.warn("House ID is null, returning empty list");
+            return List.of();
+        }
+
+        return reportRepository.findByHouseIdOrderByCreateDateDesc(houseId)
+                .stream()
+                .map(this::mapToListItem)
+                .collect(Collectors.toList());
+    }
+
     // ==================== Private Helper Methods ====================
 
     private FacilityReport findReportById(Long id) {

@@ -221,6 +221,7 @@ public class AuthService {
 
     /**
      * Login with username or email and password.
+     * Fetches employee info to include houseId in JWT token.
      */
     public LoginResponse login(LoginRequest request) {
         validateLoginRequest(request);
@@ -240,8 +241,29 @@ public class AuthService {
         // Load roles
         List<String> roleNames = getUserRoleNames(user);
 
-        // Generate JWT with userId
-        String jwtToken = jwtTokenProvider.createToken(user.getUsername(), user.getId(), roleNames);
+        // ============ NEW: Fetch employee info for JWT ============
+        Long houseId = null;
+        String employeeId = null;
+
+        EmployeeInfo employeeInfo = getEmployeeInfo(user.getId());
+        if (employeeInfo != null) {
+            houseId = employeeInfo.houseId;
+            employeeId = employeeInfo.employeeId;
+            log.info("Employee info found for userId {}: houseId={}, employeeId={}",
+                    user.getId(), houseId, employeeId);
+        } else {
+            log.info("No employee record found for userId {} (may be HR-only user)", user.getId());
+        }
+        // ==========================================================
+
+        // Generate JWT with userId AND employee info (houseId, employeeId)
+        String jwtToken = jwtTokenProvider.createToken(
+                user.getUsername(),
+                user.getId(),
+                roleNames,
+                houseId,      // NEW: Include houseId in JWT
+                employeeId    // NEW: Include employeeId in JWT
+        );
 
         Instant expiresAt = Instant.now().plusMillis(jwtTokenProvider.getValidityInMs());
 
@@ -253,9 +275,39 @@ public class AuthService {
         response.setUser(mapToUserDto(user, roleNames));
         response.setRole(roleNames.isEmpty() ? null : roleNames.get(0));
         response.setRoles(roleNames);
+        response.setHouseId(houseId);         // NEW: Include in response
+        response.setEmployeeId(employeeId);   // NEW: Include in response
 
         return response;
     }
+
+    /**
+     * Fetch employee info from Employee Service.
+     * Returns null if employee record doesn't exist (e.g., HR-only users).
+     */
+    private EmployeeInfo getEmployeeInfo(Long userId) {
+        try {
+            log.debug("Fetching employee info for userId: {}", userId);
+            ResponseEntity<EmployeeResponse> response = employeeServiceClient.getEmployeeByUserID(userId);
+
+            if (response.getStatusCode().is2xxSuccessful() && response.getBody() != null) {
+                EmployeeResponse employee = response.getBody();
+                return new EmployeeInfo(employee.getId(), employee.getHouseID());
+            }
+        } catch (feign.FeignException.NotFound e) {
+            // Employee not found - this is normal for HR-only users
+            log.debug("No employee record found for userId: {}", userId);
+        } catch (Exception e) {
+            // Log error but don't fail login
+            log.warn("Could not fetch employee info for userId {}: {}", userId, e.getMessage());
+        }
+        return null;
+    }
+
+    /**
+     * Record to hold employee info from Employee Service.
+     */
+    private record EmployeeInfo(String employeeId, Long houseId) {}
 
     /**
      * Get user profile by ID.
@@ -285,6 +337,7 @@ public class AuthService {
 
     /**
      * Validate a registration token.
+     * Returns token info including house address for display on registration page.
      */
     public RegistrationTokenDto validateRegistrationToken(String token) {
         RegistrationToken regToken = registrationTokenRepository.findByToken(token)
@@ -294,7 +347,28 @@ public class AuthService {
             throw new IllegalArgumentException("Registration token has expired");
         }
 
-        return mapToRegistrationTokenDto(regToken);
+        // 🆕 Fetch house address if houseId exists
+        String houseAddress = null;
+        if (regToken.getHouseId() != null) {
+            houseAddress = getHouseAddress(regToken.getHouseId());
+        }
+
+        return mapToRegistrationTokenDto(regToken, houseAddress);  // ✅ Uses version WITH houseAddress
+    }
+
+    /**
+     * 🆕 Helper method to get house address from Housing Service
+     */
+    private String getHouseAddress(Long houseId) {
+        try {
+            var response = housingServiceClient.checkHouseAvailability(houseId);
+            if (response != null && response.isSuccess() && response.getData() != null) {
+                return response.getData().getAddress();
+            }
+        } catch (Exception e) {
+            log.warn("Failed to fetch house address for houseId {}: {}", houseId, e.getMessage());
+        }
+        return null;
     }
 
     /**
