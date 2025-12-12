@@ -7,8 +7,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 
 import java.util.List;
 
-
-@FeignClient(name = "employee-service", fallback = EmployeeServiceClientFallback.class)
+@FeignClient(name = "employee-service")
 public interface EmployeeServiceClient {
 
 
