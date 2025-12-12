@@ -39,17 +39,6 @@ import { FacilityReportStatus } from '../../types';
 export const getAllHouses = async (): Promise<HouseListItem[]> => {
   if (isMockMode()) {
     await delay(500);
-    // return HousingMocks.MOCK_HOUSE_LIST.data!; // 🟢 标准房屋列表
-    // return [HousingMocks.SCENARIO_HOUSE_HEAVY_LOAD].map(house => ({
-    //   id: house.id,
-    //   address: house.address,
-    //   maxOccupant: house.maxOccupant,
-    //   numberOfEmployees: house.numberOfEmployees,
-    //   landlordId: house.landlord.id,
-    //   landlordFullName: house.landlord.fullName,
-    //   landlordPhone: house.landlord.cellPhone,
-    //   landlordEmail: house.landlord.email,
-    // })); // 🔴 场景：HR 重载分页
     return HousingMocks.MOCK_HOUSE_LIST.data!;
   }
   

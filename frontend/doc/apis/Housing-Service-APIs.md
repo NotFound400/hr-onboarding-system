@@ -6,13 +6,6 @@ Housing Service 是一个房屋管理微服务，提供房屋、设施、设施�
 
 **Base URL:** `/api/housing`
 
-**通用请求头:**
-| Header | 描述 | 必需 |
-|--------|------|------|
-| X-User-Id | 用户ID | 部分API需要 |
-| X-Username | 用户名 | 可选 |
-| X-User-Roles | 用户角色（如：HR, EMPLOYEE） | 部分API需要 |
-
 ---
 
 ## 通用响应格式
