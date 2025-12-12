@@ -178,7 +178,7 @@ public class ApplicationServiceImpl implements ApplicationService {
 //        ownershipValidator.checkOwnership(app.getEmployeeId());
 
         // Only allow update if status = OPEN or REJECTED
-        if (!(app.getStatus() == ApplicationStatus.Open || app.getStatus() == ApplicationStatus.Rejected)) {
+        if (!(app.getStatus() == ApplicationStatus.Open || app.getStatus() == ApplicationStatus.Rejected || app.getStatus() == ApplicationStatus.Pending)) {
             return Result.fail("Cannot update application with status: " + app.getStatus());
         }
 

@@ -1,5 +1,7 @@
 package org.example.applicationservice.controller;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import org.example.applicationservice.utils.*;
 import org.example.applicationservice.domain.DigitalDocument;
@@ -15,6 +17,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.IOException;
 import java.util.List;
 
+@Tag(name = "Document Management", description = "APIs for managing documents related to applications")
 @RestController
 @RequestMapping("/documents")
 public class DocumentController {
@@ -26,7 +29,8 @@ public class DocumentController {
     }
 
     //get documents by applicationId
-    @PreAuthorize("hasRole('EMPLOYEE')")
+    @Operation(summary = "Get documents by application ID", description = "Retrieve all documents for a specific application")
+    @PreAuthorize("hasRole('Employee')")
     @GetMapping("/application/{applicationId}")
     public ResponseEntity<Result<List<DigitalDocumentDTO>>> getDocumentsByApplication(
             @PathVariable Long applicationId) {
@@ -36,7 +40,8 @@ public class DocumentController {
     }
 
     //get documents by employeeId
-    @PreAuthorize("hasRole('EMPLOYEE')")
+    @Operation(summary = "Get documents by employee ID", description = "Retrieve all documents uploaded by a specific employee")
+    @PreAuthorize("hasRole('Employee')")
     @GetMapping("/employee/{employeeId}")
     public ResponseEntity<Result<List<DigitalDocumentDTO>>> getDocumentsByEmployee(
             @PathVariable String employeeId) {
@@ -46,7 +51,8 @@ public class DocumentController {
     }
 
     //get documents by type
-    @PreAuthorize("hasRole('EMPLOYEE')")
+    @Operation(summary = "Get documents by type", description = "Retrieve all documents of a given type")
+    @PreAuthorize("hasRole('Employee')")
     @GetMapping("/type/{type}")
     public ResponseEntity<Result<List<DigitalDocumentDTO>>> getDocumentsByType(
             @PathVariable String type) {
@@ -56,7 +62,8 @@ public class DocumentController {
     }
 
     //get required documents
-    @PreAuthorize("hasRole('EMPLOYEE')")
+    @Operation(summary = "Get required documents", description = "Retrieve all required documents for submission")
+    @PreAuthorize("hasRole('Employee')")
     @GetMapping("/required")
     public ResponseEntity<Result<List<DigitalDocumentDTO>>> getRequiredDocuments() {
         Result<List<DigitalDocumentDTO>> result = documentService.getRequiredDocuments();
@@ -64,7 +71,8 @@ public class DocumentController {
     }
 
     //upload document
-    @PreAuthorize("hasRole('EMPLOYEE')")
+    @Operation(summary = "Upload a document", description = "Upload a document with metadata")
+    @PreAuthorize("hasRole('Employee')")
     @PostMapping("/upload")
     public ResponseEntity<Result<DigitalDocumentDTO>> uploadDocument(
             @RequestPart("file") MultipartFile file,
@@ -75,7 +83,8 @@ public class DocumentController {
     }
 
     //download by documentId
-    @PreAuthorize("hasRole('EMPLOYEE')")
+    @Operation(summary = "Download a document", description = "Download a document by document ID")
+    @PreAuthorize("hasRole('Employee')")
     @GetMapping("/download/{id}")
     public ResponseEntity<byte[]> downloadDocument(@PathVariable Long id) {
         byte[] data = documentService.downloadDocumentById(id);
@@ -88,7 +97,8 @@ public class DocumentController {
     }
 
     //delete document by documentId
-    @PreAuthorize("hasRole('EMPLOYEE')")
+    @Operation(summary = "Delete a document", description = "Delete a document by document ID")
+    @PreAuthorize("hasRole('Employee')")
     @DeleteMapping("/delete/{id}")
     public ResponseEntity<Result<String>> deleteDocument(@PathVariable Long id) {
         documentService.deleteDocumentById(id);
@@ -96,7 +106,8 @@ public class DocumentController {
     }
 
     //update document
-    @PreAuthorize("hasRole('EMPLOYEE')")
+    @Operation(summary = "Update a document", description = "Update a document file and/or metadata by document ID")
+    @PreAuthorize("hasRole('Employee')")
     @PutMapping("/update/{id}")
     public ResponseEntity<Result<DigitalDocumentDTO>> updateDocument(
             @PathVariable Long id,
