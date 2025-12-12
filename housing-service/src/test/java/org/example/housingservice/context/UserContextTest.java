@@ -136,19 +136,20 @@ class UserContextTest {
         @Test
         @DisplayName("fromHeaders should create UserContext with valid headers")
         void fromHeaders_withValidHeaders_createsContext() {
-            UserContext context = UserContext.fromHeaders(123L, "user@test.com", "HR,EMPLOYEE");
+            UserContext context = UserContext.fromHeaders(123L, "user@test.com", "HR,EMPLOYEE", 1L);
 
             assertEquals(123L, context.getUserId());
             assertEquals("user@test.com", context.getUsername());
             assertEquals(2, context.getRoles().size());
             assertTrue(context.getRoles().contains("HR"));
             assertTrue(context.getRoles().contains("EMPLOYEE"));
+            assertEquals(1L, context.getHouseId());
         }
 
         @Test
         @DisplayName("fromHeaders should handle empty roles header")
         void fromHeaders_withEmptyRoles_createsContextWithEmptyRoles() {
-            UserContext context = UserContext.fromHeaders(123L, "user@test.com", "");
+            UserContext context = UserContext.fromHeaders(123L, "user@test.com", "", 1L);
 
             assertEquals(123L, context.getUserId());
             assertEquals("user@test.com", context.getUsername());
@@ -158,7 +159,7 @@ class UserContextTest {
         @Test
         @DisplayName("fromHeaders should handle null roles header")
         void fromHeaders_withNullRoles_createsContextWithEmptyRoles() {
-            UserContext context = UserContext.fromHeaders(123L, "user@test.com", null);
+            UserContext context = UserContext.fromHeaders(123L, "user@test.com", null, 1L);
 
             assertEquals(123L, context.getUserId());
             assertEquals("user@test.com", context.getUsername());
@@ -168,7 +169,7 @@ class UserContextTest {
         @Test
         @DisplayName("fromHeaders should trim whitespace from roles")
         void fromHeaders_shouldTrimWhitespace() {
-            UserContext context = UserContext.fromHeaders(123L, "user@test.com", " HR , EMPLOYEE ");
+            UserContext context = UserContext.fromHeaders(123L, "user@test.com", " HR , EMPLOYEE ", 1L);
 
             assertEquals(2, context.getRoles().size());
             assertTrue(context.getRoles().contains("HR"));

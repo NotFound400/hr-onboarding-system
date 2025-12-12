@@ -201,10 +201,15 @@ public class HouseController {
     @Operation(summary = "Get house detail (Employee explicit)", description = "Employee gets house detail (must be assigned to this house)")
     public ResponseEntity<ApiResponse<HouseDTO.EmployeeViewResponse>> getHouseForEmployee(
             @PathVariable Long id,
-            @Parameter(hidden = true) @RequestHeader(value = "X-User-Id", required = false) Long userId) {
-        
+            @Parameter(hidden = true) @RequestHeader(value = "X-User-Id", required = false) Long userId,
+            @Parameter(hidden = true) @RequestHeader(value = "X-Username", required = false) String username,
+            @Parameter(hidden = true) @RequestHeader(value = "X-User-Roles", required = false) String roles,
+            @Parameter(hidden = true) @RequestHeader(value = "X-House-Id", required = false) Long houseId) {
+
+            UserContext userContext = UserContext.fromHeaders(userId, username, roles, houseId);
+
         Long employeeId = userId != null ? userId : 1L;
-        HouseDTO.EmployeeViewResponse house = houseService.getHouseForEmployee(id, employeeId);
+        HouseDTO.EmployeeViewResponse house = houseService.getHouseForEmployee(id, userContext);
         return ResponseEntity.ok(ApiResponse.success(house));
     }
 

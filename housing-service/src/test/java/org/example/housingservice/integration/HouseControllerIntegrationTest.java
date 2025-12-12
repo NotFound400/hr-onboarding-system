@@ -100,7 +100,7 @@ class HouseControllerIntegrationTest {
         @Test
         @DisplayName("HR user should see full house list with landlord info")
         void getAllHouses_asHR_returnsFullInfo() throws Exception {
-            mockMvc.perform(get("/api/housing/houses")
+            mockMvc.perform(get("/houses")
                             .header("X-User-Id", "1")
                             .header("X-Username", "hr@company.com")
                             .header("X-User-Roles", "HR"))
@@ -123,10 +123,11 @@ class HouseControllerIntegrationTest {
                     )
             );
 
-            mockMvc.perform(get("/api/housing/houses")
+            mockMvc.perform(get("/houses")
                             .header("X-User-Id", "101")
                             .header("X-Username", "mike@company.com")
-                            .header("X-User-Roles", "EMPLOYEE"))
+                            .header("X-User-Roles", "EMPLOYEE")
+                            .header("X-House-Id", testHouse.getId()))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.success").value(true))
                     .andExpect(jsonPath("$.data").isArray())
@@ -138,7 +139,7 @@ class HouseControllerIntegrationTest {
         @Test
         @DisplayName("HR user should see full house details including facilities")
         void getHouseDetail_asHR_returnsFullDetails() throws Exception {
-            mockMvc.perform(get("/api/housing/houses/{id}", testHouse.getId())
+            mockMvc.perform(get("/houses/{id}", testHouse.getId())
                             .header("X-User-Id", "1")
                             .header("X-User-Roles", "HR"))
                     .andExpect(status().isOk())
@@ -158,9 +159,10 @@ class HouseControllerIntegrationTest {
                     )
             );
 
-            mockMvc.perform(get("/api/housing/houses/{id}", testHouse.getId())
+            mockMvc.perform(get("/houses/{id}", testHouse.getId())
                             .header("X-User-Id", "101")
-                            .header("X-User-Roles", "EMPLOYEE"))
+                            .header("X-User-Roles", "EMPLOYEE")
+                            .header("X-House-Id", testHouse.getId()))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.success").value(true))
                     .andExpect(jsonPath("$.data.viewType").value("EMPLOYEE_VIEW"))
@@ -184,7 +186,7 @@ class HouseControllerIntegrationTest {
                     )
             );
 
-            mockMvc.perform(get("/api/housing/houses/{id}", testHouse.getId())
+            mockMvc.perform(get("/houses/{id}", testHouse.getId())
                             .header("X-User-Id", "102")
                             .header("X-User-Roles", "EMPLOYEE"))
                     .andExpect(status().isForbidden())
@@ -201,7 +203,7 @@ class HouseControllerIntegrationTest {
                     )
             );
 
-            mockMvc.perform(get("/api/housing/houses")
+            mockMvc.perform(get("/houses")
                             .header("X-User-Id", "103")
                             .header("X-User-Roles", "EMPLOYEE"))
                     .andExpect(status().isOk())
@@ -223,7 +225,7 @@ class HouseControllerIntegrationTest {
                     .maxOccupant(4)
                     .build();
 
-            mockMvc.perform(post("/api/housing/houses")
+            mockMvc.perform(post("/houses")
                             .header("X-User-Roles", "HR")
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(objectMapper.writeValueAsString(request)))
@@ -242,7 +244,7 @@ class HouseControllerIntegrationTest {
                     .maxOccupant(4)
                     .build();
 
-            mockMvc.perform(post("/api/housing/houses")
+            mockMvc.perform(post("/houses")
                             .header("X-User-Roles", "HR")
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(objectMapper.writeValueAsString(request)))
@@ -259,7 +261,7 @@ class HouseControllerIntegrationTest {
                     .maxOccupant(8)
                     .build();
 
-            mockMvc.perform(put("/api/housing/houses/{id}", testHouse.getId())
+            mockMvc.perform(put("/houses/{id}", testHouse.getId())
                             .header("X-User-Roles", "HR")
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(objectMapper.writeValueAsString(request)))
@@ -274,7 +276,7 @@ class HouseControllerIntegrationTest {
         void deleteHouse_withResidents_returns400() throws Exception {
             when(employeeServiceClient.countEmployeesByHouseId(testHouse.getId())).thenReturn(3);
 
-            mockMvc.perform(delete("/api/housing/houses/{id}", testHouse.getId())
+            mockMvc.perform(delete("/houses/{id}", testHouse.getId())
                             .header("X-User-Roles", "HR"))
                     .andExpect(status().isBadRequest())
                     .andExpect(jsonPath("$.success").value(false))
@@ -293,7 +295,7 @@ class HouseControllerIntegrationTest {
 
             when(employeeServiceClient.countEmployeesByHouseId(emptyHouse.getId())).thenReturn(0);
 
-            mockMvc.perform(delete("/api/housing/houses/{id}", emptyHouse.getId())
+            mockMvc.perform(delete("/houses/{id}", emptyHouse.getId())
                             .header("X-User-Roles", "HR"))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.success").value(true));
@@ -313,7 +315,7 @@ class HouseControllerIntegrationTest {
                     )
             );
 
-            mockMvc.perform(get("/api/housing/houses/my-house")
+            mockMvc.perform(get("/houses/my-house")
                             .header("X-User-Id", "101")
                             .header("X-User-Roles", "EMPLOYEE"))
                     .andExpect(status().isOk())
@@ -332,7 +334,7 @@ class HouseControllerIntegrationTest {
                     )
             );
 
-            mockMvc.perform(get("/api/housing/houses/my-house")
+            mockMvc.perform(get("/houses/my-house")
                             .header("X-User-Id", "103")
                             .header("X-User-Roles", "EMPLOYEE"))
                     .andExpect(status().isOk())
@@ -349,7 +351,7 @@ class HouseControllerIntegrationTest {
         @Test
         @DisplayName("Get house summaries for dropdown selection")
         void getAllHouseSummaries_success() throws Exception {
-            mockMvc.perform(get("/api/housing/houses/summaries"))
+            mockMvc.perform(get("/houses/summaries"))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.success").value(true))
                     .andExpect(jsonPath("$.data").isArray())
@@ -362,7 +364,7 @@ class HouseControllerIntegrationTest {
         @Test
         @DisplayName("Get single house summary")
         void getHouseSummary_success() throws Exception {
-            mockMvc.perform(get("/api/housing/houses/{id}/summary", testHouse.getId()))
+            mockMvc.perform(get("/houses/{id}/summary", testHouse.getId()))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.success").value(true))
                     .andExpect(jsonPath("$.data.id").value(testHouse.getId()))
@@ -372,7 +374,7 @@ class HouseControllerIntegrationTest {
         @Test
         @DisplayName("Get non-existent house returns 404")
         void getHouseSummary_notFound_returns404() throws Exception {
-            mockMvc.perform(get("/api/housing/houses/999/summary"))
+            mockMvc.perform(get("/houses/999/summary"))
                     .andExpect(status().isNotFound())
                     .andExpect(jsonPath("$.success").value(false));
         }

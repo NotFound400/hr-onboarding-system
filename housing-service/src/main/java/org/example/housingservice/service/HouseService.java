@@ -88,11 +88,11 @@ public interface HouseService {
      * Contains: Address, List of employees who live in the house (Name, Phone)
      * 
      * @param houseId House ID
-     * @param employeeId Employee ID (for validation)
+     * @param userContext UserContext
      * @return Employee view response
      * @throws ForbiddenException if employee is not assigned to this house
      */
-    HouseDTO.EmployeeViewResponse getHouseForEmployee(Long houseId, Long employeeId);
+    HouseDTO.EmployeeViewResponse getHouseForEmployee(Long houseId, UserContext userContext);
 
     Map<String, Object> checkHouseAvailability(Long houseId);
 
@@ -138,13 +138,5 @@ public interface HouseService {
     @Deprecated
     default HouseDTO.DetailResponse getHouseDetailById(Long id) {
         return getHouseDetailForHR(id);
-    }
-
-    /**
-     * @deprecated Use {@link #getHouseForEmployee(Long, Long)} instead
-     */
-    @Deprecated
-    default HouseDTO.EmployeeViewResponse getHouseForEmployee(Long houseId) {
-        return getHouseForEmployee(houseId, null);
     }
 }

@@ -102,13 +102,12 @@ class HouseServiceTest {
         @DisplayName("getHouseDetail - Employee with access should get limited information")
         void getHouseDetail_asEmployee_withAccess_returnsLimitedInfo() {
             // Given
-            UserContext employeeContext = UserContext.employeeUser(101L);
+            UserContext employeeContext = UserContext.fromHeaders(101L, "Mike","EMPLOYEE", 1L);
             EmployeeServiceClient.EmployeeInfo employeeInfo = new EmployeeServiceClient.EmployeeInfo(
                     101L, "Mike", "Smith", "Mike", "555-0001", "mike@test.com", 1L
             );
             
             when(houseRepository.findByIdWithDetails(1L)).thenReturn(Optional.of(testHouse));
-            when(employeeServiceClient.getEmployeeById(101L)).thenReturn(employeeInfo);
             when(employeeServiceClient.getEmployeesByHouseId(1L)).thenReturn(List.of(employeeInfo));
 
             // When
@@ -132,7 +131,6 @@ class HouseServiceTest {
             );
             
             when(houseRepository.findByIdWithDetails(1L)).thenReturn(Optional.of(testHouse));
-            when(employeeServiceClient.getEmployeeById(101L)).thenReturn(employeeInfo);
 
             // When/Then
             assertThatThrownBy(() -> houseService.getHouseDetail(1L, employeeContext))
@@ -161,12 +159,11 @@ class HouseServiceTest {
         @DisplayName("getAllHouses - Employee should only get their assigned house")
         void getAllHouses_asEmployee_returnsOnlyAssignedHouse() {
             // Given
-            UserContext employeeContext = UserContext.employeeUser(101L);
+            UserContext employeeContext = UserContext.fromHeaders(101L, "Mike","EMPLOYEE", 1L);
             EmployeeServiceClient.EmployeeInfo employeeInfo = new EmployeeServiceClient.EmployeeInfo(
                     101L, "Mike", "Smith", "Mike", "555-0001", "mike@test.com", 1L
             );
-            
-            when(employeeServiceClient.getEmployeeById(101L)).thenReturn(employeeInfo);
+
             when(houseRepository.findById(1L)).thenReturn(Optional.of(testHouse));
             when(employeeServiceClient.getEmployeesByHouseId(1L)).thenReturn(List.of(employeeInfo));
 
@@ -186,8 +183,6 @@ class HouseServiceTest {
             EmployeeServiceClient.EmployeeInfo employeeInfo = new EmployeeServiceClient.EmployeeInfo(
                     101L, "Mike", "Smith", "Mike", "555-0001", "mike@test.com", null // No house
             );
-            
-            when(employeeServiceClient.getEmployeeById(101L)).thenReturn(employeeInfo);
 
             // When
             List<HouseDTO.UnifiedListResponse> result = houseService.getAllHouses(employeeContext);
@@ -345,13 +340,13 @@ class HouseServiceTest {
             EmployeeServiceClient.EmployeeInfo employeeInfo = new EmployeeServiceClient.EmployeeInfo(
                     101L, "Mike", "Smith", "Mike", "555-0001", "mike@test.com", 1L
             );
-            
+            UserContext userContext = UserContext.fromHeaders(101L, "Mike", "EMPLOYEE", 1L);
+
             when(houseRepository.findById(1L)).thenReturn(Optional.of(testHouse));
-            when(employeeServiceClient.getEmployeeById(101L)).thenReturn(employeeInfo);
             when(employeeServiceClient.getEmployeesByHouseId(1L)).thenReturn(List.of(employeeInfo));
 
             // When
-            HouseDTO.EmployeeViewResponse result = houseService.getHouseForEmployee(1L, 101L);
+            HouseDTO.EmployeeViewResponse result = houseService.getHouseForEmployee(1L, userContext);
 
             // Then
             assertThat(result).isNotNull();
@@ -365,12 +360,11 @@ class HouseServiceTest {
             EmployeeServiceClient.EmployeeInfo employeeInfo = new EmployeeServiceClient.EmployeeInfo(
                     101L, "Mike", "Smith", "Mike", "555-0001", "mike@test.com", 2L // Different house
             );
-            
+            UserContext userContext = UserContext.fromHeaders(101L, "Mike", "EMPLOYEE", 2L);
             when(houseRepository.findById(1L)).thenReturn(Optional.of(testHouse));
-            when(employeeServiceClient.getEmployeeById(101L)).thenReturn(employeeInfo);
 
             // When/Then
-            assertThatThrownBy(() -> houseService.getHouseForEmployee(1L, 101L))
+            assertThatThrownBy(() -> houseService.getHouseForEmployee(1L, userContext))
                     .isInstanceOf(ForbiddenException.class);
         }
     }

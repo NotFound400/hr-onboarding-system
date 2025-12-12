@@ -109,7 +109,7 @@ class HouseControllerTest {
     }
 
     @Nested
-    @DisplayName("GET /api/housing/houses - Get All Houses")
+    @DisplayName("GET /houses - Get All Houses")
     class GetAllHousesTests {
 
         @Test
@@ -117,7 +117,7 @@ class HouseControllerTest {
         void getAllHouses_asHR_returnsFullInfo() throws Exception {
             when(houseService.getAllHouses(any())).thenReturn(List.of(hrListResponse));
 
-            mockMvc.perform(get("/api/housing/houses")
+            mockMvc.perform(get("/houses")
                             .header("X-User-Id", "1")
                             .header("X-Username", "hr@test.com")
                             .header("X-User-Roles", "HR"))
@@ -135,7 +135,7 @@ class HouseControllerTest {
         void getAllHouses_asEmployee_returnsLimitedInfo() throws Exception {
             when(houseService.getAllHouses(any())).thenReturn(List.of(employeeListResponse));
 
-            mockMvc.perform(get("/api/housing/houses")
+            mockMvc.perform(get("/houses")
                             .header("X-User-Id", "101")
                             .header("X-Username", "employee@test.com")
                             .header("X-User-Roles", "EMPLOYEE"))
@@ -152,7 +152,7 @@ class HouseControllerTest {
         void getAllHouses_withoutHeaders_usesDefaultContext() throws Exception {
             when(houseService.getAllHouses(any())).thenReturn(List.of(hrListResponse));
 
-            mockMvc.perform(get("/api/housing/houses"))
+            mockMvc.perform(get("/houses"))
                     .andExpect(status().isOk());
 
             verify(houseService).getAllHouses(any());
@@ -160,7 +160,7 @@ class HouseControllerTest {
     }
 
     @Nested
-    @DisplayName("GET /api/housing/houses/{id} - Get House Detail")
+    @DisplayName("GET /houses/{id} - Get House Detail")
     class GetHouseDetailTests {
 
         @Test
@@ -168,7 +168,7 @@ class HouseControllerTest {
         void getHouseDetail_asHR_returnsFullDetails() throws Exception {
             when(houseService.getHouseDetail(eq(1L), any())).thenReturn(hrDetailResponse);
 
-            mockMvc.perform(get("/api/housing/houses/1")
+            mockMvc.perform(get("/houses/1")
                             .header("X-User-Id", "1")
                             .header("X-User-Roles", "HR"))
                     .andExpect(status().isOk())
@@ -186,7 +186,7 @@ class HouseControllerTest {
         void getHouseDetail_asEmployee_returnsLimitedDetails() throws Exception {
             when(houseService.getHouseDetail(eq(1L), any())).thenReturn(employeeDetailResponse);
 
-            mockMvc.perform(get("/api/housing/houses/1")
+            mockMvc.perform(get("/houses/1")
                             .header("X-User-Id", "101")
                             .header("X-User-Roles", "EMPLOYEE"))
                     .andExpect(status().isOk())
@@ -202,7 +202,7 @@ class HouseControllerTest {
     }
 
     @Nested
-    @DisplayName("POST /api/housing/houses - Create House")
+    @DisplayName("POST /houses - Create House")
     class CreateHouseTests {
 
         @Test
@@ -222,7 +222,7 @@ class HouseControllerTest {
 
             when(houseService.createHouse(any())).thenReturn(response);
 
-            mockMvc.perform(post("/api/housing/houses")
+            mockMvc.perform(post("/houses")
                             .header("X-User-Roles", "HR")
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(objectMapper.writeValueAsString(request)))
@@ -242,7 +242,7 @@ class HouseControllerTest {
                     .address("")  // Required field empty
                     .build();
 
-            mockMvc.perform(post("/api/housing/houses")
+            mockMvc.perform(post("/houses")
                             .header("X-User-Roles", "HR")
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(objectMapper.writeValueAsString(request)))
@@ -253,7 +253,7 @@ class HouseControllerTest {
     }
 
     @Nested
-    @DisplayName("PUT /api/housing/houses/{id} - Update House")
+    @DisplayName("PUT /houses/{id} - Update House")
     class UpdateHouseTests {
 
         @Test
@@ -272,7 +272,7 @@ class HouseControllerTest {
 
             when(houseService.updateHouse(eq(1L), any())).thenReturn(response);
 
-            mockMvc.perform(put("/api/housing/houses/1")
+            mockMvc.perform(put("/houses/1")
                             .header("X-User-Roles", "HR")
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(objectMapper.writeValueAsString(request)))
@@ -285,7 +285,7 @@ class HouseControllerTest {
     }
 
     @Nested
-    @DisplayName("DELETE /api/housing/houses/{id} - Delete House")
+    @DisplayName("DELETE /houses/{id} - Delete House")
     class DeleteHouseTests {
 
         @Test
@@ -293,7 +293,7 @@ class HouseControllerTest {
         void deleteHouse_returnsOk() throws Exception {
             doNothing().when(houseService).deleteHouse(1L);
 
-            mockMvc.perform(delete("/api/housing/houses/1")
+            mockMvc.perform(delete("/houses/1")
                             .header("X-User-Roles", "HR"))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.success").value(true))
@@ -304,7 +304,7 @@ class HouseControllerTest {
     }
 
     @Nested
-    @DisplayName("GET /api/housing/houses/my-house - Get My House")
+    @DisplayName("GET /houses/my-house - Get My House")
     class GetMyHouseTests {
 
         @Test
@@ -324,7 +324,7 @@ class HouseControllerTest {
 
             when(houseService.getMyHouse(101L)).thenReturn(response);
 
-            mockMvc.perform(get("/api/housing/houses/my-house")
+            mockMvc.perform(get("/houses/my-house")
                             .header("X-User-Id", "101")
                             .header("X-User-Roles", "EMPLOYEE"))
                     .andExpect(status().isOk())
@@ -340,7 +340,7 @@ class HouseControllerTest {
         void getMyHouse_withoutAssignedHouse_returnsNull() throws Exception {
             when(houseService.getMyHouse(102L)).thenReturn(null);
 
-            mockMvc.perform(get("/api/housing/houses/my-house")
+            mockMvc.perform(get("/houses/my-house")
                             .header("X-User-Id", "102")
                             .header("X-User-Roles", "EMPLOYEE"))
                     .andExpect(status().isOk())
@@ -352,7 +352,7 @@ class HouseControllerTest {
     }
 
     @Nested
-    @DisplayName("GET /api/housing/houses/summaries - Get Summaries")
+    @DisplayName("GET /houses/summaries - Get Summaries")
     class GetSummariesTests {
 
         @Test
@@ -375,7 +375,7 @@ class HouseControllerTest {
 
             when(houseService.getAllHouseSummaries()).thenReturn(summaries);
 
-            mockMvc.perform(get("/api/housing/houses/summaries"))
+            mockMvc.perform(get("/houses/summaries"))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.success").value(true))
                     .andExpect(jsonPath("$.data").isArray())
