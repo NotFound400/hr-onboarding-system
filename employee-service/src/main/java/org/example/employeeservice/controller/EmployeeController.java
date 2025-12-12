@@ -47,7 +47,7 @@ public class EmployeeController {
                 .orElse(ResponseEntity.notFound().build());
     }
 
-    @GetMapping("employees/user/{userID}")
+    @GetMapping("/employees/user/{userID}")
     public ResponseEntity<?> getEmployeeByUserID(@PathVariable Long userID) {
         Optional<Employee> employee = employeeService.getEmployeeByUserID(userID);
         return employee.isPresent() ? ResponseEntity.ok(employee.get())
@@ -100,7 +100,7 @@ public class EmployeeController {
      * Used by Auth Service during user registration
      * Creates employee only if not already exists
      */
-    @PostMapping("employees")
+    @PostMapping("/employees")
     public ResponseEntity<Employee> createEmployee(@RequestBody Employee employee) {
         Employee saved = employeeService.createEmployeeIfNotExists(employee);
         return ResponseEntity.status(HttpStatus.CREATED).body(saved);
