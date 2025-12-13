@@ -2,9 +2,11 @@ package org.example.housingservice.service.impl;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.example.housingservice.client.EmailServiceClient;
 import org.example.housingservice.client.EmployeeServiceClient;
 import org.example.housingservice.dto.FacilityReportDTO;
 import org.example.housingservice.dto.FacilityReportDetailDTO;
+import org.example.housingservice.dto.FacilityReportEmailRequest;
 import org.example.housingservice.entity.Facility;
 import org.example.housingservice.entity.FacilityReport;
 import org.example.housingservice.entity.FacilityReportDetail;
@@ -37,6 +39,7 @@ public class FacilityReportServiceImpl implements FacilityReportService {
     private final FacilityReportDetailRepository commentRepository;
     private final FacilityRepository facilityRepository;
     private final EmployeeServiceClient employeeServiceClient;
+    private final EmailServiceClient emailServiceClient;
 
     // ==================== Report Management ====================
 
@@ -92,7 +95,11 @@ public class FacilityReportServiceImpl implements FacilityReportService {
 
         FacilityReport report = findReportById(id);
         report.setStatus(request.getStatus());
+
         FacilityReport updated = reportRepository.save(report);
+
+        // NEW: Send email notification
+        sendStatusUpdateEmail(updated);
 
         return mapToDetailResponse(updated, null);
     }
@@ -232,13 +239,18 @@ public class FacilityReportServiceImpl implements FacilityReportService {
                 .orElseThrow(() -> new ResourceNotFoundException("FacilityReport", "id", id));
     }
 
-    private String getEmployeeName(Long employeeId) {
+    private String getEmployeeName(Long userId) {
         try {
-            EmployeeServiceClient.EmployeeInfo employee = employeeServiceClient.getEmployeeById(employeeId);
-            return employee.getDisplayName();
+            // Use getEmployeeByUserId instead of getEmployeeById
+            EmployeeServiceClient.EmployeeInfo employee =
+                    employeeServiceClient.getEmployeeByUserId(userId);
+            if (employee != null && employee.firstName() != null) {
+                return employee.getDisplayName();
+            }
+            return "Unknown";
         } catch (Exception e) {
-            log.warn("Failed to get employee name for id: {}", employeeId);
-            return "Unknown User";
+            log.warn("Failed to get employee name for userId: {}", userId);
+            return "Unknown";
         }
     }
 
@@ -254,7 +266,7 @@ public class FacilityReportServiceImpl implements FacilityReportService {
 
     private FacilityReportDTO.DetailResponse mapToDetailResponse(FacilityReport report, Long currentEmployeeId) {
         Facility facility = report.getFacility();
-        
+
         // Get reportsCreateusername
         String createdBy = getEmployeeName(report.getEmployeeId());
 
@@ -299,5 +311,33 @@ public class FacilityReportServiceImpl implements FacilityReportService {
                 .displayDate(comment.getDisplayDate())
                 .canEdit(canEdit)
                 .build();
+    }
+
+    /**
+     * Send email notification when report status is updated
+     */
+    private void sendStatusUpdateEmail(FacilityReport report) {
+        try {
+            // Get employee info by userId (stored as employeeId in report)
+            EmployeeServiceClient.EmployeeInfo employee =
+                    employeeServiceClient.getEmployeeByUserId(report.getEmployeeId());
+
+            if (employee != null && employee.email() != null) {
+                EmailServiceClient.FacilityReportEmailRequest emailRequest =
+                        new EmailServiceClient.FacilityReportEmailRequest(
+                                employee.email(),
+                                employee.getFullName(),
+                                report.getTitle(),
+                                report.getStatus().getDisplayName()
+                        );
+
+                // Send async email
+                emailServiceClient.sendFacilityReportEmailAsync(emailRequest);
+                log.info("Facility report status email queued for: {}", employee.email());
+            }
+        } catch (Exception e) {
+            // Don't fail the status update if email fails
+            log.error("Failed to send facility report status email: {}", e.getMessage());
+        }
     }
 }

@@ -11,6 +11,7 @@ import org.example.housingservice.context.UserContext;
 import org.example.housingservice.dto.ApiResponse;
 import org.example.housingservice.dto.HouseDTO;
 import org.example.housingservice.entity.House;
+import org.example.housingservice.exception.ForbiddenException;
 import org.example.housingservice.service.HouseService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -57,7 +58,7 @@ public class HouseController {
             @Parameter(hidden = true) @RequestHeader(value = "X-User-Roles", required = false) String roles,
             @Parameter(hidden = true) @RequestHeader(value = "X-House-Id", required = false) Long houseId) {
 
-        UserContext userContext = UserContext.fromHeaders(userId, username, roles, houseId);
+        UserContext userContext = buildUserContext(userId, username, roles, houseId);
         log.info("Getting all houses for user: {}, roles: {}, houseId from JWT: {}", userId, roles, houseId);
 
         List<HouseDTO.UnifiedListResponse> houses = houseService.getAllHouses(userContext);
@@ -82,7 +83,7 @@ public class HouseController {
             @Parameter(hidden = true) @RequestHeader(value = "X-User-Roles", required = false) String roles,
             @Parameter(hidden = true) @RequestHeader(value = "X-House-Id", required = false) Long houseId) {
 
-        UserContext userContext = UserContext.fromHeaders(userId, username, roles, houseId);
+        UserContext userContext = buildUserContext(userId, username, roles, houseId);
         log.info("Getting house detail for id: {}, user: {}, roles: {}, houseId from JWT: {}", id, userId, roles, houseId);
 
         HouseDTO.UnifiedDetailResponse house = houseService.getHouseDetail(id, userContext);
@@ -99,7 +100,12 @@ public class HouseController {
     public ResponseEntity<ApiResponse<HouseDTO.DetailResponse>> createHouse(
             @Valid @RequestBody HouseDTO.CreateRequest request,
             @Parameter(hidden = true) @RequestHeader(value = "X-User-Roles", required = false) String roles) {
-        
+
+        // ADD THIS CHECK:
+        if (roles == null || !roles.toUpperCase().contains("HR")) {
+            throw new ForbiddenException("Only HR can create houses");
+        }
+
         // Note: Role validation should ideally be done in a security filter or aspect
         log.info("Creating house at address: {}, roles: {}", request.getAddress(), roles);
         HouseDTO.DetailResponse house = houseService.createHouse(request);
@@ -118,7 +124,11 @@ public class HouseController {
             @PathVariable Long id,
             @Valid @RequestBody HouseDTO.UpdateRequest request,
             @Parameter(hidden = true) @RequestHeader(value = "X-User-Roles", required = false) String roles) {
-        
+
+        if (roles == null || !roles.toUpperCase().contains("HR")) {
+            throw new ForbiddenException("Only HR can create houses");
+        }
+
         log.info("Updating house: {}, roles: {}", id, roles);
         HouseDTO.DetailResponse house = houseService.updateHouse(id, request);
         
@@ -133,7 +143,11 @@ public class HouseController {
     public ResponseEntity<ApiResponse<Void>> deleteHouse(
             @PathVariable Long id,
             @Parameter(hidden = true) @RequestHeader(value = "X-User-Roles", required = false) String roles) {
-        
+
+        if (roles == null || !roles.toUpperCase().contains("HR")) {
+            throw new ForbiddenException("Only HR can create houses");
+        }
+
         log.info("Deleting house: {}, roles: {}", id, roles);
         houseService.deleteHouse(id);
         return ResponseEntity.ok(ApiResponse.success("House deleted successfully"));
@@ -249,10 +263,9 @@ public class HouseController {
      * If headers are missing, creates a default user context for testing
      */
     private UserContext buildUserContext(Long userId, String username, String roles, Long houseId) {
-        if (userId == null && roles == null) {
-            // For testing without Gateway - default to HR
-            log.warn("No user context headers found, using default HR user for testing");
-            return UserContext.hrUser(1L);
+        if (userId == null || roles == null || roles.isEmpty()) {
+            log.error("Missing user context headers - userId: {}, roles: {}", userId, roles);
+            throw new ForbiddenException("Authorization required - please provide valid authentication");
         }
         return UserContext.fromHeaders(userId, username, roles, houseId);
     }

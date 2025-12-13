@@ -77,7 +77,6 @@ public class EmployeeController {
      * Get employees by house ID
      * Used by Housing Service to list roommates
      */
-    @PreAuthorize("hasRole('HR')")
     @GetMapping("/employees/house/{houseId}")
     public ResponseEntity<List<Employee>> getEmployeesByHouseId(@PathVariable("houseId") Long houseId) {
         List<Employee> employees = employeeService.getEmployeesByHouseId(houseId);
@@ -88,7 +87,6 @@ public class EmployeeController {
      * Count employees by house ID
      * Used by Housing Service to check house availability
      */
-    @PreAuthorize("hasRole('HR')")
     @GetMapping("/employees/house/{houseId}/count")
     public ResponseEntity<Integer> countEmployeesByHouseId(@PathVariable("houseId") Long houseId) {
         int count = employeeService.countEmployeesByHouseId(houseId);

@@ -22,6 +22,17 @@ public class SecurityConfig {
                 .formLogin(ServerHttpSecurity.FormLoginSpec::disable)
                 .httpBasic(ServerHttpSecurity.HttpBasicSpec::disable)
                 .authorizeExchange(exchanges -> exchanges
+                        // Public endpoints
+                        .pathMatchers(
+                                "/api/auth/login",
+                                "/api/auth/register",
+                                "/api/auth/validate-token/**",
+                                "/api/auth/registration-token/**",
+                                "/actuator/health",
+                                "/actuator/info",
+                                "/fallback/**"
+                        ).permitAll()
+                        // Everything else requires the request to pass through (JWT filter will handle auth)
                         .anyExchange().permitAll()
                 )
                 .build();

@@ -34,7 +34,9 @@ public class JwtAuthenticationFilter implements GlobalFilter, Ordered {
     public Mono<Void> filter(ServerWebExchange exchange, GatewayFilterChain chain) {
         ServerHttpRequest request = exchange.getRequest();
         String path = request.getPath().value();
-        
+
+        log.info(">>> JwtAuthenticationFilter EXECUTING for path: {}", path);
+
         log.debug("Processing request: {} {}", request.getMethod(), path);
 
         if (routeValidator.isOpenEndpoint(request)) {
