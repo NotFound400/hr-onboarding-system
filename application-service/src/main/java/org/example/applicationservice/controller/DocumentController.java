@@ -3,6 +3,7 @@ package org.example.applicationservice.controller;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import com.fasterxml.jackson.core.JsonProcessingException;
+import org.example.applicationservice.exception.EntityNotFoundException;
 import org.example.applicationservice.utils.*;
 import org.example.applicationservice.domain.DigitalDocument;
 import org.example.applicationservice.dto.DigitalDocumentDTO;
@@ -101,8 +102,14 @@ public class DocumentController {
     @PreAuthorize("hasRole('Employee')")
     @DeleteMapping("/delete/{id}")
     public ResponseEntity<Result<String>> deleteDocument(@PathVariable Long id) {
-        documentService.deleteDocumentById(id);
-        return ResponseEntity.ok(Result.success("Document deleted successfully"));
+        try {
+            documentService.deleteDocumentById(id);
+            return ResponseEntity.ok(Result.success("Document deleted successfully"));
+        } catch (EntityNotFoundException e) {
+            return ResponseEntity.status(404).body(Result.fail(e.getMessage()));
+        } catch (IllegalStateException e) {
+            return ResponseEntity.badRequest().body(Result.fail(e.getMessage()));
+        }
     }
 
     //update document

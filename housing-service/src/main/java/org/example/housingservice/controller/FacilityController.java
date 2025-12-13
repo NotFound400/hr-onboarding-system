@@ -42,7 +42,7 @@ public class FacilityController {
 
         log.info("Adding facility to house: {}, type: {}", request.getHouseId(), request.getType());
         FacilityDTO.Response facility = facilityService.addFacility(request);
-        
+
         return ResponseEntity
                 .status(HttpStatus.CREATED)
                 .body(ApiResponse.success("Facility added successfully", facility));
@@ -84,7 +84,7 @@ public class FacilityController {
 
     /**
      * Get facility summary for a house
-     * 
+     *
      * PDF: Facility Information (Number of Beds, Mattress, Tables, Chairs)
      */
     @GetMapping("/house/{houseId}/summary")
@@ -117,7 +117,7 @@ public class FacilityController {
 
         log.info("Updating facility: {}", id);
         FacilityDTO.Response facility = facilityService.updateFacility(id, request);
-        
+
         return ResponseEntity.ok(ApiResponse.success("Facility updated successfully", facility));
     }
 

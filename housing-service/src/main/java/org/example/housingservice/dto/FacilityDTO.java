@@ -37,7 +37,7 @@ public class FacilityDTO {
     @NoArgsConstructor
     @AllArgsConstructor
     public static class CreateRequest {
-        
+
         @NotNull(message = "House ID is required")
         private Long houseId;
 
@@ -60,7 +60,7 @@ public class FacilityDTO {
     @NoArgsConstructor
     @AllArgsConstructor
     public static class UpdateRequest {
-        
+
         @Size(max = 50, message = "Type cannot exceed 50 characters")
         private String type;
 

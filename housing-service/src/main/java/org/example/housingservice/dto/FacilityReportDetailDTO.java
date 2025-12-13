@@ -17,7 +17,7 @@ public class FacilityReportDetailDTO {
 
     /**
      * Comment Response DTO
-     * 
+     *
      * PDF Requirements:
      * - Description (Comment)
      * - Created By
@@ -47,20 +47,20 @@ public class FacilityReportDetailDTO {
     @NoArgsConstructor
     @AllArgsConstructor
     public static class CreateRequest {
-        
+
         @NotNull(message = "Facility Report ID is required")
         private Long facilityReportId;
 
         @NotBlank(message = "Comment is required")
         @Size(max = 2000, message = "Comment cannot exceed 2000 characters")
         private String comment;
-        
+
         // employeeId is obtained from X-User-Id request header
     }
 
     /**
      * Update Comment Request DTO
-     * 
+     *
      * Rules: Employees can only edit their own comments, HR can only edit HR-created comments
      */
     @Data
@@ -68,7 +68,7 @@ public class FacilityReportDetailDTO {
     @NoArgsConstructor
     @AllArgsConstructor
     public static class UpdateRequest {
-        
+
         @NotBlank(message = "Comment is required")
         @Size(max = 2000, message = "Comment cannot exceed 2000 characters")
         private String comment;

@@ -37,7 +37,7 @@ public class LandlordDTO {
     @NoArgsConstructor
     @AllArgsConstructor
     public static class CreateRequest {
-        
+
         @NotBlank(message = "First name is required")
         @Size(max = 100, message = "First name cannot exceed 100 characters")
         private String firstName;
@@ -62,7 +62,7 @@ public class LandlordDTO {
     @NoArgsConstructor
     @AllArgsConstructor
     public static class UpdateRequest {
-        
+
         @Size(max = 100, message = "First name cannot exceed 100 characters")
         private String firstName;
 

@@ -9,7 +9,10 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class UpdateApplicationStatusDTO {
-//    private Long id;
+    private Long id;
     private ApplicationStatus status;
     private String comment;
+
+    public UpdateApplicationStatusDTO(ApplicationStatus status, String comment) {
+    }
 }

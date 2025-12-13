@@ -192,4 +192,34 @@ public class AuthController {
         // This endpoint can be used for audit logging or token blacklisting if needed
         return ResponseEntity.ok(ApiResponse.ok("Logged out successfully", null));
     }
+
+    /**
+     * POST /api/auth/refresh
+     * Refresh JWT token - returns a new token with extended expiration.
+     * Requires valid (non-expired) Bearer token.
+     */
+    @PostMapping("/refresh")
+    public ResponseEntity<@NonNull ApiResponse<LoginResponse>> refreshToken(
+            @RequestHeader(value = "Authorization", required = false) String authHeader) {
+        try {
+            if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+                return ResponseEntity
+                        .status(HttpStatus.UNAUTHORIZED)
+                        .body(ApiResponse.error("Bearer token required"));
+            }
+
+            String token = authHeader.substring(7);
+            LoginResponse response = authService.refreshToken(token);
+            return ResponseEntity.ok(ApiResponse.ok("Token refreshed successfully", response));
+
+        } catch (IllegalArgumentException ex) {
+            return ResponseEntity
+                    .status(HttpStatus.UNAUTHORIZED)
+                    .body(ApiResponse.error(ex.getMessage()));
+        } catch (Exception ex) {
+            return ResponseEntity
+                    .status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(ApiResponse.error("Internal server error"));
+        }
+    }
 }
