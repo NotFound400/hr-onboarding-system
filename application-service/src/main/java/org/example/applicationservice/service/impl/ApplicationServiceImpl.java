@@ -1,5 +1,8 @@
 package org.example.applicationservice.service.impl;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.example.applicationservice.client.EmployeeServiceClient;
 import org.example.applicationservice.service.ApplicationService;
 import org.example.applicationservice.utils.*;
 import org.example.applicationservice.client.EmailServiceClient;
@@ -21,13 +24,17 @@ public class ApplicationServiceImpl implements ApplicationService {
     private final ApplicationWorkFlowRepository repository;
     private final EmailServiceClient emailServiceClient;
     private final OwnershipValidator ownershipValidator;
+    private final EmployeeServiceClient employeeServiceClient;
+    private static final Logger log = LoggerFactory.getLogger(ApplicationServiceImpl.class);
 
     public ApplicationServiceImpl(ApplicationWorkFlowRepository repository,
                                   EmailServiceClient emailServiceClient,
+                                  EmployeeServiceClient employeeServiceClient,
                                   SecurityUtils securityUtils,
                                   OwnershipValidator ownershipValidator) {
         this.repository = repository;
         this.emailServiceClient = emailServiceClient;
+        this.employeeServiceClient = employeeServiceClient;
         this.ownershipValidator = ownershipValidator;
     }
 
@@ -253,6 +260,7 @@ public class ApplicationServiceImpl implements ApplicationService {
         app.setLastModificationDate(LocalDateTime.now());
 
         repository.save(app);
+        sendApplicationStatusEmail(app.getEmployeeId(), "Approved", request.getComment());
 
         // Trigger Email Service (Feign)
 //        try {
@@ -296,6 +304,7 @@ public class ApplicationServiceImpl implements ApplicationService {
         app.setLastModificationDate(LocalDateTime.now());
 
         repository.save(app);
+        sendApplicationStatusEmail(app.getEmployeeId(), "Rejected", request.getComment());
 
         //        try {
 //            emailServiceClient.sendRejectEmail(app.getEmployeeID(), request.getComment());
@@ -391,5 +400,28 @@ public class ApplicationServiceImpl implements ApplicationService {
                 .orElse(Result.fail("Application not found with id: " + applicationId));
     }
 
+    private void sendApplicationStatusEmail(String employeeId, String status, String comment) {
+        try {
+            EmployeeDTO employee = employeeServiceClient.getEmployeeById(employeeId);
 
+            if (employee == null || employee.getEmail() == null || employee.getEmail().isBlank()) {
+                log.warn("Cannot send email: Employee {} has no email address", employeeId);
+                return;
+            }
+
+            ApplicationStatusEmailRequest emailRequest = ApplicationStatusEmailRequest.builder()
+                    .to(employee.getEmail())
+                    .employeeName(employee.getDisplayName())
+                    .status(status)
+                    .comment(comment)
+                    .build();
+
+            log.info("Sending {} email to {} for employee {}", status, employee.getEmail(), employeeId);
+            emailServiceClient.sendApplicationStatusEmailAsync(emailRequest);
+            log.info("Application status email queued successfully");
+
+        } catch (Exception e) {
+            log.error("Failed to send application status email: {}", e.getMessage());
+        }
+    }
 }

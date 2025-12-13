@@ -347,17 +347,17 @@ public class AuthService {
             throw new IllegalArgumentException("Registration token has expired");
         }
 
-        // 🆕 Fetch house address if houseId exists
+        // Fetch house address if houseId exists
         String houseAddress = null;
         if (regToken.getHouseId() != null) {
             houseAddress = getHouseAddress(regToken.getHouseId());
         }
 
-        return mapToRegistrationTokenDto(regToken, houseAddress);  // ✅ Uses version WITH houseAddress
+        return mapToRegistrationTokenDto(regToken, houseAddress);  // Uses version WITH houseAddress
     }
 
     /**
-     * 🆕 Helper method to get house address from Housing Service
+     *  Helper method to get house address from Housing Service
      */
     private String getHouseAddress(Long houseId) {
         try {

@@ -276,13 +276,15 @@ public class HouseServiceImpl implements HouseService {
     }
 
     @Override
-    public HouseDTO.EmployeeViewResponse getMyHouse(Long employeeId) {
-        log.debug("Getting house for employee: {}", employeeId);
+    public HouseDTO.EmployeeViewResponse getMyHouse(Long userId) {
+        log.debug("Getting house for userId: {}", userId);
 
-        // Get employee's house ID from EmployeeService
-        Long houseId = getEmployeeHouseId(employeeId);
+        // Get employee by Auth User ID
+        EmployeeServiceClient.EmployeeInfo employee = employeeServiceClient.getEmployeeByUserId(userId);
+
+        Long houseId = employee != null ? employee.houseId() : null;
         if (houseId == null) {
-            log.warn("Employee {} is not assigned to any house", employeeId);
+            log.warn("User {} is not assigned to any house", userId);
             return null;
         }
 
@@ -347,12 +349,13 @@ public class HouseServiceImpl implements HouseService {
     /**
      * Get employee's assigned house ID from EmployeeService
      */
-    private Long getEmployeeHouseId(Long employeeId) {
+    private Long getEmployeeHouseId(Long userId) {
         try {
-            EmployeeServiceClient.EmployeeInfo employee = employeeServiceClient.getEmployeeById(employeeId);
+            EmployeeServiceClient.EmployeeInfo employee =
+                    employeeServiceClient.getEmployeeByUserId(userId);  // Use getEmployeeByUserId
             return employee != null ? employee.houseId() : null;
         } catch (Exception e) {
-            log.warn("Failed to get employee info for id: {}", employeeId, e);
+            log.warn("Failed to get employee info for userId: {}", userId, e);
             return null;
         }
     }

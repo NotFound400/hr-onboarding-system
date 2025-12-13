@@ -44,7 +44,17 @@ public class RouteValidator {
      */
     public boolean isOpenEndpoint(ServerHttpRequest request) {
         String path = request.getURI().getPath();
-        return OPEN_API_ENDPOINTS.stream()
-                .anyMatch(path::contains);
+
+        return OPEN_API_ENDPOINTS.stream().anyMatch(openPath -> {
+            // Exact match or path starts with open endpoint
+            if (openPath.endsWith("/")) {
+                return path.startsWith(openPath);
+            }
+            // For validate-token, allow any suffix (the token value)
+            if (openPath.equals("/api/auth/validate-token")) {
+                return path.startsWith("/api/auth/validate-token/");
+            }
+            return path.equals(openPath) || path.startsWith(openPath + "/");
+        });
     }
 }

@@ -10,6 +10,12 @@ spring:
     username: admin
     password: HRonboarding2025
     driver-class-name: com.mysql.cj.jdbc.Driver
+    hikari:
+      maximum-pool-size: 5
+      minimum-idle: 1
+      idle-timeout: 30000
+      max-lifetime: 600000
+      connection-timeout: 30000
 
   jpa:
     hibernate:
@@ -23,6 +29,7 @@ spring:
 
   profiles:
     active: dev
+
 
 # Swagger/OpenAPI
 springdoc:

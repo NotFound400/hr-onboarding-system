@@ -69,3 +69,23 @@ springdoc:
     path: /api-docs
   swagger-ui:
     path: /swagger-ui.html
+
+# Email Service URL
+email:
+  service:
+    url: ${EMAIL_SERVICE_URL:http://localhost:8085}
+
+employee:
+  service:
+    url: http://localhost:8082
+
+# Feign configuration
+spring.cloud:
+  openfeign:
+    client:
+      config:
+        email-service:
+          connect-timeout: 3000
+          read-timeout: 5000
+    circuitbreaker:
+      enabled: true

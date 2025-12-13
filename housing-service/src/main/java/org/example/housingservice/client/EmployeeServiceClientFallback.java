@@ -11,9 +11,15 @@ import java.util.List;
 public class EmployeeServiceClientFallback implements EmployeeServiceClient {
 
     @Override
-    public EmployeeInfo getEmployeeById(Long id) {
+    public EmployeeInfo getEmployeeById(String id) {  // Changed to String
         log.warn("Fallback: Unable to get employee info for id: {}", id);
-        return new EmployeeInfo(id, "Unknown", "User", null, null, null, null);
+        return new EmployeeInfo(id, null, "Unknown", "User", null, null, null, null);
+    }
+
+    @Override
+    public EmployeeInfo getEmployeeByUserId(Long userId) {
+        log.warn("Fallback: Unable to get employee info for userId: {}", userId);
+        return new EmployeeInfo(null, userId, "Unknown", "User", null, null, null, null);
     }
 
     @Override
