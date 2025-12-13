@@ -39,7 +39,7 @@ public class LandlordController {
 
         log.info("Creating landlord: {} {}", request.getFirstName(), request.getLastName());
         LandlordDTO.Response landlord = landlordService.createLandlord(request);
-        
+
         return ResponseEntity
                 .status(HttpStatus.CREATED)
                 .body(ApiResponse.success("Landlord created successfully", landlord));
@@ -80,7 +80,7 @@ public class LandlordController {
 
         log.info("Updating landlord: {}", id);
         LandlordDTO.Response landlord = landlordService.updateLandlord(id, request);
-        
+
         return ResponseEntity.ok(ApiResponse.success("Landlord updated successfully", landlord));
     }
 

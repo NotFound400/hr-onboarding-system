@@ -3,11 +3,9 @@ package org.example.housingservice.service.impl;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.example.housingservice.dto.LandlordDTO;
-import org.example.housingservice.entity.House;
 import org.example.housingservice.entity.Landlord;
 import org.example.housingservice.exception.BusinessException;
 import org.example.housingservice.exception.ResourceNotFoundException;
-import org.example.housingservice.repository.HouseRepository;
 import org.example.housingservice.repository.LandlordRepository;
 import org.example.housingservice.service.LandlordService;
 import org.springframework.stereotype.Service;
@@ -26,7 +24,6 @@ import java.util.stream.Collectors;
 public class LandlordServiceImpl implements LandlordService {
 
     private final LandlordRepository landlordRepository;
-    private final HouseRepository houseRepository;
 
     @Override
     @Transactional
@@ -100,14 +97,7 @@ public class LandlordServiceImpl implements LandlordService {
     @Transactional
     public void deleteLandlord(Long id) {
         log.info("Deleting landlord: {}", id);
-
         Landlord landlord = findLandlordById(id);
-
-        List<House> houses = houseRepository.findByLandlordId(id);
-        if (!houses.isEmpty()) {
-            throw new BusinessException("Cannot delete landlord. This landlord still has houses assigned.");
-        }
-
         landlordRepository.delete(landlord);
     }
 

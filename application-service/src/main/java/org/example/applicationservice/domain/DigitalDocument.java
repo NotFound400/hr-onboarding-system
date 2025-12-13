@@ -2,13 +2,13 @@ package org.example.applicationservice.domain;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 @Entity
 @Table(name = "digital_document")
 @Data
+@ToString(exclude = "application")
+@EqualsAndHashCode(exclude = "documents")
 @NoArgsConstructor
 @AllArgsConstructor
 public class DigitalDocument {

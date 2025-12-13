@@ -16,7 +16,7 @@ import java.util.Map;
 
 /**
  * House DTO Collection
- * 
+ *
  * Contains different response structures for HR and Employee views
  */
 public class HouseDTO {
@@ -25,10 +25,10 @@ public class HouseDTO {
 
     /**
      * Unified House Detail Response - Returns different data based on user role
-     * 
+     *
      * HR View: Full information including landlord, facilities, employee count
      * Employee View: Only address and roommate list (Name, Phone)
-     * 
+     *
      * Uses @JsonInclude to exclude null fields from JSON response
      */
     @Data
@@ -39,17 +39,17 @@ public class HouseDTO {
     public static class UnifiedDetailResponse {
         private Long id;
         private String address;
-        
+
         // HR only fields
         private Integer maxOccupant;
         private Integer numberOfEmployees;
         private LandlordDTO.Response landlord;
         private Map<String, Integer> facilitySummary;
         private List<FacilityDTO.Response> facilities;
-        
+
         // Employee only fields
         private List<ResidentInfo> roommates;
-        
+
         // Indicates which view this response represents
         private String viewType;  // "HR_VIEW" or "EMPLOYEE_VIEW"
     }
@@ -65,7 +65,7 @@ public class HouseDTO {
     public static class UnifiedListResponse {
         private Long id;
         private String address;
-        
+
         // HR only fields
         private Integer maxOccupant;
         private Integer numberOfEmployees;
@@ -73,10 +73,10 @@ public class HouseDTO {
         private String landlordFullName;
         private String landlordPhone;
         private String landlordEmail;
-        
+
         // Employee only fields - just basic info
         private List<ResidentInfo> roommates;
-        
+
         private String viewType;
     }
 
@@ -84,7 +84,7 @@ public class HouseDTO {
 
     /**
      * House List Response DTO (HR View)
-     * 
+     *
      * Contains: Address, Number of Employees, Landlord Info
      */
     @Data
@@ -96,7 +96,7 @@ public class HouseDTO {
         private String address;
         private Integer maxOccupant;
         private Integer numberOfEmployees;
-        
+
         // Landlord Info
         private Long landlordId;
         private String landlordFullName;
@@ -106,7 +106,7 @@ public class HouseDTO {
 
     /**
      * House Detail Response DTO (HR View)
-     * 
+     *
      * Contains: Basic Info, Facility Info, Facility Reports
      */
     @Data
@@ -118,13 +118,13 @@ public class HouseDTO {
         private String address;
         private Integer maxOccupant;
         private Integer numberOfEmployees;
-        
+
         // Landlord Info
         private LandlordDTO.Response landlord;
-        
+
         // Facility Summary (Number of Beds, Mattress, Tables, Chairs)
         private Map<String, Integer> facilitySummary;
-        
+
         // Facility List
         private List<FacilityDTO.Response> facilities;
 
@@ -134,7 +134,7 @@ public class HouseDTO {
 
     /**
      * Employee View House Response DTO
-     * 
+     *
      * PDF: Employees can only view house details including address and roommate list
      */
     @Data
@@ -176,7 +176,7 @@ public class HouseDTO {
     @NoArgsConstructor
     @AllArgsConstructor
     public static class ResidentInfo {
-        private Long userID;
+        private String employeeId;
         private String name;  // Preferred Name, if empty then use First Name
         private String phone;
     }

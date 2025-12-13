@@ -11,6 +11,7 @@ import org.example.housingservice.context.UserContext;
 import org.example.housingservice.dto.ApiResponse;
 import org.example.housingservice.dto.HouseDTO;
 import org.example.housingservice.entity.House;
+import org.example.housingservice.exception.ForbiddenException;
 import org.example.housingservice.service.HouseService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -22,11 +23,11 @@ import java.util.Map;
 
 /**
  * House Management Controller
- * 
+ *
  * Provides unified endpoints that return different views based on user role:
  * - HR: Full access to all houses with detailed information
  * - Employee: Limited access to their assigned house with roommate info
- * 
+ *
  * User role is extracted from X-User-Roles header set by API Gateway
  */
 @RestController
@@ -42,14 +43,14 @@ public class HouseController {
 
     /**
      * Get all houses (Unified API - returns different views based on role)
-     * 
+     *
      * HR View: All houses with Address, Number of Employees, Landlord Info
      * Employee View: Only their assigned house with Address and Roommate list
      */
     @GetMapping
     @Operation(
-        summary = "Get all houses (role-based)",
-        description = "Returns different data based on user role. HR sees all houses with full info. Employee sees only their assigned house."
+            summary = "Get all houses (role-based)",
+            description = "Returns different data based on user role. HR sees all houses with full info. Employee sees only their assigned house."
     )
     public ResponseEntity<ApiResponse<List<HouseDTO.UnifiedListResponse>>> getAllHouses(
             @Parameter(hidden = true) @RequestHeader(value = "X-User-Id", required = false) Long userId,
@@ -57,7 +58,7 @@ public class HouseController {
             @Parameter(hidden = true) @RequestHeader(value = "X-User-Roles", required = false) String roles,
             @Parameter(hidden = true) @RequestHeader(value = "X-House-Id", required = false) Long houseId) {
 
-        UserContext userContext = UserContext.fromHeaders(userId, username, roles, houseId);
+        UserContext userContext = buildUserContext(userId, username, roles, houseId);
         log.info("Getting all houses for user: {}, roles: {}, houseId from JWT: {}", userId, roles, houseId);
 
         List<HouseDTO.UnifiedListResponse> houses = houseService.getAllHouses(userContext);
@@ -66,14 +67,14 @@ public class HouseController {
 
     /**
      * Get house detail by ID (Unified API - returns different views based on role)
-     * 
+     *
      * HR View: Full house info + landlord + facilities + employee count
      * Employee View: Address + Roommate list (must be assigned to this house)
      */
     @GetMapping("/{id}")
     @Operation(
-        summary = "Get house detail (role-based)",
-        description = "Returns different data based on user role. HR sees full info. Employee sees address and roommates (only for their assigned house)."
+            summary = "Get house detail (role-based)",
+            description = "Returns different data based on user role. HR sees full info. Employee sees address and roommates (only for their assigned house)."
     )
     public ResponseEntity<ApiResponse<HouseDTO.UnifiedDetailResponse>> getHouseDetail(
             @PathVariable Long id,
@@ -82,7 +83,7 @@ public class HouseController {
             @Parameter(hidden = true) @RequestHeader(value = "X-User-Roles", required = false) String roles,
             @Parameter(hidden = true) @RequestHeader(value = "X-House-Id", required = false) Long houseId) {
 
-        UserContext userContext = UserContext.fromHeaders(userId, username, roles, houseId);
+        UserContext userContext = buildUserContext(userId, username, roles, houseId);
         log.info("Getting house detail for id: {}, user: {}, roles: {}, houseId from JWT: {}", id, userId, roles, houseId);
 
         HouseDTO.UnifiedDetailResponse house = houseService.getHouseDetail(id, userContext);
@@ -99,11 +100,16 @@ public class HouseController {
     public ResponseEntity<ApiResponse<HouseDTO.DetailResponse>> createHouse(
             @Valid @RequestBody HouseDTO.CreateRequest request,
             @Parameter(hidden = true) @RequestHeader(value = "X-User-Roles", required = false) String roles) {
-        
+
+        // ADD THIS CHECK:
+        if (roles == null || !roles.toUpperCase().contains("HR")) {
+            throw new ForbiddenException("Only HR can create houses");
+        }
+
         // Note: Role validation should ideally be done in a security filter or aspect
         log.info("Creating house at address: {}, roles: {}", request.getAddress(), roles);
         HouseDTO.DetailResponse house = houseService.createHouse(request);
-        
+
         return ResponseEntity
                 .status(HttpStatus.CREATED)
                 .body(ApiResponse.success("House created successfully", house));
@@ -118,10 +124,14 @@ public class HouseController {
             @PathVariable Long id,
             @Valid @RequestBody HouseDTO.UpdateRequest request,
             @Parameter(hidden = true) @RequestHeader(value = "X-User-Roles", required = false) String roles) {
-        
+
+        if (roles == null || !roles.toUpperCase().contains("HR")) {
+            throw new ForbiddenException("Only HR can create houses");
+        }
+
         log.info("Updating house: {}, roles: {}", id, roles);
         HouseDTO.DetailResponse house = houseService.updateHouse(id, request);
-        
+
         return ResponseEntity.ok(ApiResponse.success("House updated successfully", house));
     }
 
@@ -133,7 +143,11 @@ public class HouseController {
     public ResponseEntity<ApiResponse<Void>> deleteHouse(
             @PathVariable Long id,
             @Parameter(hidden = true) @RequestHeader(value = "X-User-Roles", required = false) String roles) {
-        
+
+        if (roles == null || !roles.toUpperCase().contains("HR")) {
+            throw new ForbiddenException("Only HR can create houses");
+        }
+
         log.info("Deleting house: {}, roles: {}", id, roles);
         houseService.deleteHouse(id);
         return ResponseEntity.ok(ApiResponse.success("House deleted successfully"));
@@ -141,7 +155,7 @@ public class HouseController {
 
     /**
      * Get all houses for HR (explicit HR endpoint)
-     * 
+     *
      * PDF: HR should be able to view all houses with:
      * Address, Number of Employees, Landlord Info (Full Name, Phone, Email)
      */
@@ -154,7 +168,7 @@ public class HouseController {
 
     /**
      * Get house detail for HR (explicit HR endpoint)
-     * 
+     *
      * PDF: HR can view house details:
      * - Basic House Information (Address, Landlord, Phone, Email, Number of People)
      * - Facility Information (Number of Beds, Mattress, Tables, Chairs)
@@ -170,26 +184,26 @@ public class HouseController {
 
     /**
      * Get my assigned house (Employee)
-     * 
+     *
      * PDF: The employee will be assigned to a house when their registration token has been generated.
      * Employees can only view the details about the house.
-     * 
+     *
      * Returns: Address, List of employees who live in the house (Name, Phone)
      */
     @GetMapping("/my-house")
     @Operation(summary = "Get my assigned house (Employee)", description = "Employee gets their assigned house with roommate info")
     public ResponseEntity<ApiResponse<HouseDTO.EmployeeViewResponse>> getMyHouse(
             @Parameter(hidden = true) @RequestHeader(value = "X-User-Id", required = false) Long userId) {
-        
+
         Long employeeId = userId != null ? userId : 1L;
         log.info("Getting house for employee: {}", employeeId);
-        
+
         HouseDTO.EmployeeViewResponse house = houseService.getMyHouse(employeeId);
-        
+
         if (house == null) {
             return ResponseEntity.ok(ApiResponse.success("You are not assigned to any house", null));
         }
-        
+
         return ResponseEntity.ok(ApiResponse.success(house));
     }
 
@@ -206,7 +220,7 @@ public class HouseController {
             @Parameter(hidden = true) @RequestHeader(value = "X-User-Roles", required = false) String roles,
             @Parameter(hidden = true) @RequestHeader(value = "X-House-Id", required = false) Long houseId) {
 
-            UserContext userContext = UserContext.fromHeaders(userId, username, roles, houseId);
+        UserContext userContext = UserContext.fromHeaders(userId, username, roles, houseId);
 
         Long employeeId = userId != null ? userId : 1L;
         HouseDTO.EmployeeViewResponse house = houseService.getHouseForEmployee(id, userContext);
@@ -249,10 +263,9 @@ public class HouseController {
      * If headers are missing, creates a default user context for testing
      */
     private UserContext buildUserContext(Long userId, String username, String roles, Long houseId) {
-        if (userId == null && roles == null) {
-            // For testing without Gateway - default to HR
-            log.warn("No user context headers found, using default HR user for testing");
-            return UserContext.hrUser(1L);
+        if (userId == null || roles == null || roles.isEmpty()) {
+            log.error("Missing user context headers - userId: {}, roles: {}", userId, roles);
+            throw new ForbiddenException("Authorization required - please provide valid authentication");
         }
         return UserContext.fromHeaders(userId, username, roles, houseId);
     }

@@ -56,7 +56,7 @@ public class SecurityConfig {
                         // HR-only endpoints
                         .requestMatchers(HttpMethod.POST, "/api/auth/registration-token").hasRole("HR")
                         // Authenticated endpoints
-                        .requestMatchers("/api/auth/profile", "/api/auth/logout").authenticated()
+                        .requestMatchers("/api/auth/profile", "/api/auth/logout", "/api/auth/refresh").authenticated()
                         // Everything else requires authentication
                         .anyRequest().authenticated()
                 )

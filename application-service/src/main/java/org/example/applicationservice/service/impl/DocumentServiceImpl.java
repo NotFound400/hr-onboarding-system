@@ -1,5 +1,6 @@
 package org.example.applicationservice.service.impl;
 
+import jakarta.transaction.Transactional;
 import org.example.applicationservice.service.DocumentService;
 import org.example.applicationservice.utils.*;
 import org.example.applicationservice.dao.ApplicationWorkFlowRepository;
@@ -48,8 +49,7 @@ public class DocumentServiceImpl implements DocumentService {
 
     @Override
     public Result<List<DigitalDocumentDTO>> getDocumentsByApplication(Long applicationId) {
-//        List<DigitalDocument> documents = repository.findByApplicationId(applicationId);
-        List<DigitalDocument> documents = repository.findByApplicationIdAndIdGreaterThan(applicationId, 3L);
+        List<DigitalDocument> documents = repository.findByApplicationId(applicationId);
 
         List<DigitalDocumentDTO> dtos = documents.stream()
                 .map(doc -> new DigitalDocumentDTO(
@@ -68,8 +68,7 @@ public class DocumentServiceImpl implements DocumentService {
 
     @Override
     public Result<List<DigitalDocumentDTO>> getDocumentsByEmployee(String employeeID) {
-//        List<DigitalDocument> documents = repository.findByApplicationEmployeeId(employeeID);
-        List<DigitalDocument> documents = repository.findByApplicationEmployeeIdAndIdGreaterThan(employeeID, 3L);
+        List<DigitalDocument> documents = repository.findByApplicationEmployeeId(employeeID);
 
         List<DigitalDocumentDTO> dtos = documents.stream()
                 .map(doc -> new DigitalDocumentDTO(
@@ -88,8 +87,7 @@ public class DocumentServiceImpl implements DocumentService {
 
     @Override
     public Result<List<DigitalDocumentDTO>> getDocumentsByType(String type) {
-//        List<DigitalDocument> documents = repository.findByType(type);
-        List<DigitalDocument> documents = repository.findByTypeAndIdGreaterThan(type, 3L);
+        List<DigitalDocument> documents = repository.findByType(type);
 
         List<DigitalDocumentDTO> dtos = documents.stream()
                 .map(doc -> new DigitalDocumentDTO(
@@ -108,7 +106,7 @@ public class DocumentServiceImpl implements DocumentService {
 
     @Override
     public Result<List<DigitalDocumentDTO>> getRequiredDocuments() {
-        List<DigitalDocument> documents = repository.findTop3ByOrderByIdAsc();
+        List<DigitalDocument> documents = repository.findByIsRequiredTrue();
 
         List<DigitalDocumentDTO> dtos = documents.stream()
                 .map(doc -> new DigitalDocumentDTO(
@@ -182,7 +180,7 @@ public class DocumentServiceImpl implements DocumentService {
         if (type == null || type.trim().isEmpty()) return false;
         String t = type.trim().toLowerCase();
         Set<String> requiredExact = Set.of(
-//                "passport",
+                "passport",
                 "driver license",
                 "driver's license",
                 "i-20 form",
@@ -201,10 +199,7 @@ public class DocumentServiceImpl implements DocumentService {
         // 1. Fetch document entity
         DigitalDocument doc = repository.findById(documentId)
                 .orElseThrow(() -> new EntityNotFoundException("Document not found with id: " + documentId));
-        if (doc.getId() <= 3L) {
-            throw new EntityNotFoundException("Cannot fetch template document with id: " + documentId);
-        }
-        //        ownershipValidator.checkOwnership(doc.getApplication().getEmployeeId());
+//        ownershipValidator.checkOwnership(doc.getApplication().getEmployeeId());
 
         // 2. Extract S3 key from URL (assuming you stored full S3 URL in doc.getPath())
         String s3Url = doc.getPath();
@@ -219,37 +214,50 @@ public class DocumentServiceImpl implements DocumentService {
     }
 
     public DigitalDocument getDocumentEntityById(Long id) {
-        DigitalDocument doc = repository.findById(id)
+        return repository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Document not found with id: " + id));
-
-        if (doc.getId() <= 3L) {
-            throw new EntityNotFoundException("Cannot fetch template document with id: " + id);
-        }
-        return doc;
     }
 
     @Override
+    @Transactional
     public void deleteDocumentById(Long documentId) {
 
         // 1. Fetch entity
         DigitalDocument doc = repository.findById(documentId)
                 .orElseThrow(() -> new EntityNotFoundException("Document not found with id: " + documentId));
-        if (doc.getId() <= 3L) {
-            throw new EntityNotFoundException("Cannot find document with id: " + documentId);
-        }
-        //        ownershipValidator.checkOwnership(doc.getApplication().getEmployeeId());
+//        ownershipValidator.checkOwnership(doc.getApplication().getEmployeeId());
 
         // 2. Extract S3 key
+//        String s3Url = doc.getPath();
+//        String key = s3Url.substring(s3Url.indexOf(".com/") + 5);
+
+        // 3. Check application status - only allow deletion when Open or Rejected
+        ApplicationWorkFlow application = doc.getApplication();
+        if (application == null) {
+            throw new EntityNotFoundException("Application not found for document: " + documentId);
+        }
+
+        System.out.println("Application: " + application);
+        System.out.println("Application ID: " + (application != null ? application.getId() : "null"));
+        System.out.println("Application Status: " + (application != null ? application.getStatus() : "null"));
+
+        ApplicationStatus status = application.getStatus();
+        if (!(status == ApplicationStatus.Open || status == ApplicationStatus.Rejected)) {
+            throw new IllegalStateException(
+                    "Cannot delete document. Application status must be 'Open' or 'Rejected', but was: " + status);
+        }
+
+        // 4. Extract S3 key
         String s3Url = doc.getPath();
         String key = s3Url.substring(s3Url.indexOf(".com/") + 5);
 
-        // 3. Delete from S3
+        // 5. Delete from S3
         s3Client.deleteObject(DeleteObjectRequest.builder()
                 .bucket(bucketName)
                 .key(key)
                 .build());
 
-        // 4. Delete entity from DB
+        // 6. Delete entity from DB
         repository.delete(doc);
     }
 
@@ -259,9 +267,6 @@ public class DocumentServiceImpl implements DocumentService {
         // 1. Find existing document
         DigitalDocument doc = repository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Document not found: " + id));
-        if (doc.getId() <= 3L) {
-            throw new EntityNotFoundException("Cannot find document");
-        }
 //        ownershipValidator.checkOwnership(doc.getApplication().getEmployeeId());
 
         // 2. Extract S3 key from existing path

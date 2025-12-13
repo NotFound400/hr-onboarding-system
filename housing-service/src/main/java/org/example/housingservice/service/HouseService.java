@@ -10,7 +10,7 @@ import java.util.Map;
 
 /**
  * House Service Interface
- * 
+ *
  * Provides role-based access to house information:
  * - HR: Full access to all houses with detailed information
  * - Employee: Limited access to their assigned house with roommate info
@@ -21,11 +21,11 @@ public interface HouseService {
 
     /**
      * Get house detail based on user role (Unified API)
-     * 
+     *
      * Same endpoint returns different views:
      * - HR: Full house info + landlord + facilities
      * - Employee: Address + roommate list (must be assigned to this house)
-     * 
+     *
      * @param houseId House ID
      * @param userContext User context containing userId and roles
      * @return UnifiedDetailResponse with role-appropriate data
@@ -34,10 +34,10 @@ public interface HouseService {
 
     /**
      * Get all houses list based on user role (Unified API)
-     * 
+     *
      * - HR: All houses with landlord info and employee count
      * - Employee: Only their assigned house with roommate info
-     * 
+     *
      * @param userContext User context containing userId and roles
      * @return List of houses with role-appropriate data
      */
@@ -52,7 +52,7 @@ public interface HouseService {
 
     /**
      * Get house detail for HR
-     * 
+     *
      * PDF: HR can view house details:
      * - Basic House Information (Address, Landlord, Phone, Email, Number of People)
      * - Facility Information (Number of Beds, Mattress, Tables, Chairs)
@@ -61,7 +61,7 @@ public interface HouseService {
 
     /**
      * Get all houses list for HR
-     * 
+     *
      * PDF: HR should be able to view all houses with:
      * Address, Number of Employees, Landlord Info
      */
@@ -81,12 +81,12 @@ public interface HouseService {
 
     /**
      * Get house detail for Employee
-     * 
+     *
      * PDF: The employee will be assigned to a house when their registration token has been generated.
      * Employees can only view the details about the house, but can not change the house assigned to them.
-     * 
+     *
      * Contains: Address, List of employees who live in the house (Name, Phone)
-     * 
+     *
      * @param houseId House ID
      * @param userContext UserContext
      * @return Employee view response
@@ -99,7 +99,7 @@ public interface HouseService {
     List<EmployeeServiceClient.EmployeeInfo> getEmployeesByHouseId(Long houseId);
     /**
      * Get employee's assigned house
-     * 
+     *
      * @param employeeId Employee ID
      * @return Employee's house info, or null if not assigned
      */
