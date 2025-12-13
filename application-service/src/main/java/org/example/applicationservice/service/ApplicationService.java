@@ -21,4 +21,5 @@ public interface ApplicationService {
     Result<List<ApplicationFlowDTO>> getApplicationsByEmployeeId(String employeeID);
     Result<List<ApplicationFlowDTO>> getApplicationsByStatus(ApplicationStatus status);
     Result<Void> deleteApplication(Long applicationId);
+    Result<List<ApplicationFlowDTO>> getApplicationsByUserId(Long userId);
 }
