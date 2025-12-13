@@ -15,7 +15,7 @@ import java.util.List;
 @Tag(name = "Application Work Flow API",
         description = "APIs for creating, updating, submitting, and retrieving onboarding applications")
 @RestController
-@RequestMapping()
+@RequestMapping("/applications")
 public class ApplicationFlowController {
     private final ApplicationService applicationService;
 

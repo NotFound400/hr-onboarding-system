@@ -1,11 +1,10 @@
-
 package org.example.applicationservice.config;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
-import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
@@ -19,6 +18,7 @@ import org.springframework.security.oauth2.jwt.NimbusJwtDecoder;
 import org.springframework.security.oauth2.jose.jws.MacAlgorithm;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationConverter;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
 import javax.crypto.spec.SecretKeySpec;
 import java.nio.charset.StandardCharsets;
@@ -38,13 +38,19 @@ public class SecurityConfig {
     @Value("${security.jwt.algorithm:HS256}")
     private String hmacAlgorithmName;
 
+    @Autowired
+    private HeaderAuthenticationFilter headerAuthFilter;
+
     @Bean
     SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
                 .csrf(csrf -> csrf.disable())
                 .sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
+                        // Health check
                         .requestMatchers(HttpMethod.GET, "/actuator/health").permitAll()
+                        
+                        // Swagger/OpenAPI
                         .requestMatchers(
                                 "/swagger-ui/**",
                                 "/swagger-ui.html",
@@ -54,15 +60,28 @@ public class SecurityConfig {
                                 "/swagger-resources/**",
                                 "/webjars/**"
                         ).permitAll()
-                        // everything else requires a valid token; fine if you rely on @PreAuthorize
+                        
+                        // Everything else requires authentication
                         .anyRequest().authenticated()
                 )
+                // Add header authentication filter BEFORE JWT authentication
+                .addFilterBefore(headerAuthFilter, UsernamePasswordAuthenticationFilter.class)
+                // Configure JWT as fallback authentication
                 .oauth2ResourceServer(oauth2 -> oauth2
                         .jwt(jwt -> {
                             jwt.decoder(jwtDecoder());
                             jwt.jwtAuthenticationConverter(jwtAuthenticationConverter());
                         })
-                        .authenticationEntryPoint((req, res, ex) -> res.sendError(401, "Unauthorized"))
+                        .authenticationEntryPoint((req, res, ex) -> {
+                            // Check if already authenticated by header filter
+                            if (org.springframework.security.core.context.SecurityContextHolder
+                                    .getContext().getAuthentication() != null &&
+                                org.springframework.security.core.context.SecurityContextHolder
+                                    .getContext().getAuthentication().isAuthenticated()) {
+                                return;
+                            }
+                            res.sendError(401, "Unauthorized");
+                        })
                         .accessDeniedHandler((req, res, ex) -> res.sendError(403, "Forbidden"))
                 );
 
@@ -80,7 +99,7 @@ public class SecurityConfig {
                 .macAlgorithm(macAlg)
                 .build();
 
-        // Timestamp validation only; issuer/audience intentionally not validated
+        // Timestamp validation only
         OAuth2TokenValidator<Jwt> timestamps = new JwtTimestampValidator(Duration.ofSeconds(60));
         decoder.setJwtValidator(timestamps);
         return decoder;
@@ -104,8 +123,7 @@ public class SecurityConfig {
     }
 
     @Bean
-    JwtAuthenticationConverter jwtAuthenticationConverter() { //JWT as array "roles": ["HR", "ADMIN"]
-        // Convert `roles` claim (e.g., ["USER","ADMIN"]) to ROLE_* authorities
+    JwtAuthenticationConverter jwtAuthenticationConverter() {
         JwtAuthenticationConverter converter = new JwtAuthenticationConverter();
         converter.setJwtGrantedAuthoritiesConverter(jwt -> {
             Collection<GrantedAuthority> authorities = new ArrayList<>();
@@ -117,20 +135,4 @@ public class SecurityConfig {
         });
         return converter;
     }
-
-//    converter.setJwtGrantedAuthoritiesConverter(jwt -> { //JWT (or header) has roles as a string "HR,ADMIN":
-//        Collection<GrantedAuthority> authorities = new ArrayList<>();
-//
-//        String rolesString = jwt.getClaimAsString("roles");
-//        if (rolesString != null && !rolesString.isEmpty()) {
-//            Arrays.stream(rolesString.split(","))
-//                    .map(String::trim)
-//                    .map(r -> new SimpleGrantedAuthority("ROLE_" + r))
-//                    .forEach(authorities::add);
-//        }
-//
-//        return authorities;
-//    });
-
-
 }

@@ -1,9 +1,11 @@
-package org.example.employeeservice.config;
+package org.example.applicationservice.config;
 
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import org.springframework.core.Ordered;
+import org.springframework.core.annotation.Order;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -16,14 +18,17 @@ import java.util.stream.Collectors;
 
 /**
  * Filter to authenticate requests based on headers set by API Gateway
+ * This runs BEFORE JWT authentication and takes precedence if gateway headers are present
+ * 
  * Headers expected:
  * - X-User-Id: The authenticated user's ID
  * - X-Username: The authenticated user's username
- * - X-User-Roles: Comma-separated list of roles (e.g., "HR,EMPLOYEE")
+ * - X-User-Roles: Comma-separated list of roles (e.g., "HR,Employee")
  * - X-Gateway-Request: Indicates request came through gateway
  * - X-House-Id: The user's assigned house ID (if applicable)
  */
 @Component
+@Order(Ordered.HIGHEST_PRECEDENCE)
 public class HeaderAuthenticationFilter extends OncePerRequestFilter {
 
     public static final String HEADER_USER_ID = "X-User-Id";
@@ -38,13 +43,13 @@ public class HeaderAuthenticationFilter extends OncePerRequestFilter {
                                     FilterChain filterChain)
             throws ServletException, IOException {
 
+        String gatewayRequest = request.getHeader(HEADER_GATEWAY_REQUEST);
         String userId = request.getHeader(HEADER_USER_ID);
         String username = request.getHeader(HEADER_USERNAME);
         String rolesHeader = request.getHeader(HEADER_USER_ROLES);
-        String gatewayRequest = request.getHeader(HEADER_GATEWAY_REQUEST);
         String houseId = request.getHeader(HEADER_HOUSE_ID);
 
-        // Only authenticate if this is a gateway request with valid headers
+        // Only authenticate via headers if this is a gateway request
         if (gatewayRequest != null && userId != null) {
             
             // Parse roles
@@ -52,15 +57,15 @@ public class HeaderAuthenticationFilter extends OncePerRequestFilter {
 
             // Create authentication details map
             Map<String, Object> details = new HashMap<>();
-            details.put("userId", userId);
+            details.put("userId", Long.parseLong(userId));
             details.put("username", username);
             details.put("houseId", houseId);
             details.put("gatewayRequest", true);
 
             // Create authentication token
             UsernamePasswordAuthenticationToken auth = new UsernamePasswordAuthenticationToken(
-                    userId,      // principal - using userId as the principal
-                    null,        // credentials - not needed
+                    userId,      // principal
+                    null,        // credentials
                     authorities  // authorities/roles
             );
             auth.setDetails(details);
@@ -73,7 +78,7 @@ public class HeaderAuthenticationFilter extends OncePerRequestFilter {
 
     /**
      * Parse roles header into list of authorities
-     * Expected format: "HR,EMPLOYEE,ADMIN" or "HR, EMPLOYEE, ADMIN"
+     * Expected format: "HR,Employee,ADMIN" or "HR, Employee, ADMIN"
      */
     private List<SimpleGrantedAuthority> parseRoles(String rolesHeader) {
         if (rolesHeader == null || rolesHeader.isBlank()) {
@@ -84,8 +89,8 @@ public class HeaderAuthenticationFilter extends OncePerRequestFilter {
                 .map(String::trim)
                 .filter(s -> !s.isEmpty())
                 .map(role -> {
-                    // Normalize role name and add ROLE_ prefix
-                    String normalizedRole = role.toUpperCase();
+                    // Normalize role name and add ROLE_ prefix if needed
+                    String normalizedRole = role;
                     if (!normalizedRole.startsWith("ROLE_")) {
                         normalizedRole = "ROLE_" + normalizedRole;
                     }

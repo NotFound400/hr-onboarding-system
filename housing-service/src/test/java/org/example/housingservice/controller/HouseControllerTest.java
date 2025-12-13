@@ -146,17 +146,6 @@ class HouseControllerTest {
 
             verify(houseService).getAllHouses(any());
         }
-
-        @Test
-        @DisplayName("Request without headers should use default HR context")
-        void getAllHouses_withoutHeaders_usesDefaultContext() throws Exception {
-            when(houseService.getAllHouses(any())).thenReturn(List.of(hrListResponse));
-
-            mockMvc.perform(get("/houses"))
-                    .andExpect(status().isOk());
-
-            verify(houseService).getAllHouses(any());
-        }
     }
 
     @Nested

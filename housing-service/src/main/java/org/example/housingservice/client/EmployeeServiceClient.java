@@ -15,11 +15,8 @@ import java.util.List;
 )
 public interface EmployeeServiceClient {
 
-    @GetMapping("/employees/{id}")
-    EmployeeInfo getEmployeeById(@PathVariable("id") String id);  // Changed to String
-
     @GetMapping("/employees/user/{userId}")
-    EmployeeInfo getEmployeeByUserId(@PathVariable("userId") Long userId);
+    EmployeeInfo getEmployeeByUserID(@PathVariable("userId") Long userId);
 
     @GetMapping("/employees/house/{houseId}")
     List<EmployeeInfo> getEmployeesByHouseId(@PathVariable("houseId") Long houseId);
@@ -31,7 +28,7 @@ public interface EmployeeServiceClient {
     List<EmployeeInfo> getEmployeesByIds(@RequestParam("ids") List<Long> ids);
 
     record EmployeeInfo(
-            String id,                              // MongoDB ObjectId is String, not Long
+            Long userID,                             // MongoDB ObjectId is String, not Long
             String firstName,
             String lastName,
             String preferredName,
