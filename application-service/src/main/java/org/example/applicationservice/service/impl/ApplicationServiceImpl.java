@@ -1,5 +1,6 @@
 package org.example.applicationservice.service.impl;
 
+import org.example.applicationservice.client.EmployeeServiceClient;
 import org.example.applicationservice.service.ApplicationService;
 import org.example.applicationservice.utils.*;
 import org.example.applicationservice.client.EmailServiceClient;
@@ -8,6 +9,7 @@ import org.example.applicationservice.domain.ApplicationWorkFlow;
 import org.example.applicationservice.dto.*;
 import org.example.applicationservice.utils.OwnershipValidator;
 import org.example.applicationservice.utils.SecurityUtils;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDateTime;
@@ -20,11 +22,12 @@ import java.util.stream.Collectors;
 public class ApplicationServiceImpl implements ApplicationService {
     private final ApplicationWorkFlowRepository repository;
     private final EmailServiceClient emailServiceClient;
+    @Autowired
+    private EmployeeServiceClient employeeServiceClient;
     private final OwnershipValidator ownershipValidator;
 
     public ApplicationServiceImpl(ApplicationWorkFlowRepository repository,
                                   EmailServiceClient emailServiceClient,
-                                  SecurityUtils securityUtils,
                                   OwnershipValidator ownershipValidator) {
         this.repository = repository;
         this.emailServiceClient = emailServiceClient;
@@ -358,6 +361,26 @@ public class ApplicationServiceImpl implements ApplicationService {
     }
 
     @Override
+    public Result<List<ApplicationFlowDTO>> getApplicationsByUserId(Long userId) {
+        String employeeId = employeeServiceClient.getEmployeeIdByUserId(userId);
+        List<ApplicationWorkFlow> applications = repository.findByEmployeeIdOrderByCreateDateDesc(employeeId);
+
+        List<ApplicationFlowDTO> dtos = applications.stream()
+                .map(app -> new ApplicationFlowDTO(
+                        app.getId(),
+                        app.getEmployeeId(),
+                        app.getCreateDate(),
+                        app.getLastModificationDate(),
+                        app.getStatus(),
+                        app.getComment(),
+                        app.getApplicationType()
+                ))
+                .collect(Collectors.toList());
+
+        return Result.success(dtos);
+    }
+
+    @Override
     public Result<List<ApplicationFlowDTO>> getApplicationsByStatus(ApplicationStatus status) {
         List<ApplicationWorkFlow> applications = repository.findByStatusOrderByCreateDateDesc(status);
 
@@ -390,6 +413,8 @@ public class ApplicationServiceImpl implements ApplicationService {
                 })
                 .orElse(Result.fail("Application not found with id: " + applicationId));
     }
+
+
 
 
 }

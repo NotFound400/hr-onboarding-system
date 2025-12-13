@@ -77,6 +77,11 @@ public class ApplicationFlowController {
         return ResponseEntity.ok(result);
     }
 
+    public ResponseEntity<Result<List<ApplicationFlowDTO>>> getApplicationsByUserId(@PathVariable Long userId) {
+        Result<List<ApplicationFlowDTO>> result = applicationService.getApplicationsByUserId(userId);
+        return ResponseEntity.ok(result);
+    }
+
     @Operation(summary = "Update application",
             description = "Employee updates their existing application before submission")
     @PreAuthorize("hasRole('Employee')")
