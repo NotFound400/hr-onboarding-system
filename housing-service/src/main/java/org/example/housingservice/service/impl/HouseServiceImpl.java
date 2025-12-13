@@ -27,7 +27,7 @@ import java.util.stream.Collectors;
 
 /**
  * House Service Implementation
- * 
+ *
  * Provides role-based access to house information
  */
 @Service
@@ -162,7 +162,7 @@ public class HouseServiceImpl implements HouseService {
         log.debug("Getting all houses for HR");
 
         List<House> houses = houseRepository.findAllWithLandlord();
-        
+
         return houses.stream()
                 .map(house -> {
                     Integer employeeCount = employeeServiceClient.countEmployeesByHouseId(house.getId());
@@ -197,7 +197,7 @@ public class HouseServiceImpl implements HouseService {
 
         if (request.getAddress() != null) {
             // Check if new address is used by another house
-            if (!house.getAddress().equals(request.getAddress()) 
+            if (!house.getAddress().equals(request.getAddress())
                     && houseRepository.existsByAddress(request.getAddress())) {
                 throw new BusinessException("Address already in use: " + request.getAddress());
             }
@@ -276,13 +276,15 @@ public class HouseServiceImpl implements HouseService {
     }
 
     @Override
-    public HouseDTO.EmployeeViewResponse getMyHouse(Long employeeId) {
-        log.debug("Getting house for employee: {}", employeeId);
+    public HouseDTO.EmployeeViewResponse getMyHouse(Long userId) {
+        log.debug("Getting house for userId: {}", userId);
 
-        // Get employee's house ID from EmployeeService
-        Long houseId = getEmployeeHouseId(employeeId);
+        // Get employee by Auth User ID
+        EmployeeServiceClient.EmployeeInfo employee = employeeServiceClient.getEmployeeByUserId(userId);
+
+        Long houseId = employee != null ? employee.houseId() : null;
         if (houseId == null) {
-            log.warn("Employee {} is not assigned to any house", employeeId);
+            log.warn("User {} is not assigned to any house", userId);
             return null;
         }
 
@@ -347,12 +349,13 @@ public class HouseServiceImpl implements HouseService {
     /**
      * Get employee's assigned house ID from EmployeeService
      */
-    private Long getEmployeeHouseId(Long employeeId) {
+    private Long getEmployeeHouseId(Long userId) {
         try {
-            EmployeeServiceClient.EmployeeInfo employee = employeeServiceClient.getEmployeeById(employeeId);
+            EmployeeServiceClient.EmployeeInfo employee =
+                    employeeServiceClient.getEmployeeByUserId(userId);  // Use getEmployeeByUserId
             return employee != null ? employee.houseId() : null;
         } catch (Exception e) {
-            log.warn("Failed to get employee info for id: {}", employeeId, e);
+            log.warn("Failed to get employee info for userId: {}", userId, e);
             return null;
         }
     }
@@ -361,7 +364,7 @@ public class HouseServiceImpl implements HouseService {
      * Get roommate list for a house
      */
     private List<HouseDTO.ResidentInfo> getRoommates(Long houseId) {
-        List<EmployeeServiceClient.EmployeeInfo> employees = 
+        List<EmployeeServiceClient.EmployeeInfo> employees =
                 employeeServiceClient.getEmployeesByHouseId(houseId);
 
         return employees.stream()
@@ -385,8 +388,8 @@ public class HouseServiceImpl implements HouseService {
 
         if (house.getFacilities() != null) {
             for (Facility facility : house.getFacilities()) {
-                facilitySummary.merge(facility.getType(), 
-                        facility.getQuantity() != null ? facility.getQuantity() : 0, 
+                facilitySummary.merge(facility.getType(),
+                        facility.getQuantity() != null ? facility.getQuantity() : 0,
                         Integer::sum);
 
                 facilityResponses.add(FacilityDTO.Response.builder()
@@ -509,7 +512,7 @@ public class HouseServiceImpl implements HouseService {
      */
     private HouseDTO.ListResponse mapToListResponse(House house, Integer employeeCount) {
         Landlord landlord = house.getLandlord();
-        
+
         return HouseDTO.ListResponse.builder()
                 .id(house.getId())
                 .address(house.getAddress())

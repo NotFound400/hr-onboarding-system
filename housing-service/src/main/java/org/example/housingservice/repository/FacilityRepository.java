@@ -34,8 +34,8 @@ public interface FacilityRepository extends JpaRepository<Facility, Long> {
      * Returnformat: [type, totalQuantity]
      */
     @Query("SELECT f.type, SUM(f.quantity) FROM Facility f " +
-           "WHERE f.house.id = :houseId " +
-           "GROUP BY f.type")
+            "WHERE f.house.id = :houseId " +
+            "GROUP BY f.type")
     List<Object[]> getFacilitySummaryByHouseId(@Param("houseId") Long houseId);
 
     /**

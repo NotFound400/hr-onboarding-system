@@ -19,7 +19,7 @@ public class FacilityReportDTO {
 
     /**
      * Report List Item DTO
-     * 
+     *
      * For list display: Title + Date + Status
      * PDF: Each page should only display 3-5 reports, sorted by created date
      */
@@ -37,7 +37,7 @@ public class FacilityReportDTO {
 
     /**
      * Report Detail Response DTO
-     * 
+     *
      * PDF Requirements:
      * - Title
      * - Description
@@ -56,24 +56,24 @@ public class FacilityReportDTO {
         private String facilityType;
         private Long houseId;
         private String houseAddress;
-        
+
         private String title;
         private String description;
-        
+
         private Long employeeId;       // Reporter ID
         private String createdBy;      // Reporter name (from EmployeeService)
-        
+
         private LocalDateTime createDate;
         private FacilityReportStatus status;
         private String statusDisplayName;
-        
+
         // Comment list
         private List<FacilityReportDetailDTO.Response> comments;
     }
 
     /**
      * Create Report Request DTO
-     * 
+     *
      * Employee creates facility issue report
      */
     @Data
@@ -81,7 +81,7 @@ public class FacilityReportDTO {
     @NoArgsConstructor
     @AllArgsConstructor
     public static class CreateRequest {
-        
+
         @NotNull(message = "Facility ID is required")
         private Long facilityId;
 
@@ -91,7 +91,7 @@ public class FacilityReportDTO {
 
         @Size(max = 2000, message = "Description cannot exceed 2000 characters")
         private String description;
-        
+
         // employeeId is obtained from X-User-Id request header
     }
 
@@ -103,7 +103,7 @@ public class FacilityReportDTO {
     @NoArgsConstructor
     @AllArgsConstructor
     public static class UpdateRequest {
-        
+
         @Size(max = 200, message = "Title cannot exceed 200 characters")
         private String title;
 
@@ -113,7 +113,7 @@ public class FacilityReportDTO {
 
     /**
      * Update Report Status Request DTO
-     * 
+     *
      * HR can update report status
      */
     @Data
@@ -121,14 +121,14 @@ public class FacilityReportDTO {
     @NoArgsConstructor
     @AllArgsConstructor
     public static class UpdateStatusRequest {
-        
+
         @NotNull(message = "Status is required")
         private FacilityReportStatus status;
     }
 
     /**
      * Employee View Report Response
-     * 
+     *
      * PDF: Employees should be able to report a facility issue in the house,
      * and see all comments by employees or HR
      */
@@ -144,7 +144,7 @@ public class FacilityReportDTO {
         private LocalDateTime createDate;
         private FacilityReportStatus status;
         private String statusDisplayName;
-        
+
         // All comments (both employee and HR comments)
         private List<FacilityReportDetailDTO.Response> comments;
     }

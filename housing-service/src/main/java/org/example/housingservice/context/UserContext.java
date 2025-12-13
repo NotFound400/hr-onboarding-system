@@ -11,7 +11,7 @@ import java.util.List;
 
 /**
  * User Context - Encapsulates user information from API Gateway headers
- * 
+ *
  * API Gateway extracts JWT claims and passes them via headers:
  * - X-User-Id: User's ID
  * - X-Username: User's username/email
@@ -33,8 +33,8 @@ public class UserContext {
      */
     public boolean isHR() {
         return roles != null && roles.stream()
-                .anyMatch(role -> role.equalsIgnoreCase("HR") || 
-                                  role.equalsIgnoreCase("ROLE_HR"));
+                .anyMatch(role -> role.equalsIgnoreCase("HR") ||
+                        role.equalsIgnoreCase("ROLE_HR"));
     }
 
     /**
@@ -42,8 +42,8 @@ public class UserContext {
      */
     public boolean isEmployee() {
         return roles != null && roles.stream()
-                .anyMatch(role -> role.equalsIgnoreCase("EMPLOYEE") || 
-                                  role.equalsIgnoreCase("ROLE_EMPLOYEE"));
+                .anyMatch(role -> role.equalsIgnoreCase("EMPLOYEE") ||
+                        role.equalsIgnoreCase("ROLE_EMPLOYEE"));
     }
 
     /**
@@ -51,8 +51,8 @@ public class UserContext {
      */
     public boolean isAdmin() {
         return roles != null && roles.stream()
-                .anyMatch(role -> role.equalsIgnoreCase("ADMIN") || 
-                                  role.equalsIgnoreCase("ROLE_ADMIN"));
+                .anyMatch(role -> role.equalsIgnoreCase("ADMIN") ||
+                        role.equalsIgnoreCase("ROLE_ADMIN"));
     }
 
     /**
@@ -60,13 +60,13 @@ public class UserContext {
      */
     public boolean hasRole(String role) {
         return roles != null && roles.stream()
-                .anyMatch(r -> r.equalsIgnoreCase(role) || 
-                               r.equalsIgnoreCase("ROLE_" + role));
+                .anyMatch(r -> r.equalsIgnoreCase(role) ||
+                        r.equalsIgnoreCase("ROLE_" + role));
     }
 
     /**
      * Create UserContext from request headers
-     * 
+     *
      * @param userId User ID from X-User-Id header
      * @param username Username from X-Username header
      * @param rolesHeader Comma-separated roles from X-User-Roles header
