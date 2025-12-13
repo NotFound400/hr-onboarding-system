@@ -5,8 +5,8 @@
 
 import axios from 'axios';
 import type { AxiosInstance, AxiosError, AxiosResponse, InternalAxiosRequestConfig } from 'axios';
-import { message } from 'antd';
 import type { ApiResponse } from '../../types';
+import { getGlobalMessageApi } from '../../utils/messageApi';
 
 // 创建 Axios 实例
 const axiosClient: AxiosInstance = axios.create({
@@ -19,6 +19,15 @@ const axiosClient: AxiosInstance = axios.create({
 
 export const buildHousingPath = (path: string): string =>
   `/housing${path.startsWith('/') ? path : `/${path}`}`;
+
+const showErrorMessage = (content: string) => {
+  const messageApi = getGlobalMessageApi();
+  if (messageApi) {
+    messageApi.error(content);
+  } else {
+    console.error(content);
+  }
+};
 
 /**
  * Request Interceptor
@@ -52,8 +61,7 @@ axiosClient.interceptors.response.use(
       // 业务成功: 剥离 ApiResponse 外壳，直接返回 Payload
       return apiResponse.data;
     } else {
-      // 业务失败: 显示错误信息并拒绝 Promise
-      message.error(apiResponse.message || '操作失败');
+      showErrorMessage(apiResponse.message || '操作失败');
       return Promise.reject(new Error(apiResponse.message || '操作失败'));
     }
   },
@@ -65,7 +73,7 @@ axiosClient.interceptors.response.use(
 
       switch (status) {
         case 401:
-          message.error('未授权，请重新登录');
+          showErrorMessage('未授权，请重新登录');
           // 清除本地 Token
           localStorage.removeItem('token');
           localStorage.removeItem('role');
@@ -78,26 +86,26 @@ axiosClient.interceptors.response.use(
           window.location.href = '/login';
           break;
         case 403:
-          message.error('没有权限访问该资源');
+          showErrorMessage('没有权限访问该资源');
           break;
         case 404:
-          message.error('请求的资源不存在');
+          showErrorMessage('请求的资源不存在');
           break;
         case 500:
-          message.error('服务器内部错误，请稍后重试');
+          showErrorMessage('服务器内部错误，请稍后重试');
           break;
         default:
-          message.error(apiResponse?.message || `请求失败 (${status})`);
+          showErrorMessage(apiResponse?.message || `请求失败 (${status})`);
       }
 
       return Promise.reject(error);
     } else if (error.request) {
       // 网络错误
-      message.error('网络连接失败，请检查您的网络');
+      showErrorMessage('网络连接失败，请检查您的网络');
       return Promise.reject(new Error('网络连接失败'));
     } else {
       // 其他错误
-      message.error('请求发生错误');
+      showErrorMessage('请求发生错误');
       return Promise.reject(error);
     }
   }

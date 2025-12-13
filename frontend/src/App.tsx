@@ -10,9 +10,9 @@
  * - /onboarding/* - Onboarding 流程路由
  */
 
-import { useEffect } from 'react';
+import { useEffect, type ReactNode } from 'react';
 import { BrowserRouter, Routes, Route, Navigate, Outlet } from 'react-router-dom';
-import { ConfigProvider } from 'antd';
+import { ConfigProvider, App as AntdApp } from 'antd';
 import { useAppDispatch } from './store/hooks';
 import { restoreAuth } from './store/slices/authSlice';
 import AuthGuard from './app/routes/AuthGuard';
@@ -43,6 +43,7 @@ import {
   FacilityReportPage,
 } from './features/employee';
 import './App.css';
+import { setGlobalMessageApi } from './utils/messageApi';
 
 function App() {
   const dispatch = useAppDispatch();
@@ -61,7 +62,9 @@ function App() {
         },
       }}
     >
-      <BrowserRouter>
+      <AntdApp>
+        <AntdMessageBridge>
+          <BrowserRouter>
         <Routes>
           {/* 公共路由 */}
           <Route path="/login" element={<LoginPage />} />
@@ -132,9 +135,21 @@ function App() {
           <Route path="/" element={<Navigate to="/login" replace />} />
           <Route path="*" element={<Navigate to="/login" replace />} />
         </Routes>
-      </BrowserRouter>
+          </BrowserRouter>
+        </AntdMessageBridge>
+      </AntdApp>
     </ConfigProvider>
   );
 }
 
 export default App;
+
+const AntdMessageBridge: React.FC<{ children: ReactNode }> = ({ children }) => {
+  const { message } = AntdApp.useApp();
+
+  useEffect(() => {
+    setGlobalMessageApi(message);
+  }, [message]);
+
+  return <>{children}</>;
+};

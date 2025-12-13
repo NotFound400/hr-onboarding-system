@@ -4,9 +4,10 @@
  */
 
 import { useState } from 'react';
-import { Upload, Button, Modal, message } from 'antd';
+import { Upload, Button, Modal } from 'antd';
 import { UploadOutlined, EyeOutlined, DownloadOutlined } from '@ant-design/icons';
 import type { UploadFile, UploadProps } from 'antd';
+import { useAntdMessage } from '../../../hooks/useAntdMessage';
 
 interface DocumentUploadProps {
   /** 文档标题 */
@@ -40,6 +41,7 @@ const DocumentUpload: React.FC<DocumentUploadProps> = ({
   const [previewVisible, setPreviewVisible] = useState(false);
   const [previewUrl, setPreviewUrl] = useState<string>('');
   const [previewTitle, setPreviewTitle] = useState<string>('');
+  const messageApi = useAntdMessage();
 
   /**
    * 处理文件上传
@@ -50,7 +52,7 @@ const DocumentUpload: React.FC<DocumentUploadProps> = ({
       if (onSuccess) {
         onSuccess('ok');
       }
-      message.success(`${(file as File).name} uploaded successfully`);
+      messageApi.success(`${(file as File).name} uploaded successfully`);
     }, 1000);
   };
 
@@ -93,7 +95,7 @@ const DocumentUpload: React.FC<DocumentUploadProps> = ({
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
-      message.success('Download started');
+      messageApi.success('Download started');
     }
   };
 

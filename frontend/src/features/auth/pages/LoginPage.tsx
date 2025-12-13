@@ -5,12 +5,13 @@
 
 import { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { Form, Input, Button, Card, Typography, message } from 'antd';
+import { Form, Input, Button, Card, Typography } from 'antd';
 import { UserOutlined, LockOutlined } from '@ant-design/icons';
 import { useAppDispatch, useAppSelector } from '../../../store/hooks';
 import { login, selectIsAuthenticated, selectAuthLoading, selectUser } from '../../../store/slices/authSlice';
 import { getApplicationsByEmployeeId, getEmployeeByUserId } from '../../../services/api';
 import type { LoginRequest } from '../../../types';
+import { useAntdMessage } from '../../../hooks/useAntdMessage';
 
 const { Title, Text } = Typography;
 
@@ -27,6 +28,7 @@ const LoginPage: React.FC = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const dispatch = useAppDispatch();
+  const messageApi = useAntdMessage();
   const [checkingOnboarding, setCheckingOnboarding] = useState(false);
 
   const isAuthenticated = useAppSelector(selectIsAuthenticated);
@@ -103,13 +105,13 @@ const LoginPage: React.FC = () => {
       const resultAction = await dispatch(login(values));
       
       if (login.fulfilled.match(resultAction)) {
-        message.success('Login successful');
+        messageApi.success('Login successful');
         // 跳转逻辑由 useEffect 处理
       } else if (login.rejected.match(resultAction)) {
-        message.error(resultAction.payload || 'Login failed');
+        messageApi.error(resultAction.payload || 'Login failed');
       }
     } catch (error) {
-      message.error('An unexpected error occurred');
+      messageApi.error('An unexpected error occurred');
     }
   };
 

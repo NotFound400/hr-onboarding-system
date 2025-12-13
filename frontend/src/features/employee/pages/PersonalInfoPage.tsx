@@ -10,7 +10,7 @@
  */
 
 import { useState, useEffect } from 'react';
-import { Card, Avatar, Space, message, Form, Row, Col } from 'antd';
+import { Card, Avatar, Space, Form, Row, Col } from 'antd';
 import {
   UserOutlined,
   IdcardOutlined,
@@ -24,6 +24,7 @@ import { getEmployeeById, getEmployeeByUserId, updateEmployee } from '../../../s
 import { useAppSelector } from '../../../store/hooks';
 import { selectUser } from '../../../store/slices/authSlice';
 import type { Employee, UpdateEmployeeRequest } from '../../../types';
+import { useAntdMessage } from '../../../hooks/useAntdMessage';
 
 // Import all section components
 import EditableSectionCard from '../components/personal-info/EditableSectionCard';
@@ -53,6 +54,7 @@ const PersonalInfoPage: React.FC = () => {
   const [contactForm] = Form.useForm();
   const [emergencyContactForm] = Form.useForm();
   const [employmentForm] = Form.useForm();
+  const messageApi = useAntdMessage();
 
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState<SectionType | null>(null);
@@ -87,7 +89,7 @@ const PersonalInfoPage: React.FC = () => {
       const data = await getEmployeeById(empData.id);
       setEmployee(data);
     } catch (error: any) {
-      message.error(error.message || 'Failed to load employee information');
+      messageApi.error(error.message || 'Failed to load employee information');
     } finally {
       setLoading(false);
     }
@@ -176,16 +178,16 @@ const PersonalInfoPage: React.FC = () => {
 
       // Call API to update
       await updateEmployee(currentEmployeeId, updatePayload as UpdateEmployeeRequest);
-      message.success('Information updated successfully');
+      messageApi.success('Information updated successfully');
 
       // Refresh data and exit edit mode
       await fetchEmployeeInfo();
       setEditingSection(null);
     } catch (error: any) {
       if (error.errorFields) {
-        message.error('Please check the form fields');
+        messageApi.error('Please check the form fields');
       } else {
-        message.error(error.message || 'Failed to update information');
+        messageApi.error(error.message || 'Failed to update information');
       }
     } finally {
       setSaving(null);

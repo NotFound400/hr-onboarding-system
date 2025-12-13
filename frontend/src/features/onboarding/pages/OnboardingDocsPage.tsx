@@ -5,10 +5,11 @@
 
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Button, message, Alert } from 'antd';
+import { Button, Alert } from 'antd';
 import { PageContainer } from '../../../components/common/PageContainer';
 import DocumentUpload from '../components/DocumentUpload';
 import type { UploadFile } from 'antd';
+import { useAntdMessage } from '../../../hooks/useAntdMessage';
 
 /**
  * OnboardingDocsPage Component
@@ -27,6 +28,7 @@ const OnboardingDocsPage: React.FC = () => {
   const [i20Files, setI20Files] = useState<UploadFile[]>([]);
   const [driverLicenseFiles, setDriverLicenseFiles] = useState<UploadFile[]>([]);
   const [submitting, setSubmitting] = useState(false);
+  const messageApi = useAntdMessage();
 
   /**
    * 检查是否所有必填文档已上传
@@ -40,7 +42,7 @@ const OnboardingDocsPage: React.FC = () => {
    */
   const handleSubmit = async () => {
     if (!isAllDocumentsUploaded()) {
-      message.error('Please upload all required documents');
+      messageApi.error('Please upload all required documents');
       return;
     }
 
@@ -49,10 +51,10 @@ const OnboardingDocsPage: React.FC = () => {
       // Mock 上传逻辑
       await new Promise(resolve => setTimeout(resolve, 1500));
       
-      message.success('All documents uploaded successfully!');
+      messageApi.success('All documents uploaded successfully!');
       navigate('/onboarding/submit-result');
     } catch (error) {
-      message.error('Failed to submit documents');
+      messageApi.error('Failed to submit documents');
     } finally {
       setSubmitting(false);
     }

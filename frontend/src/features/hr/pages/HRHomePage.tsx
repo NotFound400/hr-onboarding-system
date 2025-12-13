@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Card, Button, Space, Typography, Table, Tag, message } from 'antd';
+import { Card, Button, Space, Typography, Table, Tag } from 'antd';
 import {
   UserOutlined,
   FileTextOutlined,
@@ -11,6 +11,7 @@ import {
 import { PageContainer } from '../../../components/common/PageContainer';
 import { getOngoingApplications } from '../../../services/api';
 import type { Application, ApplicationStatus } from '../../../types';
+import { useAntdMessage } from '../../../hooks/useAntdMessage';
 import dayjs from 'dayjs';
 
 const { Title, Text } = Typography;
@@ -23,6 +24,7 @@ export const HRHomePage: React.FC = () => {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [applications, setApplications] = useState<Application[]>([]);
+  const messageApi = useAntdMessage();
 
   useEffect(() => {
     fetchApplications();
@@ -40,7 +42,7 @@ export const HRHomePage: React.FC = () => {
       const pendingApps = data.filter(app => app.status === 'Pending' || app.status === 'Open');
       setApplications(pendingApps);
     } catch (error: any) {
-      message.error(error.message || 'Failed to load applications');
+      messageApi.error(error.message || 'Failed to load applications');
     } finally {
       setLoading(false);
     }

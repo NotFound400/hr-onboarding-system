@@ -1,8 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { Form, Input, Button, Card, message, Spin, Alert } from 'antd';
+import { Form, Input, Button, Card, Spin, Alert } from 'antd';
 import { UserOutlined, LockOutlined, CheckCircleOutlined } from '@ant-design/icons';
 import { validateToken, registerUser } from '../../../services/api';
+import { useAntdMessage } from '../../../hooks/useAntdMessage';
 import type {
   RegisterRequest,
   RegistrationTokenValidationResponse,
@@ -33,6 +34,7 @@ export const RegistrationPage: React.FC = () => {
   const [errorMessage, setErrorMessage] = useState('');
   const [assignedHouseId, setAssignedHouseId] = useState<number | null>(null);
   const [houseContext, setHouseContext] = useState<RegistrationTokenHouseContext | null>(null);
+  const messageApi = useAntdMessage();
 
   const token = searchParams.get('token');
 
@@ -83,7 +85,7 @@ export const RegistrationPage: React.FC = () => {
    */
   const handleSubmit = async (values: any) => {
     if (!token) {
-      message.error('Token is missing');
+      messageApi.error('Token is missing');
       return;
     }
 
@@ -99,14 +101,14 @@ export const RegistrationPage: React.FC = () => {
 
       await registerUser(request);
       
-      message.success('Registration successful! Redirecting to login page...');
+      messageApi.success('Registration successful! Redirecting to login page...');
       
       // 延迟跳转，让用户看到成功提示
       setTimeout(() => {
         navigate('/login', { state: { registeredEmail: email } });
       }, 1500);
     } catch (error: any) {
-      message.error(error.message || 'Registration failed. Please try again.');
+      messageApi.error(error.message || 'Registration failed. Please try again.');
       console.error('Registration error:', error);
     } finally {
       setSubmitting(false);

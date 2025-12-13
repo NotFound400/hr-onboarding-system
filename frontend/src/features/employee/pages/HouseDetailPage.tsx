@@ -4,13 +4,14 @@
  */
 
 import { useEffect, useState } from 'react';
-import { Card, Descriptions, List, Space, Empty, message, Alert, Avatar, Tag } from 'antd';
+import { Card, Descriptions, List, Space, Empty, Alert, Avatar, Tag } from 'antd';
 import { HomeOutlined, TeamOutlined, PhoneOutlined, UserOutlined } from '@ant-design/icons';
 import { PageContainer } from '../../../components/common/PageContainer';
 import { getEmployeeByUserId, getHouseById } from '../../../services/api';
 import { useAppSelector } from '../../../store/hooks';
 import { selectUser } from '../../../store/slices/authSlice';
 import type { Employee, HouseDetail, HouseDetailEmployee } from '../../../types';
+import { useAntdMessage } from '../../../hooks/useAntdMessage';
 
 const isEmployeeHouseDetail = (detail: HouseDetail): detail is HouseDetailEmployee =>
   detail.viewType === 'EMPLOYEE_VIEW';
@@ -20,6 +21,7 @@ const HouseDetailPage: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [employee, setEmployee] = useState<Employee | null>(null);
   const [houseDetail, setHouseDetail] = useState<HouseDetailEmployee | null>(null);
+  const messageApi = useAntdMessage();
 
   useEffect(() => {
     fetchHouseDetail();
@@ -40,13 +42,13 @@ const HouseDetailPage: React.FC = () => {
           setHouseDetail(detail);
         } else {
           setHouseDetail(null);
-          message.warning('Unable to load employee housing data. Please contact HR.');
+          messageApi.warning('Unable to load employee housing data. Please contact HR.');
         }
       } else {
         setHouseDetail(null);
       }
     } catch (error: any) {
-      message.error(error.message || 'Failed to load house detail');
+      messageApi.error(error.message || 'Failed to load house detail');
     } finally {
       setLoading(false);
     }

@@ -3,280 +3,15 @@
  * 满足 raw_project_requirement.md §6.c/6.d：查看房屋详情、设施、报修记录与住户信息
  */
 
-import { useEffect, useState, useCallback } from 'react';
-import {
-  Card,
-  Descriptions,
-  Table,
-  Button,
-  Space,
-  Modal,
-  Input,
-  message,
-  Tag,
-  List,
-  Typography,
-  Spin,
-} from 'antd';
-import {
-  HomeOutlined,
-  ToolOutlined,
-  CommentOutlined,
-} from '@ant-design/icons';
+import { useEffect, useState } from 'react';
+import { Card, Descriptions, Table, Button, Space, Tag } from 'antd';
+import { HomeOutlined } from '@ant-design/icons';
 import type { ColumnsType } from 'antd/es/table';
 import { useParams, useNavigate } from 'react-router-dom';
 import { PageContainer } from '../../../components/common/PageContainer';
-import {
-  getHouseById,
-  getAllFacilityReports,
-  getFacilityReportById,
-  addFacilityReportComment,
-  updateFacilityReportComment,
-  getAllEmployees,
-} from '../../../services/api';
-import { FacilityReportStatus } from '../../../types';
-import type {
-  HouseDetail,
-  HouseDetailHR,
-  FacilityReportDetail,
-  FacilityReportComment,
-  Employee,
-} from '../../../types';
-import { useAppSelector } from '../../../store/hooks';
-import { selectUser } from '../../../store/slices/authSlice';
-
-const { TextArea } = Input;
-const { Text, Paragraph } = Typography;
-
-interface FacilityReportModalProps {
-  visible: boolean;
-  reportId: number | null;
-  onClose: () => void;
-  currentUserId?: number;
-  onUpdated?: () => void;
-}
-
-const FacilityReportModal: React.FC<FacilityReportModalProps> = ({
-  visible,
-  reportId,
-  onClose,
-  currentUserId,
-  onUpdated,
-}) => {
-  const [loading, setLoading] = useState(false);
-  const [reportDetail, setReportDetail] = useState<FacilityReportDetail | null>(null);
-  const [newComment, setNewComment] = useState('');
-  const [submittingComment, setSubmittingComment] = useState(false);
-  const [editingComment, setEditingComment] = useState<FacilityReportComment | null>(null);
-  const [editingValue, setEditingValue] = useState('');
-  const [updatingComment, setUpdatingComment] = useState(false);
-
-  useEffect(() => {
-    if (visible && reportId) {
-      fetchReportDetail(reportId);
-    }
-  }, [visible, reportId]);
-
-  const fetchReportDetail = async (id: number) => {
-    try {
-      setLoading(true);
-      const detail = await getFacilityReportById(id);
-      setReportDetail(detail);
-    } catch (error: any) {
-      message.error(error.message || 'Failed to load report details');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleAddComment = async () => {
-    if (!newComment.trim() || !reportId) {
-      message.warning('Please enter a comment');
-      return;
-    }
-    try {
-      setSubmittingComment(true);
-      await addFacilityReportComment({
-        facilityReportId: reportId,
-        comment: newComment.trim(),
-      });
-      message.success('Comment added');
-      setNewComment('');
-      fetchReportDetail(reportId);
-      onUpdated?.();
-    } catch (error: any) {
-      message.error(error.message || 'Failed to add comment');
-    } finally {
-      setSubmittingComment(false);
-    }
-  };
-
-  const handleUpdateComment = async () => {
-    if (!editingComment || !reportId) return;
-    if (!editingValue.trim()) {
-      message.warning('Comment cannot be empty');
-      return;
-    }
-    try {
-      setUpdatingComment(true);
-      await updateFacilityReportComment(editingComment.id, editingValue.trim());
-      message.success('Comment updated');
-      setEditingComment(null);
-      setEditingValue('');
-      fetchReportDetail(reportId);
-      onUpdated?.();
-    } catch (error: any) {
-      message.error(error.message || 'Failed to update comment');
-    } finally {
-      setUpdatingComment(false);
-    }
-  };
-
-  const isCommentOwner = (comment: FacilityReportComment) =>
-    currentUserId !== undefined && Number(comment.employeeId) === Number(currentUserId);
-
-  const renderContent = () => {
-    if (loading) {
-      return (
-        <div style={{ textAlign: 'center', padding: 24 }}>
-          <Spin />
-        </div>
-      );
-    }
-
-    if (!reportDetail) {
-      return <div style={{ textAlign: 'center', padding: 24 }}>No report selected</div>;
-    }
-
-    return (
-      <Space direction="vertical" size="large" style={{ width: '100%' }}>
-        <Card size="small">
-          <Space direction="vertical" size={4} style={{ width: '100%' }}>
-            <Space>
-              <Tag color={
-                reportDetail.status === FacilityReportStatus.OPEN ? 'red' :
-                reportDetail.status === FacilityReportStatus.IN_PROGRESS ? 'orange' : 'green'
-              }>
-                {reportDetail.statusDisplayName || reportDetail.status}
-              </Tag>
-              <Text type="secondary">
-                {new Date(reportDetail.createDate).toLocaleString()}
-              </Text>
-            </Space>
-            <Text type="secondary">{reportDetail.houseAddress}</Text>
-            <Paragraph style={{ marginBottom: 0 }}>{reportDetail.description}</Paragraph>
-          </Space>
-        </Card>
-
-        <Card title="Comments" size="small">
-          {reportDetail.comments.length === 0 ? (
-            <div style={{ textAlign: 'center', color: '#999' }}>No comments yet</div>
-          ) : (
-            <List
-              dataSource={reportDetail.comments}
-              renderItem={(comment) => (
-                <List.Item
-                  actions={
-                    isCommentOwner(comment)
-                      ? editingComment?.id === comment.id
-                        ? [
-                            <Button
-                              key="save"
-                              type="link"
-                              size="small"
-                              onClick={handleUpdateComment}
-                              loading={updatingComment}
-                            >
-                              Save
-                            </Button>,
-                            <Button
-                              key="cancel"
-                              type="link"
-                              size="small"
-                              onClick={() => {
-                                setEditingComment(null);
-                                setEditingValue('');
-                              }}
-                            >
-                              Cancel
-                            </Button>,
-                          ]
-                        : [
-                            <Button
-                              key="edit"
-                              type="link"
-                              size="small"
-                              onClick={() => {
-                                setEditingComment(comment);
-                                setEditingValue(comment.comment);
-                              }}
-                            >
-                              Edit
-                            </Button>,
-                          ]
-                      : undefined
-                  }
-                >
-                  <List.Item.Meta
-                    title={
-                      <Space>
-                        <strong>{comment.createdBy}</strong>
-                        <Text type="secondary">
-                          {new Date(comment.displayDate || comment.createDate).toLocaleString()}
-                        </Text>
-                      </Space>
-                    }
-                    description={
-                      editingComment?.id === comment.id ? (
-                        <TextArea
-                          rows={3}
-                          value={editingValue}
-                          onChange={(e) => setEditingValue(e.target.value)}
-                        />
-                      ) : (
-                        <Paragraph style={{ marginBottom: 0 }}>{comment.comment}</Paragraph>
-                      )
-                    }
-                  />
-                </List.Item>
-              )}
-            />
-          )}
-
-          <Space direction="vertical" style={{ width: '100%', marginTop: 16 }}>
-            <TextArea
-              rows={3}
-              placeholder="Add a new comment"
-              value={newComment}
-              onChange={(e) => setNewComment(e.target.value)}
-            />
-            <Button
-              type="primary"
-              icon={<CommentOutlined />}
-              onClick={handleAddComment}
-              loading={submittingComment}
-            >
-              Submit Comment
-            </Button>
-          </Space>
-        </Card>
-      </Space>
-    );
-  };
-
-  return (
-    <Modal
-      open={visible}
-      onCancel={onClose}
-      footer={null}
-      width={800}
-      title="Facility Report Detail"
-      destroyOnClose
-    >
-      {renderContent()}
-    </Modal>
-  );
-};
+import { getHouseById, getAllEmployees } from '../../../services/api';
+import type { HouseDetail, HouseDetailHR, Employee, Facility } from '../../../types';
+import { useAntdMessage } from '../../../hooks/useAntdMessage';
 
 const isHouseDetailHR = (detail: HouseDetail): detail is HouseDetailHR =>
   detail.viewType === 'HR_VIEW';
@@ -284,16 +19,12 @@ const isHouseDetailHR = (detail: HouseDetail): detail is HouseDetailHR =>
 const HouseDetailManagementPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const currentUser = useAppSelector(selectUser);
 
   const [loading, setLoading] = useState(false);
   const [houseDetail, setHouseDetail] = useState<HouseDetailHR | null>(null);
-  const [facilityReports, setFacilityReports] = useState<FacilityReportDetail[]>([]);
-  const [reportsLoading, setReportsLoading] = useState(false);
   const [residents, setResidents] = useState<Employee[]>([]);
   const [residentsLoading, setResidentsLoading] = useState(false);
-  const [modalVisible, setModalVisible] = useState(false);
-  const [selectedReportId, setSelectedReportId] = useState<number | null>(null);
+  const messageApi = useAntdMessage();
 
   useEffect(() => {
     if (id) {
@@ -313,35 +44,13 @@ const HouseDetailManagementPage: React.FC = () => {
       } else {
         throw new Error('Invalid house detail payload');
       }
-      fetchFacilityReports(houseId);
       fetchResidents(houseId);
     } catch (error: any) {
-      message.error(error.message || 'Failed to load house details');
+      messageApi.error(error.message || 'Failed to load house details');
     } finally {
       setLoading(false);
     }
   };
-
-  const fetchFacilityReports = useCallback(async (houseId: number) => {
-    try {
-      setReportsLoading(true);
-      const list = await getAllFacilityReports();
-      const detailedReports = await Promise.all(
-        list.map((report) => getFacilityReportById(report.id))
-      );
-      const filtered = detailedReports
-        .filter((report) => report.houseId === houseId)
-        .sort(
-          (a, b) =>
-            new Date(b.createDate).getTime() - new Date(a.createDate).getTime()
-        );
-      setFacilityReports(filtered);
-    } catch (error: any) {
-      message.error(error.message || 'Failed to load facility reports');
-    } finally {
-      setReportsLoading(false);
-    }
-  }, []);
 
   const fetchResidents = async (houseId: number) => {
     try {
@@ -350,54 +59,28 @@ const HouseDetailManagementPage: React.FC = () => {
       const assigned = employees.filter((employee) => Number(employee.houseID) === houseId);
       setResidents(assigned);
     } catch (error: any) {
-      message.error(error.message || 'Failed to load residents');
+      messageApi.error(error.message || 'Failed to load residents');
     } finally {
       setResidentsLoading(false);
     }
   };
 
-  const handleViewReport = (reportId: number) => {
-    setSelectedReportId(reportId);
-    setModalVisible(true);
-  };
-
-  const reportColumns: ColumnsType<FacilityReportDetail> = [
+  const facilityColumns: ColumnsType<Facility> = [
     {
-      title: 'Title',
-      dataIndex: 'title',
-      key: 'title',
-      width: '40%',
+      title: 'Type',
+      dataIndex: 'type',
+      key: 'type',
     },
     {
-      title: 'Date',
-      dataIndex: 'createDate',
-      key: 'createDate',
-      width: '30%',
-      render: (date: string) => new Date(date).toLocaleDateString(),
+      title: 'Description',
+      dataIndex: 'description',
+      key: 'description',
     },
     {
-      title: 'Status',
-      dataIndex: 'status',
-      key: 'status',
-      width: '20%',
-      render: (status: string, record) => (
-        <Tag color={
-          status === FacilityReportStatus.OPEN ? 'red' :
-          status === FacilityReportStatus.IN_PROGRESS ? 'orange' : 'green'
-        }>
-          {record.statusDisplayName || status}
-        </Tag>
-      ),
-    },
-    {
-      title: 'Action',
-      key: 'action',
-      width: '10%',
-      render: (_, record) => (
-        <Button type="link" onClick={() => handleViewReport(record.id)}>
-          View
-        </Button>
-      ),
+      title: 'Quantity',
+      dataIndex: 'quantity',
+      key: 'quantity',
+      width: 120,
     },
   ];
 
@@ -450,15 +133,23 @@ const HouseDetailManagementPage: React.FC = () => {
               <Descriptions.Item label="Address" span={2}>
                 <strong>{houseDetail.address}</strong>
               </Descriptions.Item>
-              <Descriptions.Item label="Landlord Name">
-                {houseDetail.landlord.fullName}
-              </Descriptions.Item>
-              <Descriptions.Item label="Landlord Phone">
-                {houseDetail.landlord.cellPhone}
-              </Descriptions.Item>
-              <Descriptions.Item label="Landlord Email">
-                {houseDetail.landlord.email}
-              </Descriptions.Item>
+              {houseDetail.landlord ? (
+                <>
+                  <Descriptions.Item label="Landlord Name">
+                    {houseDetail.landlord.fullName}
+                  </Descriptions.Item>
+                  <Descriptions.Item label="Landlord Phone">
+                    {houseDetail.landlord.cellPhone}
+                  </Descriptions.Item>
+                  <Descriptions.Item label="Landlord Email">
+                    {houseDetail.landlord.email}
+                  </Descriptions.Item>
+                </>
+              ) : (
+                <Descriptions.Item label="Landlord" span={2}>
+                  Not Available
+                </Descriptions.Item>
+              )}
               <Descriptions.Item label="Number of People Living There">
                 <Tag color="blue">
                   {houseDetail.numberOfEmployees} / {houseDetail.maxOccupant}
@@ -481,20 +172,18 @@ const HouseDetailManagementPage: React.FC = () => {
             )}
           </Card>
 
-          <Card title={<><ToolOutlined /> Facility Reports</>}>
-            <Table
-              columns={reportColumns}
-              dataSource={facilityReports}
-              rowKey="id"
-              loading={reportsLoading}
-              pagination={{
-                pageSize: 5,
-                showSizeChanger: true,
-                pageSizeOptions: ['3', '5'],
-                showTotal: (total) => `Total ${total} reports`,
-              }}
-              locale={{ emptyText: 'No facility reports' }}
-            />
+          <Card title="Facility Details">
+            {houseDetail.facilities && houseDetail.facilities.length > 0 ? (
+              <Table
+                columns={facilityColumns}
+                dataSource={houseDetail.facilities}
+                rowKey="id"
+                pagination={false}
+                locale={{ emptyText: 'No facility records' }}
+              />
+            ) : (
+              <div style={{ textAlign: 'center', color: '#999' }}>No facility records</div>
+            )}
           </Card>
 
           <Card title="Residents">
@@ -512,20 +201,6 @@ const HouseDetailManagementPage: React.FC = () => {
         <div style={{ textAlign: 'center', padding: 48 }}>No house data found.</div>
       )}
 
-      <FacilityReportModal
-        visible={modalVisible}
-        reportId={selectedReportId}
-        onClose={() => {
-          setModalVisible(false);
-          setSelectedReportId(null);
-        }}
-        currentUserId={currentUser?.id}
-        onUpdated={() => {
-          if (houseDetail) {
-            fetchFacilityReports(houseDetail.id);
-          }
-        }}
-      />
     </PageContainer>
   );
 };

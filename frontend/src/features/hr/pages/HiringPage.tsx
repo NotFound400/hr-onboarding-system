@@ -8,7 +8,7 @@
  */
 
 import { useState, useEffect } from 'react';
-import { Table, Card, Input, Button, Space, Form, message, Tag, Descriptions, Select, Alert } from 'antd';
+import { Table, Card, Input, Button, Space, Form, Tag, Descriptions, Select, Alert } from 'antd';
 import { UserAddOutlined, CopyOutlined, ReloadOutlined } from '@ant-design/icons';
 import type { ColumnsType } from 'antd/es/table';
 import { PageContainer } from '../../../components/common/PageContainer';
@@ -19,6 +19,7 @@ import {
   getHouseAvailability,
 } from '../../../services/api';
 import type { ApplicationDetail, ApplicationStatus, HouseSummary } from '../../../types';
+import { useAntdMessage } from '../../../hooks/useAntdMessage';
 
 /**
  * HiringPage Component
@@ -33,6 +34,7 @@ const HiringPage: React.FC = () => {
   const [houses, setHouses] = useState<HouseSummary[]>([]);
   const [housesLoading, setHousesLoading] = useState(false);
   const [assignedHouseAddress, setAssignedHouseAddress] = useState('');
+  const messageApi = useAntdMessage();
 
   // 获取 Onboarding 申请列表
   useEffect(() => {
@@ -50,7 +52,7 @@ const HiringPage: React.FC = () => {
       
       setApplications(onboardingApps);
     } catch (error: any) {
-      message.error(error.message || 'Failed to load onboarding applications');
+      messageApi.error(error.message || 'Failed to load onboarding applications');
     } finally {
       setLoading(false);
     }
@@ -64,7 +66,7 @@ const HiringPage: React.FC = () => {
       const available = summaries.filter((house) => house.availableSpots > 0);
       setHouses(available);
     } catch (error: any) {
-      message.error(error.message || 'Failed to load available houses');
+      messageApi.error(error.message || 'Failed to load available houses');
     } finally {
       setHousesLoading(false);
     }
@@ -80,7 +82,7 @@ const HiringPage: React.FC = () => {
       const availability = await getHouseAvailability(houseId);
 
       if (!availability.available) {
-        message.error(
+        messageApi.error(
           `House "${availability.address}" is full (${availability.currentOccupants}/${availability.maxOccupant}). Please select another house.`
         );
         return;
@@ -98,11 +100,11 @@ const HiringPage: React.FC = () => {
         tokenInfo.houseAddress || assignedHouse?.address || ''
       );
 
-      message.success(`Token generated successfully for ${values.email}`);
+      messageApi.success(`Token generated successfully for ${values.email}`);
       fetchAvailableHouses();
       form.resetFields(['houseId']);
     } catch (error: any) {
-      message.error(error.message || 'Failed to generate token');
+      messageApi.error(error.message || 'Failed to generate token');
     } finally {
       setGenerating(false);
     }
@@ -113,7 +115,7 @@ const HiringPage: React.FC = () => {
    */
   const handleCopyToken = () => {
     navigator.clipboard.writeText(generatedToken);
-    message.success('Token copied to clipboard');
+    messageApi.success('Token copied to clipboard');
   };
 
   /**

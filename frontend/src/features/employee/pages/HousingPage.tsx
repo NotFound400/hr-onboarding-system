@@ -9,7 +9,7 @@
  */
 
 import { useState, useEffect } from 'react';
-import { Card, Descriptions, List, Avatar, Button, Empty, Space, Tag, message, Alert } from 'antd';
+import { Card, Descriptions, List, Avatar, Button, Empty, Space, Tag, Alert } from 'antd';
 import { HomeOutlined, UserOutlined, ToolOutlined, PhoneOutlined } from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
 import { PageContainer } from '../../../components/common/PageContainer';
@@ -17,6 +17,7 @@ import { getHouseById, getMyHouse } from '../../../services/api';
 import { useAppSelector } from '../../../store/hooks';
 import { selectUser } from '../../../store/slices/authSlice';
 import type { HouseDetail, HouseEmployeeView } from '../../../types';
+import { useAntdMessage } from '../../../hooks/useAntdMessage';
 
 /**
  * HousingPage Component
@@ -25,6 +26,7 @@ const HousingPage: React.FC = () => {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [houseInfo, setHouseInfo] = useState<HouseEmployeeView | null>(null);
+  const messageApi = useAntdMessage();
 
   // 获取当前登录用户
   const currentUser = useAppSelector(selectUser);
@@ -59,7 +61,7 @@ const HousingPage: React.FC = () => {
       setHouseInfo(houseData);
     } catch (error: any) {
       setHouseInfo(null);
-      message.error(error.message || 'Failed to load housing information');
+      messageApi.error(error.message || 'Failed to load housing information');
     } finally {
       setLoading(false);
     }

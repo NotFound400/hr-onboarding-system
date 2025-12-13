@@ -7,7 +7,6 @@ import {
   Table,
   Tag,
   Space,
-  message,
   Spin,
   Modal,
   Input,
@@ -18,6 +17,7 @@ import dayjs from 'dayjs';
 import { PageContainer } from '../../../components/common/PageContainer';
 import { getEmployeeById, getActiveApplications } from '../../../services/api';
 import type { Employee, Application, ApplicationDocument } from '../../../types';
+import { useAntdMessage } from '../../../hooks/useAntdMessage';
 
 // Type aliases for better readability
 type App = Application;
@@ -42,6 +42,7 @@ export const EmployeeProfileDetailPage: React.FC = () => {
   const [commentModalVisible, setCommentModalVisible] = useState(false);
   const [currentDocument, setCurrentDocument] = useState<Document | null>(null);
   const [comment, setComment] = useState('');
+  const messageApi = useAntdMessage();
 
   useEffect(() => {
     if (id) {
@@ -75,7 +76,7 @@ export const EmployeeProfileDetailPage: React.FC = () => {
         setApplication(applications[0]);
       }
     } catch (error) {
-      message.error('Failed to load employee details');
+      messageApi.error('Failed to load employee details');
       console.error(error);
     } finally {
       setLoading(false);
@@ -98,7 +99,7 @@ export const EmployeeProfileDetailPage: React.FC = () => {
     if (!currentDocument) return;
 
     // 在实际项目中，这里应该调用 API 更新文档评论
-    message.success('Comment saved successfully');
+    messageApi.success('Comment saved successfully');
     console.log('Document:', currentDocument.id, 'Comment:', comment);
 
     // 更新本地状态
@@ -118,7 +119,7 @@ export const EmployeeProfileDetailPage: React.FC = () => {
    * 下载文档
    */
   const handleDownload = (doc: Document) => {
-    message.info(`Downloading: ${doc.filename}`);
+    messageApi.info(`Downloading: ${doc.filename}`);
     // 实际项目中应该触发文件下载
     console.log('Download document:', doc);
   };

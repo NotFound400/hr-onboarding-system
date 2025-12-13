@@ -18,7 +18,6 @@ import {
   Space, 
   Modal, 
   Input, 
-  message, 
   Spin, 
   Tag, 
   Form,
@@ -36,6 +35,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { PageContainer } from '../../../components/common/PageContainer';
 import { getApplicationById, getEmployeeById, approveApplication, rejectApplication } from '../../../services/api';
 import type { Application, Employee } from '../../../types';
+import { useAntdMessage } from '../../../hooks/useAntdMessage';
 
 const { TextArea } = Input;
 
@@ -129,6 +129,7 @@ const DocumentComment: React.FC<DocumentCommentProps> = ({
 const ApplicationReviewDetailPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const messageApi = useAntdMessage();
   
   const [loading, setLoading] = useState(false);
   const [approving, setApproving] = useState(false);
@@ -168,7 +169,7 @@ const ApplicationReviewDetailPage: React.FC = () => {
       // Note: Document management is now separate from application
       // Documents should be fetched using getDocumentsByApplicationId if needed
     } catch (error: any) {
-      message.error(error.message || 'Failed to load application details');
+      messageApi.error(error.message || 'Failed to load application details');
     } finally {
       setLoading(false);
     }
@@ -202,12 +203,12 @@ const ApplicationReviewDetailPage: React.FC = () => {
             comment: 'Application approved. Welcome to the team!',
           });
           
-          message.success('Application approved successfully');
+        messageApi.success('Application approved successfully');
           
           // 返回列表页
           navigate('/hr/hiring');
         } catch (error: any) {
-          message.error(error.message || 'Failed to approve application');
+        messageApi.error(error.message || 'Failed to approve application');
         } finally {
           setApproving(false);
         }
@@ -227,7 +228,7 @@ const ApplicationReviewDetailPage: React.FC = () => {
    */
   const handleConfirmReject = async () => {
     if (!rejectReason.trim()) {
-      message.error('Please provide a reason for rejection');
+      messageApi.error('Please provide a reason for rejection');
       return;
     }
     
@@ -238,12 +239,12 @@ const ApplicationReviewDetailPage: React.FC = () => {
         comment: rejectReason,
       });
       
-      message.success('Application rejected');
+      messageApi.success('Application rejected');
       
       setRejectModalVisible(false);
       navigate('/hr/hiring');
     } catch (error: any) {
-      message.error(error.message || 'Failed to reject application');
+      messageApi.error(error.message || 'Failed to reject application');
     } finally {
       setRejecting(false);
     }

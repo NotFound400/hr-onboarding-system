@@ -14,7 +14,6 @@ import {
   Space,
   Modal,
   Empty,
-  message,
   Alert,
   Typography,
   Spin,
@@ -45,6 +44,7 @@ import type {
   FacilityReportComment,
   Facility,
 } from '../../../types';
+import { useAntdMessage } from '../../../hooks/useAntdMessage';
 
 const { TextArea } = Input;
 const { Paragraph, Text } = Typography;
@@ -68,6 +68,7 @@ const FacilityReportPage: React.FC = () => {
   const [commentSubmitting, setCommentSubmitting] = useState(false);
   const [editingComment, setEditingComment] = useState<{ id: number; value: string } | null>(null);
   const [commentUpdating, setCommentUpdating] = useState(false);
+  const messageApi = useAntdMessage();
 
   useEffect(() => {
     initialize();
@@ -89,7 +90,7 @@ const FacilityReportPage: React.FC = () => {
       await fetchReports();
       await fetchFacilities(normalizedHouseId);
     } catch (error: any) {
-      message.error(error.message || 'Failed to load facility reports');
+      messageApi.error(error.message || 'Failed to load facility reports');
     } finally {
       setLoading(false);
     }
@@ -101,7 +102,7 @@ const FacilityReportPage: React.FC = () => {
       const list = await getMyFacilityReports();
       setReports(list);
     } catch (error: any) {
-      message.error(error.message || 'Failed to fetch reports');
+      messageApi.error(error.message || 'Failed to fetch reports');
     } finally {
       setReportsLoading(false);
     }
@@ -113,7 +114,7 @@ const FacilityReportPage: React.FC = () => {
       const list = await getFacilitiesByHouseId(targetHouseId);
       setFacilities(list);
     } catch (error: any) {
-      message.error(error.message || 'Failed to load facilities');
+      messageApi.error(error.message || 'Failed to load facilities');
       setFacilities([]);
     } finally {
       setFacilityLoading(false);
@@ -137,7 +138,7 @@ const FacilityReportPage: React.FC = () => {
     values?: { title: string; description: string; facilityId: number }
   ) => {
     if (!houseId) {
-      message.warning('You need an assigned house before reporting an issue.');
+      messageApi.warning('You need an assigned house before reporting an issue.');
       return;
     }
 
@@ -149,14 +150,14 @@ const FacilityReportPage: React.FC = () => {
         title: formValues.title,
         description: formValues.description,
       });
-      message.success('Facility issue reported successfully');
+      messageApi.success('Facility issue reported successfully');
       form.resetFields();
       fetchReports();
     } catch (error: any) {
       if (error?.errorFields) {
         return;
       }
-      message.error(error.message || 'Failed to submit report');
+      messageApi.error(error.message || 'Failed to submit report');
     } finally {
       setSubmittingReport(false);
     }
@@ -171,7 +172,7 @@ const FacilityReportPage: React.FC = () => {
       setNewComment('');
       setEditingComment(null);
     } catch (error: any) {
-      message.error(error.message || 'Failed to load report detail');
+      messageApi.error(error.message || 'Failed to load report detail');
     } finally {
       setDetailLoading(false);
     }
@@ -189,14 +190,14 @@ const FacilityReportPage: React.FC = () => {
       const detail = await getFacilityReportById(reportId);
       setSelectedReport(detail);
     } catch (error: any) {
-      message.error(error.message || 'Failed to refresh report detail');
+      messageApi.error(error.message || 'Failed to refresh report detail');
     }
   };
 
   const handleAddComment = async () => {
     if (!selectedReport) return;
     if (!newComment.trim()) {
-      message.warning('Please enter a comment');
+      messageApi.warning('Please enter a comment');
       return;
     }
 
@@ -206,12 +207,12 @@ const FacilityReportPage: React.FC = () => {
         facilityReportId: selectedReport.id,
         comment: newComment.trim(),
       });
-      message.success('Comment added');
+      messageApi.success('Comment added');
       setNewComment('');
       refreshSelectedReport(selectedReport.id);
       fetchReports();
     } catch (error: any) {
-      message.error(error.message || 'Failed to add comment');
+      messageApi.error(error.message || 'Failed to add comment');
     } finally {
       setCommentSubmitting(false);
     }
@@ -224,7 +225,7 @@ const FacilityReportPage: React.FC = () => {
   const handleUpdateComment = async () => {
     if (!selectedReport || !editingComment) return;
     if (!editingComment.value.trim()) {
-      message.warning('Comment cannot be empty');
+      messageApi.warning('Comment cannot be empty');
       return;
     }
 
@@ -234,11 +235,11 @@ const FacilityReportPage: React.FC = () => {
         editingComment.id,
         editingComment.value.trim()
       );
-      message.success('Comment updated');
+      messageApi.success('Comment updated');
       setEditingComment(null);
       refreshSelectedReport(selectedReport.id);
     } catch (error: any) {
-      message.error(error.message || 'Failed to update comment');
+      messageApi.error(error.message || 'Failed to update comment');
     } finally {
       setCommentUpdating(false);
     }

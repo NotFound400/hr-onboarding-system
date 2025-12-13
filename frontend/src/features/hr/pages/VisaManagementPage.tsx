@@ -9,12 +9,13 @@
  */
 
 import { useState, useEffect } from 'react';
-import { Table, Button, Space, Modal, Input, message, Tag } from 'antd';
+import { Table, Button, Space, Modal, Input, Tag } from 'antd';
 import { CheckOutlined, CloseOutlined } from '@ant-design/icons';
 import type { ColumnsType } from 'antd/es/table';
 import { PageContainer } from '../../../components/common/PageContainer';
 import { getOngoingApplications, approveApplication, rejectApplication } from '../../../services/api';
 import type { Application } from '../../../types';
+import { useAntdMessage } from '../../../hooks/useAntdMessage';
 
 const { TextArea } = Input;
 
@@ -28,6 +29,7 @@ const VisaManagementPage: React.FC = () => {
   const [selectedApplication, setSelectedApplication] = useState<Application | null>(null);
   const [rejectReason, setRejectReason] = useState('');
   const [submitting, setSubmitting] = useState(false);
+  const messageApi = useAntdMessage();
 
   // 获取签证申请列表
   useEffect(() => {
@@ -46,7 +48,7 @@ const VisaManagementPage: React.FC = () => {
       
       setApplications(visaApplications);
     } catch (error: any) {
-      message.error(error.message || 'Failed to load visa applications');
+      messageApi.error(error.message || 'Failed to load visa applications');
     } finally {
       setLoading(false);
     }
@@ -62,10 +64,10 @@ const VisaManagementPage: React.FC = () => {
         comment: 'Application approved by HR',
       });
       
-      message.success('Application approved. Email notification sent to employee');
+      messageApi.success('Application approved. Email notification sent to employee');
       fetchApplications(); // 刷新列表
     } catch (error: any) {
-      message.error(error.message || 'Failed to approve application');
+      messageApi.error(error.message || 'Failed to approve application');
     } finally {
       setSubmitting(false);
     }
@@ -85,7 +87,7 @@ const VisaManagementPage: React.FC = () => {
    */
   const handleRejectConfirm = async () => {
     if (!rejectReason.trim()) {
-      message.warning('Please provide a rejection reason');
+      messageApi.warning('Please provide a rejection reason');
       return;
     }
 
@@ -97,13 +99,13 @@ const VisaManagementPage: React.FC = () => {
         comment: rejectReason,
       });
       
-      message.success('Application rejected. Email notification sent to employee');
+      messageApi.success('Application rejected. Email notification sent to employee');
       setRejectModalVisible(false);
       setSelectedApplication(null);
       setRejectReason('');
       fetchApplications(); // 刷新列表
     } catch (error: any) {
-      message.error(error.message || 'Failed to reject application');
+      messageApi.error(error.message || 'Failed to reject application');
     } finally {
       setSubmitting(false);
     }
@@ -216,7 +218,7 @@ const VisaManagementPage: React.FC = () => {
           type="link" 
           size="small"
           onClick={() => {
-            message.info(`Section HR.4.b.vi: HR should be able to access all past documents submitted by ${record.employeeName}`);
+            messageApi.info(`Section HR.4.b.vi: HR should be able to access all past documents submitted by ${record.employeeName}`);
             // Should show document list modal or navigate to document view
           }}
         >

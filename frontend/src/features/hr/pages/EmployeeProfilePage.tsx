@@ -10,12 +10,13 @@
 
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Table, Input, Space, Button, message, Card, Typography } from 'antd';
+import { Table, Input, Space, Button, Card, Typography } from 'antd';
 import { SearchOutlined, EyeOutlined } from '@ant-design/icons';
 import type { ColumnsType } from 'antd/es/table';
 import { PageContainer } from '../../../components/common/PageContainer';
 import { getAllEmployees } from '../../../services/api';
 import type { Employee } from '../../../types';
+import { useAntdMessage } from '../../../hooks/useAntdMessage';
 
 const { Search } = Input;
 const { Text } = Typography;
@@ -29,6 +30,7 @@ const EmployeeProfilePage: React.FC = () => {
   const [employees, setEmployees] = useState<Employee[]>([]);
   const [filteredEmployees, setFilteredEmployees] = useState<Employee[]>([]);
   const [searchText, setSearchText] = useState('');
+  const messageApi = useAntdMessage();
 
   // 获取所有员工数据
   useEffect(() => {
@@ -42,7 +44,7 @@ const EmployeeProfilePage: React.FC = () => {
       setEmployees(data);
       setFilteredEmployees(data);
     } catch (error: any) {
-      message.error(error.message || 'Failed to load employees');
+      messageApi.error(error.message || 'Failed to load employees');
     } finally {
       setLoading(false);
     }
@@ -70,11 +72,11 @@ const EmployeeProfilePage: React.FC = () => {
 
     // 处理搜索结果状态提示
     if (filtered.length === 0) {
-      message.info('No records found');
+      messageApi.info('No records found');
     } else if (filtered.length === 1) {
-      message.success('1 record found');
+      messageApi.success('1 record found');
     } else {
-      message.success(`${filtered.length} records found`);
+      messageApi.success(`${filtered.length} records found`);
     }
   };
 

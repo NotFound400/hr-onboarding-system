@@ -25,7 +25,6 @@ import {
   Button, 
   Row, 
   Col, 
-  message, 
   Divider, 
   Radio, 
   Upload, 
@@ -45,6 +44,7 @@ import {
 import { selectUser } from '../../../store/slices/authSlice';
 import type { OnboardingFormDTO, VisaStatusType } from '../../../types';
 import dayjs from 'dayjs';
+import { useAntdMessage } from '../../../hooks/useAntdMessage';
 
 /**
  * OnboardingFormPage Component
@@ -61,6 +61,7 @@ const OnboardingFormPage: React.FC = () => {
   const [form] = Form.useForm();
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
+  const messageApi = useAntdMessage();
   
   // 监听条件字段状态
   const [isCitizenOrPR, setIsCitizenOrPR] = useState<boolean | undefined>(undefined);
@@ -83,18 +84,18 @@ const OnboardingFormPage: React.FC = () => {
   // 提交成功后跳转到文档页面 (Section 3.d)
   useEffect(() => {
     if (submitSuccess) {
-      message.success('Onboarding form submitted successfully!');
+      messageApi.success('Onboarding form submitted successfully!');
       navigate('/onboarding/docs');
     }
-  }, [submitSuccess, navigate]);
+  }, [submitSuccess, navigate, messageApi]);
 
   // 显示错误信息
   useEffect(() => {
     if (error) {
-      message.error(error);
+      messageApi.error(error);
       dispatch(clearError());
     }
-  }, [error, dispatch]);
+  }, [error, dispatch, messageApi]);
 
   /**
    * 处理表单提交 - Tech Lead Fix
@@ -270,7 +271,7 @@ const OnboardingFormPage: React.FC = () => {
       
     } catch (error) {
       console.error('❌ Form validation or submission failed:', error);
-      message.error('Please fill in all required fields');
+      messageApi.error('Please fill in all required fields');
     }
   };
 

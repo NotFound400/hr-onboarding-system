@@ -10,7 +10,7 @@
  */
 
 import { useState, useEffect } from 'react';
-import { Card, Descriptions, Empty, Space, Alert, Tag, message, Steps } from 'antd';
+import { Card, Descriptions, Empty, Space, Alert, Tag, Steps } from 'antd';
 import { SafetyOutlined, FileTextOutlined, CheckCircleOutlined } from '@ant-design/icons';
 import dayjs from 'dayjs';
 import type { UploadFile } from 'antd';
@@ -20,6 +20,7 @@ import { getEmployeeById, getEmployeeByUserId } from '../../../services/api';
 import { useAppSelector } from '../../../store/hooks';
 import { selectUser } from '../../../store/slices/authSlice';
 import type { Employee, VisaStatus } from '../../../types';
+import { useAntdMessage } from '../../../hooks/useAntdMessage';
 
 /**
  * VisaStatusPage Component
@@ -37,6 +38,7 @@ const VisaStatusPage: React.FC = () => {
 
   // 获取当前登录用户
   const currentUser = useAppSelector(selectUser);
+  const messageApi = useAntdMessage();
 
   useEffect(() => {
     fetchEmployeeVisaInfo();
@@ -60,7 +62,7 @@ const VisaStatusPage: React.FC = () => {
       const hasVisa = data.visaStatus && data.visaStatus.length > 0;
       setIsCitizen(!hasVisa);
     } catch (error: any) {
-      message.error(error.message || 'Failed to load visa information');
+      messageApi.error(error.message || 'Failed to load visa information');
     } finally {
       setLoading(false);
     }
@@ -95,7 +97,7 @@ const VisaStatusPage: React.FC = () => {
     const hasNewUpload = fileList.some(file => file.status === 'done' && !file.url);
     
     if (hasNewUpload) {
-      message.success(`${docType} uploaded successfully. Email notification sent to HR.`);
+      messageApi.success(`${docType} uploaded successfully. Email notification sent to HR.`);
     }
 
     // 根据文档类型更新对应的状态

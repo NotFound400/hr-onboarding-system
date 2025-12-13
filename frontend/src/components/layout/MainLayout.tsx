@@ -5,7 +5,7 @@
 
 import { useState, useEffect } from 'react';
 import { Outlet, useNavigate, useLocation } from 'react-router-dom';
-import { Layout, Menu, Avatar, Dropdown, Typography, Space, Modal, message } from 'antd';
+import { Layout, Menu, Avatar, Dropdown, Typography, Space, Modal } from 'antd';
 import {
   HomeOutlined,
   UserOutlined,
@@ -23,6 +23,7 @@ import { logout, selectUser, selectRole } from '../../store/slices/authSlice';
 import { getEmployeeByUserId } from '../../services/api';
 import { VisaStatusType } from '../../types/enums';
 import type { Employee, VisaStatus } from '../../types/employee';
+import { useAntdMessage } from '../../hooks/useAntdMessage';
 
 const { Header, Sider, Content } = Layout;
 const { Text } = Typography;
@@ -40,6 +41,7 @@ const MainLayout: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const dispatch = useAppDispatch();
+  const messageApi = useAntdMessage();
 
   const user = useAppSelector(selectUser);
   const role = useAppSelector(selectRole);
@@ -194,10 +196,10 @@ const MainLayout: React.FC = () => {
       onOk: async () => {
         try {
           await dispatch(logout()).unwrap();
-          message.success('Logged out successfully');
+          messageApi.success('Logged out successfully');
           navigate('/login', { replace: true });
         } catch (error) {
-          message.error('Logout failed');
+          messageApi.error('Logout failed');
         }
       },
     });
@@ -223,7 +225,7 @@ const MainLayout: React.FC = () => {
       key: 'settings',
       icon: <SettingOutlined />,
       label: 'Settings',
-      onClick: () => message.info('Settings page coming soon'),
+      onClick: () => messageApi.info('Settings page coming soon'),
     },
     {
       type: 'divider',

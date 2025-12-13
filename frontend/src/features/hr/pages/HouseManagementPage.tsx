@@ -1,11 +1,19 @@
 import React, { useEffect, useState } from 'react';
-import { Table, Button, Modal, Form, Input, message, Space, Popconfirm } from 'antd';
-import { PlusOutlined, DeleteOutlined } from '@ant-design/icons';
+import { Table, Button, Modal, Form, Input, Space, Popconfirm, Card } from 'antd';
+import { PlusOutlined } from '@ant-design/icons';
 import type { ColumnsType } from 'antd/es/table';
 import { useNavigate } from 'react-router-dom';
 import { PageContainer } from '../../../components/common/PageContainer';
-import { getHouseList, createHouse, deleteHouse } from '../../../services/api';
-import type { House, CreateHouseRequest } from '../../../types';
+import {
+  getHouseList,
+  createHouse,
+  deleteHouse,
+  getAllLandlords,
+  createLandlord,
+  deleteLandlord,
+} from '../../../services/api';
+import type { House, CreateHouseRequest, Landlord, CreateLandlordRequest } from '../../../types';
+import { useAntdMessage } from '../../../hooks/useAntdMessage';
 
 /**
  * HR 房屋管理页面
@@ -16,12 +24,20 @@ import type { House, CreateHouseRequest } from '../../../types';
 export const HouseManagementPage: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [houseList, setHouseList] = useState<House[]>([]);
+  const [landlordLoading, setLandlordLoading] = useState(false);
+  const [landlords, setLandlords] = useState<Landlord[]>([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isLandlordModalOpen, setIsLandlordModalOpen] = useState(false);
+  const [submittingLandlord, setSubmittingLandlord] = useState(false);
+  const [deletingLandlordId, setDeletingLandlordId] = useState<number | null>(null);
   const [form] = Form.useForm();
+  const [landlordForm] = Form.useForm();
+  const messageApi = useAntdMessage();
   const navigate = useNavigate();
 
   useEffect(() => {
     fetchHouseList();
+    fetchLandlords();
   }, []);
 
   /**
@@ -33,10 +49,26 @@ export const HouseManagementPage: React.FC = () => {
       const data = await getHouseList();
       setHouseList(data);
     } catch (error) {
-      message.error('Failed to load house list');
+      messageApi.error('Failed to load house list');
       console.error(error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  /**
+   * 获取房东列表
+   */
+  const fetchLandlords = async () => {
+    try {
+      setLandlordLoading(true);
+      const data = await getAllLandlords();
+      setLandlords(data);
+    } catch (error) {
+      messageApi.error('Failed to load landlord list');
+      console.error(error);
+    } finally {
+      setLandlordLoading(false);
     }
   };
 
@@ -46,6 +78,14 @@ export const HouseManagementPage: React.FC = () => {
   const handleAddHouse = () => {
     form.resetFields();
     setIsModalOpen(true);
+  };
+
+  /**
+   * 打开添加房东弹窗
+   */
+  const handleAddLandlord = () => {
+    landlordForm.resetFields();
+    setIsLandlordModalOpen(true);
   };
 
   /**
@@ -68,7 +108,7 @@ export const HouseManagementPage: React.FC = () => {
       };
 
       await createHouse(request);
-      message.success('House added successfully');
+      messageApi.success('House added successfully');
       setIsModalOpen(false);
       form.resetFields();
       fetchHouseList(); // 刷新列表
@@ -77,7 +117,7 @@ export const HouseManagementPage: React.FC = () => {
         // 表单验证错误
         return;
       }
-      message.error('Failed to add house');
+      messageApi.error('Failed to add house');
       console.error(error);
     }
   };
@@ -88,11 +128,58 @@ export const HouseManagementPage: React.FC = () => {
   const handleDelete = async (houseId: number) => {
     try {
       await deleteHouse(houseId);
-      message.success('House deleted successfully');
+      messageApi.success('House deleted successfully');
       fetchHouseList(); // 刷新列表
     } catch (error) {
-      message.error('Failed to delete house');
+      messageApi.error('Failed to delete house');
       console.error(error);
+    }
+  };
+
+  /**
+   * 创建房东
+   */
+  const handleSubmitLandlord = async () => {
+    try {
+      const values = await landlordForm.validateFields();
+      const payload: CreateLandlordRequest = {
+        firstName: values.firstName,
+        lastName: values.lastName,
+        email: values.email,
+        cellPhone: values.cellPhone,
+      };
+
+      setSubmittingLandlord(true);
+      await createLandlord(payload);
+      messageApi.success('Landlord added successfully');
+      setIsLandlordModalOpen(false);
+      landlordForm.resetFields();
+      fetchLandlords();
+    } catch (error: any) {
+      if (error?.errorFields) {
+        return;
+      }
+      messageApi.error('Failed to add landlord');
+      console.error(error);
+    } finally {
+      setSubmittingLandlord(false);
+    }
+  };
+
+  /**
+   * 删除房东
+   */
+  const handleDeleteLandlord = async (id: number) => {
+    try {
+      setDeletingLandlordId(id);
+      await deleteLandlord(id);
+      messageApi.success('Landlord deleted successfully');
+      fetchLandlords();
+    } catch (error) {
+      messageApi.error('Failed to delete landlord');
+      console.error(error);
+    } finally {
+      setDeletingLandlordId(null);
     }
   };
 
@@ -101,20 +188,16 @@ export const HouseManagementPage: React.FC = () => {
    */
   const columns: ColumnsType<House> = [
     {
-      title: 'House ID',
-      dataIndex: 'id',
-      key: 'id',
-      width: 100,
-    },
-    {
       title: 'Address',
       dataIndex: 'address',
       key: 'address',
       ellipsis: true,
+      width: 240,
     },
     {
       title: 'Landlord',
       key: 'landlord',
+      width: 180,
       render: (_, record) =>
         record.landlord
           ? `${record.landlord.firstName} ${record.landlord.lastName}`
@@ -123,6 +206,7 @@ export const HouseManagementPage: React.FC = () => {
     {
       title: 'Landlord Phone',
       key: 'landlordPhone',
+      width: 150,
       render: (_, record) => record.landlord?.cellPhone || record.landlordPhone || '-',
     },
     {
@@ -149,13 +233,6 @@ export const HouseManagementPage: React.FC = () => {
       },
     },
     {
-      title: 'Facility Info',
-      dataIndex: 'facilityInfo',
-      key: 'facilityInfo',
-      ellipsis: true,
-      width: 200,
-    },
-    {
       title: 'Action',
       key: 'action',
       width: 180,
@@ -176,11 +253,71 @@ export const HouseManagementPage: React.FC = () => {
             cancelText="No"
             okButtonProps={{ danger: true }}
           >
-            <Button type="link" danger icon={<DeleteOutlined />}>
+            <Button type="link" danger>
               Delete
             </Button>
           </Popconfirm>
         </Space>
+      ),
+    },
+  ];
+
+  const landlordColumns: ColumnsType<Landlord> = [
+    {
+      title: 'ID',
+      dataIndex: 'id',
+      key: 'id',
+      width: 80,
+    },
+    {
+      title: 'First Name',
+      dataIndex: 'firstName',
+      key: 'firstName',
+    },
+    {
+      title: 'Last Name',
+      dataIndex: 'lastName',
+      key: 'lastName',
+    },
+    {
+      title: 'Full Name',
+      dataIndex: 'fullName',
+      key: 'fullName',
+    },
+    {
+      title: 'Email',
+      dataIndex: 'email',
+      key: 'email',
+      render: (value: string | undefined) => value || '-',
+    },
+    {
+      title: 'Cell Phone',
+      dataIndex: 'cellPhone',
+      key: 'cellPhone',
+      render: (value: string | undefined) => value || '-',
+    },
+    {
+      title: 'Action',
+      key: 'action',
+      width: 120,
+      render: (_, record) => (
+        <Popconfirm
+          title="Delete Landlord"
+          description="Are you sure you want to delete this landlord?"
+          okText="Yes"
+          cancelText="No"
+          okButtonProps={{ danger: true, loading: deletingLandlordId === record.id }}
+          onConfirm={() => handleDeleteLandlord(record.id)}
+        >
+          <Button
+            type="link"
+            danger
+            loading={deletingLandlordId === record.id}
+            disabled={deletingLandlordId !== null && deletingLandlordId !== record.id}
+          >
+            Delete
+          </Button>
+        </Popconfirm>
       ),
     },
   ];
@@ -195,17 +332,41 @@ export const HouseManagementPage: React.FC = () => {
       </div>
 
       <Table
+        size="small"
         columns={columns}
         dataSource={houseList}
         rowKey="id"
         loading={loading}
         pagination={{
           pageSize: 10,
+          size: 'small',
           showSizeChanger: true,
           showTotal: (total) => `Total ${total} houses`,
         }}
         scroll={{ x: 1200 }}
       />
+
+      <Card
+        title="Landlord Directory"
+        style={{ marginTop: 24 }}
+        extra={
+          <Button type="primary" onClick={handleAddLandlord}>
+            Add Landlord
+          </Button>
+        }
+      >
+        <Table
+          columns={landlordColumns}
+          dataSource={landlords}
+          rowKey="id"
+          loading={landlordLoading}
+          pagination={{
+            pageSize: 8,
+            showSizeChanger: true,
+            showTotal: (total) => `Total ${total} landlords`,
+          }}
+        />
+      </Card>
 
       {/* 添加房屋弹窗 */}
       <Modal
@@ -312,6 +473,57 @@ export const HouseManagementPage: React.FC = () => {
               placeholder="e.g., 2 bedrooms, 1 bathroom, WiFi, parking, laundry"
               rows={3}
             />
+          </Form.Item>
+        </Form>
+      </Modal>
+
+      <Modal
+        title="Add New Landlord"
+        open={isLandlordModalOpen}
+        onOk={handleSubmitLandlord}
+        okText="Submit"
+        cancelText="Cancel"
+        confirmLoading={submittingLandlord}
+        onCancel={() => {
+          setIsLandlordModalOpen(false);
+          landlordForm.resetFields();
+        }}
+      >
+        <Form
+          form={landlordForm}
+          layout="vertical"
+          style={{ marginTop: 16 }}
+        >
+          <Form.Item
+            label="First Name"
+            name="firstName"
+            rules={[{ required: true, message: 'Please enter first name' }]}
+          >
+            <Input placeholder="John" />
+          </Form.Item>
+          <Form.Item
+            label="Last Name"
+            name="lastName"
+            rules={[{ required: true, message: 'Please enter last name' }]}
+          >
+            <Input placeholder="Smith" />
+          </Form.Item>
+          <Form.Item
+            label="Email"
+            name="email"
+            rules={[
+              { required: true, message: 'Please enter email' },
+              { type: 'email', message: 'Invalid email address' },
+            ]}
+          >
+            <Input placeholder="john.smith@example.com" />
+          </Form.Item>
+          <Form.Item
+            label="Cell Phone"
+            name="cellPhone"
+            rules={[{ required: true, message: 'Please enter cell phone' }]}
+          >
+            <Input placeholder="555-123-4567" />
           </Form.Item>
         </Form>
       </Modal>
