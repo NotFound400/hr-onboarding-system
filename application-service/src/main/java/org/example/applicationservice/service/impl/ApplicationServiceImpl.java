@@ -55,7 +55,7 @@ public class ApplicationServiceImpl implements ApplicationService {
         entity.setComment(request.getComment());
         entity.setCreateDate(LocalDateTime.now());
         entity.setLastModificationDate(LocalDateTime.now());
-        entity.setStatus(ApplicationStatus.Pending);
+        entity.setStatus(ApplicationStatus.Open);
 
         ApplicationWorkFlow saved = repository.save(entity);
 
