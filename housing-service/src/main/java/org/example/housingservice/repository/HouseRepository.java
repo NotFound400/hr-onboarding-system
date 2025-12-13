@@ -52,8 +52,8 @@ public interface HouseRepository extends JpaRepository<House, Long> {
      * GetHousecompleteInfo（Landlord + facility）
      */
     @Query("SELECT DISTINCT h FROM House h " +
-           "JOIN FETCH h.landlord " +
-           "LEFT JOIN FETCH h.facilities " +
-           "WHERE h.id = :id")
+            "JOIN FETCH h.landlord " +
+            "LEFT JOIN FETCH h.facilities " +
+            "WHERE h.id = :id")
     Optional<House> findByIdWithDetails(@Param("id") Long id);
 }

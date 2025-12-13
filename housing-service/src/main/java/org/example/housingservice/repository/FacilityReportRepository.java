@@ -43,35 +43,35 @@ public interface FacilityReportRepository extends JpaRepository<FacilityReport, 
      * ByCreation timeDescending ordersorting
      */
     @Query("SELECT fr FROM FacilityReport fr " +
-           "JOIN fr.facility f " +
-           "WHERE f.house.id = :houseId " +
-           "ORDER BY fr.createDate DESC")
+            "JOIN fr.facility f " +
+            "WHERE f.house.id = :houseId " +
+            "ORDER BY fr.createDate DESC")
     List<FacilityReport> findByHouseIdOrderByCreateDateDesc(@Param("houseId") Long houseId);
 
     /**
      * ByHouseIDGet reports（pagination）
      */
     @Query("SELECT fr FROM FacilityReport fr " +
-           "JOIN fr.facility f " +
-           "WHERE f.house.id = :houseId " +
-           "ORDER BY fr.createDate DESC")
+            "JOIN fr.facility f " +
+            "WHERE f.house.id = :houseId " +
+            "ORDER BY fr.createDate DESC")
     Page<FacilityReport> findByHouseIdOrderByCreateDateDesc(@Param("houseId") Long houseId, Pageable pageable);
 
     /**
      * Get reportsand itsComment
      */
     @Query("SELECT DISTINCT fr FROM FacilityReport fr " +
-           "LEFT JOIN FETCH fr.comments " +
-           "WHERE fr.id = :id")
+            "LEFT JOIN FETCH fr.comments " +
+            "WHERE fr.id = :id")
     Optional<FacilityReport> findByIdWithComments(@Param("id") Long id);
 
     /**
      * Get reports completeInfo（includingfacilityandHouse）
      */
     @Query("SELECT fr FROM FacilityReport fr " +
-           "JOIN FETCH fr.facility f " +
-           "JOIN FETCH f.house " +
-           "WHERE fr.id = :id")
+            "JOIN FETCH fr.facility f " +
+            "JOIN FETCH f.house " +
+            "WHERE fr.id = :id")
     Optional<FacilityReport> findByIdWithDetails(@Param("id") Long id);
 
     /**
@@ -84,7 +84,7 @@ public interface FacilityReportRepository extends JpaRepository<FacilityReport, 
      * StatisticsHouseReportscount
      */
     @Query("SELECT COUNT(fr) FROM FacilityReport fr " +
-           "JOIN fr.facility f " +
-           "WHERE f.house.id = :houseId")
+            "JOIN fr.facility f " +
+            "WHERE f.house.id = :houseId")
     long countByHouseId(@Param("houseId") Long houseId);
 }

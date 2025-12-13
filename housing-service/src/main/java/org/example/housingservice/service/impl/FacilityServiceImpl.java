@@ -75,7 +75,7 @@ public class FacilityServiceImpl implements FacilityService {
         }
 
         List<Object[]> results = facilityRepository.getFacilitySummaryByHouseId(houseId);
-        
+
         return results.stream()
                 .map(row -> FacilityDTO.Summary.builder()
                         .type((String) row[0])

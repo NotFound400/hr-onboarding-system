@@ -21,7 +21,7 @@ import java.util.List;
 
 /**
  * Facility Report Controller
- * 
+ *
  * PDF Requirements:
  * - Employees should be able to report a facility issue in the house
  * - See all comments by employees or HR
@@ -41,7 +41,7 @@ public class FacilityReportController {
 
     /**
      * Create facility report
-     * 
+     *
      * PDF: Employees should be able to report a facility issue in the house
      */
     @PostMapping
@@ -55,10 +55,10 @@ public class FacilityReportController {
         }
         // If user ID not found in header, use default value or throw exception
         Long employeeId = userId;
-        
+
         log.info("Creating facility report by employee: {}", employeeId);
         FacilityReportDTO.DetailResponse report = reportService.createReport(request, employeeId);
-        
+
         return ResponseEntity
                 .status(HttpStatus.CREATED)
                 .body(ApiResponse.success("Report created successfully", report));
@@ -72,14 +72,14 @@ public class FacilityReportController {
     public ResponseEntity<ApiResponse<FacilityReportDTO.DetailResponse>> getReportById(
             @PathVariable Long id,
             @RequestHeader(value = "X-User-Id", required = false) Long userId) {
-        
+
         FacilityReportDTO.DetailResponse report = reportService.getReportById(id, userId);
         return ResponseEntity.ok(ApiResponse.success(report));
     }
 
     /**
      * Get reports for a house (paginated)
-     * 
+     *
      * PDF: Each page should only display 3-5 reports, sorted by created date
      */
     @GetMapping("/house/{houseId}")
@@ -96,7 +96,7 @@ public class FacilityReportController {
 
         Pageable pageable = PageRequest.of(page, size);
         Page<FacilityReportDTO.ListItem> reports = reportService.getReportsByHouseId(houseId, pageable);
-        
+
         return ResponseEntity.ok(ApiResponse.success(reports));
     }
 
@@ -119,7 +119,7 @@ public class FacilityReportController {
 
     /**
      * Update report status (HR only)
-     * 
+     *
      * PDF: Status (Open, In Progress, Closed)
      */
     @PatchMapping("/{id}/status")
@@ -135,13 +135,13 @@ public class FacilityReportController {
 
         log.info("Updating report status: {}, newStatus: {}", id, request.getStatus());
         FacilityReportDTO.DetailResponse report = reportService.updateReportStatus(id, request);
-        
+
         return ResponseEntity.ok(ApiResponse.success("Report status updated successfully", report));
     }
 
     /**
      * Update report content
-     * 
+     *
      * Only report creator can update
      */
     @PutMapping("/{id}")
@@ -150,12 +150,12 @@ public class FacilityReportController {
             @PathVariable Long id,
             @Valid @RequestBody FacilityReportDTO.UpdateRequest request,
             @RequestHeader(value = "X-User-Id", required = false) Long userId) {
-        
+
         Long employeeId = userId != null ? userId : 1L;
-        
+
         log.info("Updating report: {}, by employee: {}", id, employeeId);
         FacilityReportDTO.DetailResponse report = reportService.updateReport(id, request, employeeId);
-        
+
         return ResponseEntity.ok(ApiResponse.success("Report updated successfully", report));
     }
 
@@ -163,7 +163,7 @@ public class FacilityReportController {
 
     /**
      * Add comment
-     * 
+     *
      * PDF: For each report, employees can add comments
      */
     @PostMapping("/comments")
@@ -171,12 +171,12 @@ public class FacilityReportController {
     public ResponseEntity<ApiResponse<FacilityReportDetailDTO.Response>> addComment(
             @Valid @RequestBody FacilityReportDetailDTO.CreateRequest request,
             @RequestHeader(value = "X-User-Id", required = false) Long userId) {
-        
+
         Long employeeId = userId != null ? userId : 1L;
-        
+
         log.info("Adding comment to report: {}, by employee: {}", request.getFacilityReportId(), employeeId);
         FacilityReportDetailDTO.Response comment = reportService.addComment(request, employeeId);
-        
+
         return ResponseEntity
                 .status(HttpStatus.CREATED)
                 .body(ApiResponse.success("Comment added successfully", comment));
@@ -184,7 +184,7 @@ public class FacilityReportController {
 
     /**
      * Update comment
-     * 
+     *
      * PDF: Employees can update comments which are created by the employee
      */
     @PutMapping("/comments/{commentId}")
@@ -193,12 +193,12 @@ public class FacilityReportController {
             @PathVariable Long commentId,
             @Valid @RequestBody FacilityReportDetailDTO.UpdateRequest request,
             @RequestHeader(value = "X-User-Id", required = false) Long userId) {
-        
+
         Long employeeId = userId != null ? userId : 1L;
-        
+
         log.info("Updating comment: {}, by employee: {}", commentId, employeeId);
         FacilityReportDetailDTO.Response comment = reportService.updateComment(commentId, request, employeeId);
-        
+
         return ResponseEntity.ok(ApiResponse.success("Comment updated successfully", comment));
     }
 
@@ -210,7 +210,7 @@ public class FacilityReportController {
     public ResponseEntity<ApiResponse<List<FacilityReportDetailDTO.Response>>> getCommentsByReportId(
             @PathVariable Long reportId,
             @RequestHeader(value = "X-User-Id", required = false) Long userId) {
-        
+
         List<FacilityReportDetailDTO.Response> comments = reportService.getCommentsByReportId(reportId, userId);
         return ResponseEntity.ok(ApiResponse.success(comments));
     }
@@ -224,9 +224,9 @@ public class FacilityReportController {
     @Operation(summary = "Get my reports", description = "Get all reports submitted by current employee")
     public ResponseEntity<ApiResponse<List<FacilityReportDTO.ListItem>>> getMyReports(
             @RequestHeader(value = "X-User-Id", required = false) Long userId) {
-        
+
         Long employeeId = userId != null ? userId : 1L;
-        
+
         List<FacilityReportDTO.ListItem> reports = reportService.getReportsByEmployeeId(employeeId);
         return ResponseEntity.ok(ApiResponse.success(reports));
     }
@@ -262,9 +262,9 @@ public class FacilityReportController {
     public ResponseEntity<ApiResponse<FacilityReportDTO.EmployeeViewResponse>> getReportForEmployee(
             @PathVariable Long id,
             @RequestHeader(value = "X-User-Id", required = false) Long userId) {
-        
+
         Long employeeId = userId != null ? userId : 1L;
-        
+
         FacilityReportDTO.EmployeeViewResponse report = reportService.getReportForEmployee(id, employeeId);
         return ResponseEntity.ok(ApiResponse.success(report));
     }

@@ -77,11 +77,6 @@ public class ApplicationFlowController {
         return ResponseEntity.ok(result);
     }
 
-    public ResponseEntity<Result<List<ApplicationFlowDTO>>> getApplicationsByUserId(@PathVariable Long userId) {
-        Result<List<ApplicationFlowDTO>> result = applicationService.getApplicationsByUserId(userId);
-        return ResponseEntity.ok(result);
-    }
-
     @Operation(summary = "Update application",
             description = "Employee updates their existing application before submission")
     @PreAuthorize("hasRole('Employee')")
@@ -102,13 +97,11 @@ public class ApplicationFlowController {
             description = "Employee submits completed application for HR review")
     @PreAuthorize("hasRole('Employee')")
     @PostMapping("/{applicationId}/submit")
-    public ResponseEntity<Result<Void>> submitApplication(@PathVariable Long applicationId) {
-        Result<Void> result = applicationService.submitApplication(applicationId);
-
+    public ResponseEntity<Result<UpdateApplicationStatusDTO>> submitApplication(@PathVariable Long applicationId) {
+        Result<UpdateApplicationStatusDTO> result = applicationService.submitApplication(applicationId);
         if (!result.isSuccess()) {
             return ResponseEntity.badRequest().body(result);
         }
-
         return ResponseEntity.ok(result);
     }
 

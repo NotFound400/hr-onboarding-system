@@ -16,9 +16,9 @@ public interface FacilityReportService {
 
     /**
      * CreateFacility Report
-     * 
+     *
      * PDF: Employees should be able to report a facility issue in the house
-     * 
+     *
      * @param request CreateRequest
      * @param employeeId Reporter employeeID
      * @return CreateReports
@@ -27,7 +27,7 @@ public interface FacilityReportService {
 
     /**
      * Get reportsDetail
-     * 
+     *
      * @param id reportID
      * @param currentEmployeeId current userID（to determineCommentwhether editable）
      * @return reportDetail（containsComment）
@@ -36,7 +36,7 @@ public interface FacilityReportService {
 
     /**
      * GetHouse allreport（pagination）
-     * 
+     *
      * PDF: Each page should only display 3-5 reports, sorted by created date
      */
     Page<FacilityReportDTO.ListItem> getReportsByHouseId(Long houseId, Pageable pageable);
@@ -48,14 +48,14 @@ public interface FacilityReportService {
 
     /**
      * UpdateReport status
-     * 
+     *
      * HR canUpdateReport status
      */
     FacilityReportDTO.DetailResponse updateReportStatus(Long id, FacilityReportDTO.UpdateStatusRequest request);
 
     /**
      * Updatereportcontent
-     * 
+     *
      * OnlyreportCreateusercanUpdate
      */
     FacilityReportDTO.DetailResponse updateReport(Long id, FacilityReportDTO.UpdateRequest request, Long employeeId);
@@ -64,7 +64,7 @@ public interface FacilityReportService {
 
     /**
      * AddComment
-     * 
+     *
      * PDF: Employees can add comments or update comments which are created by the employee
      * HR can add comments or update comments which are created by HR
      */
@@ -72,7 +72,7 @@ public interface FacilityReportService {
 
     /**
      * UpdateComment
-     * 
+     *
      * OnlyCommentCreateusercanUpdateown Comment
      */
     FacilityReportDetailDTO.Response updateComment(Long commentId, FacilityReportDetailDTO.UpdateRequest request, Long employeeId);
