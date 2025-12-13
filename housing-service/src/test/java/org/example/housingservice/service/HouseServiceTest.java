@@ -303,7 +303,7 @@ class HouseServiceTest {
                     101L, "Mike", "Smith", "Mike", "555-0001", "mike@test.com", 1L
             );
             
-            when(employeeServiceClient.getEmployeeById(101L)).thenReturn(employeeInfo);
+            when(employeeServiceClient.getEmployeeByUserID(101L)).thenReturn(employeeInfo);
             when(houseRepository.findById(1L)).thenReturn(Optional.of(testHouse));
             when(employeeServiceClient.getEmployeesByHouseId(1L)).thenReturn(List.of(employeeInfo));
 
@@ -324,7 +324,7 @@ class HouseServiceTest {
                     101L, "Mike", "Smith", "Mike", "555-0001", "mike@test.com", null
             );
             
-            when(employeeServiceClient.getEmployeeById(101L)).thenReturn(employeeInfo);
+            when(employeeServiceClient.getEmployeeByUserID(101L)).thenReturn(employeeInfo);
 
             // When
             HouseDTO.EmployeeViewResponse result = houseService.getMyHouse(101L);
