@@ -182,12 +182,9 @@ public class DocumentServiceImpl implements DocumentService {
         if (type == null || type.trim().isEmpty()) return false;
         String t = type.trim().toLowerCase();
         Set<String> requiredExact = Set.of(
-//                "passport",
-                "driver license",
-                "driver's license",
+                "passport",
                 "i-20 form",
-                "driving licence",
-                "driving license"
+                "f1-visa"
         );
 
         if (requiredExact.contains(t)) {
