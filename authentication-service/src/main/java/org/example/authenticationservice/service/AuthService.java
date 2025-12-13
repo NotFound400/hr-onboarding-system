@@ -388,6 +388,40 @@ public class AuthService {
                 .anyMatch(ur -> ur.getRole().getRoleName().equalsIgnoreCase(roleName));
     }
 
+    /**
+     * Refresh JWT token.
+     * Validates the current token and issues a new one with fresh expiration.
+     */
+    public LoginResponse refreshToken(String token) {
+        // Extract user info from current token
+        Long userId = jwtTokenProvider.getUserIdFromToken(token);
+        String username = jwtTokenProvider.getUsernameFromToken(token);
+        List<String> roles = jwtTokenProvider.getRolesFromToken(token);
+        Long houseId = jwtTokenProvider.getHouseIdFromToken(token);
+        String employeeId = jwtTokenProvider.getEmployeeIdFromToken(token);
+
+        // Validate user still exists
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new IllegalArgumentException("User not found"));
+
+        // Generate new token
+        String newToken = jwtTokenProvider.createToken(username, userId, roles, houseId, employeeId);
+        Instant expiresAt = Instant.now().plusMillis(jwtTokenProvider.getValidityInMs());
+
+        // Build response
+        LoginResponse response = new LoginResponse();
+        response.setToken(newToken);
+        response.setTokenType("Bearer");
+        response.setExpiresAt(expiresAt);
+        response.setUser(mapToUserDto(user, roles));
+        response.setRole(roles.isEmpty() ? null : roles.get(0));
+        response.setRoles(roles);
+        response.setHouseId(houseId);
+        response.setEmployeeId(employeeId);
+
+        return response;
+    }
+
     // ==================== Private Helper Methods ====================
 
     private void validateRegistrationRequest(RegisterRequest request) {

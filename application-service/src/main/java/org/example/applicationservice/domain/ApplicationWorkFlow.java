@@ -1,10 +1,9 @@
 package org.example.applicationservice.domain;
 
+import lombok.*;
 import org.example.applicationservice.utils.*;
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -12,6 +11,8 @@ import java.util.List;
 @Entity
 @Table(name="application_work_flow")
 @Data
+@ToString(exclude = "documents")
+@EqualsAndHashCode(exclude = "application")
 @NoArgsConstructor
 @AllArgsConstructor
 public class ApplicationWorkFlow {

@@ -1,5 +1,6 @@
 package org.example.applicationservice.service.impl;
 
+import jakarta.transaction.Transactional;
 import org.example.applicationservice.service.DocumentService;
 import org.example.applicationservice.utils.*;
 import org.example.applicationservice.dao.ApplicationWorkFlowRepository;
@@ -218,6 +219,7 @@ public class DocumentServiceImpl implements DocumentService {
     }
 
     @Override
+    @Transactional
     public void deleteDocumentById(Long documentId) {
 
         // 1. Fetch entity
@@ -226,16 +228,36 @@ public class DocumentServiceImpl implements DocumentService {
 //        ownershipValidator.checkOwnership(doc.getApplication().getEmployeeId());
 
         // 2. Extract S3 key
+//        String s3Url = doc.getPath();
+//        String key = s3Url.substring(s3Url.indexOf(".com/") + 5);
+
+        // 3. Check application status - only allow deletion when Open or Rejected
+        ApplicationWorkFlow application = doc.getApplication();
+        if (application == null) {
+            throw new EntityNotFoundException("Application not found for document: " + documentId);
+        }
+
+        System.out.println("Application: " + application);
+        System.out.println("Application ID: " + (application != null ? application.getId() : "null"));
+        System.out.println("Application Status: " + (application != null ? application.getStatus() : "null"));
+
+        ApplicationStatus status = application.getStatus();
+        if (!(status == ApplicationStatus.Open || status == ApplicationStatus.Rejected)) {
+            throw new IllegalStateException(
+                    "Cannot delete document. Application status must be 'Open' or 'Rejected', but was: " + status);
+        }
+
+        // 4. Extract S3 key
         String s3Url = doc.getPath();
         String key = s3Url.substring(s3Url.indexOf(".com/") + 5);
 
-        // 3. Delete from S3
+        // 5. Delete from S3
         s3Client.deleteObject(DeleteObjectRequest.builder()
                 .bucket(bucketName)
                 .key(key)
                 .build());
 
-        // 4. Delete entity from DB
+        // 6. Delete entity from DB
         repository.delete(doc);
     }
 

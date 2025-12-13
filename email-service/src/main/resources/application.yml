@@ -45,3 +45,12 @@ email:
     application-status: email.application-status.queue
     opt-update: email.opt-update.queue
     facility-report: email.facility-report.queue
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  endpoint:
+    health:
+      show-details: always  # Shows RabbitMQ, mail server status

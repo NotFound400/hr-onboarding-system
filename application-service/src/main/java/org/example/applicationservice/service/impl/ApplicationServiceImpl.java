@@ -51,7 +51,7 @@ public class ApplicationServiceImpl implements ApplicationService {
             return Result.fail("applicationType is required");
         }
 
-//        ownershipValidator.checkOwnership(request.getEmployeeId());
+        ownershipValidator.checkOwnership(request.getEmployeeId());
 
         ApplicationWorkFlow entity = new ApplicationWorkFlow();
         entity.setEmployeeId(request.getEmployeeId());
@@ -59,7 +59,7 @@ public class ApplicationServiceImpl implements ApplicationService {
         entity.setComment(request.getComment());
         entity.setCreateDate(LocalDateTime.now());
         entity.setLastModificationDate(LocalDateTime.now());
-        entity.setStatus(ApplicationStatus.Pending);
+        entity.setStatus(ApplicationStatus.Open);
 
         ApplicationWorkFlow saved = repository.save(entity);
 
@@ -171,12 +171,7 @@ public class ApplicationServiceImpl implements ApplicationService {
     @Override
     @Transactional
     public Result<ApplicationFlowDTO> updateApplication(Long applicationId, UpdateApplicationDTO request) {
-        if (applicationId == null) {
-            return Result.fail("applicationId is required");
-        }
-
         Optional<ApplicationWorkFlow> optionalApp = repository.findById(applicationId);
-
         if (optionalApp.isEmpty()) {
             return Result.fail("Application not found with ID: " + applicationId);
         }
@@ -185,7 +180,7 @@ public class ApplicationServiceImpl implements ApplicationService {
 //        ownershipValidator.checkOwnership(app.getEmployeeId());
 
         // Only allow update if status = OPEN or REJECTED
-        if (!(app.getStatus() == ApplicationStatus.Open || app.getStatus() == ApplicationStatus.Rejected || app.getStatus() == ApplicationStatus.Pending)) {
+        if (!(app.getStatus() == ApplicationStatus.Open || app.getStatus() == ApplicationStatus.Rejected)) {
             return Result.fail("Cannot update application with status: " + app.getStatus());
         }
 
@@ -214,7 +209,7 @@ public class ApplicationServiceImpl implements ApplicationService {
 
     @Override
     @Transactional
-    public Result<Void> submitApplication(Long applicationId) {
+    public Result<UpdateApplicationStatusDTO> submitApplication(Long applicationId) {
         if (applicationId == null) {
             return Result.fail("applicationId is required");
         }
@@ -225,19 +220,24 @@ public class ApplicationServiceImpl implements ApplicationService {
         }
 
         ApplicationWorkFlow app = optionalApp.get();
-//        ownershipValidator.checkOwnership(app.getEmployeeId());
+
         // Only allow submission if status = Open or Rejected
         if (!(app.getStatus() == ApplicationStatus.Open || app.getStatus() == ApplicationStatus.Rejected)) {
             return Result.fail("Cannot submit application with status: " + app.getStatus());
         }
 
-        // Set status to Pending (reuse)
+        // Set status to Pending
         app.setStatus(ApplicationStatus.Pending);
         app.setLastModificationDate(LocalDateTime.now());
+        ApplicationWorkFlow saved = repository.save(app);
 
-        repository.save(app);
+        // Return the updated status info
+        UpdateApplicationStatusDTO response = new UpdateApplicationStatusDTO();
+        response.setId(saved.getId());
+        response.setStatus(ApplicationStatus.valueOf(saved.getStatus().name()));
+        response.setComment(saved.getComment());
 
-        return Result.success(null); // No data needed
+        return Result.success(response);
     }
 
     @Override
@@ -258,68 +258,47 @@ public class ApplicationServiceImpl implements ApplicationService {
         app.setStatus(ApplicationStatus.Approved);
         app.setComment(request.getComment());
         app.setLastModificationDate(LocalDateTime.now());
+        ApplicationWorkFlow saved = repository.save(app);
 
-        repository.save(app);
         sendApplicationStatusEmail(app.getEmployeeId(), "Approved", request.getComment());
 
-        // Trigger Email Service (Feign)
-//        try {
-//            emailServiceClient.sendApprovalEmail(app.getEmployeeID(), request.getComment());
-//        } catch (Exception e) {
-//            System.err.println("Failed to send approval email: " + e.getMessage());
-//        }
+        // Make sure this is populated
+        UpdateApplicationStatusDTO response = new UpdateApplicationStatusDTO();
+        response.setId(saved.getId());
+        response.setStatus(ApplicationStatus.valueOf(saved.getStatus().name()));
+        response.setComment(saved.getComment());
 
-        // create response DTO
-        UpdateApplicationStatusDTO dto = new UpdateApplicationStatusDTO(
-                app.getStatus(),
-                app.getComment()
-        );
-
-        return Result.success(dto);
+        return Result.success(response);
     }
 
     @Override
     @Transactional
     public Result<UpdateApplicationStatusDTO> rejectApplication(Long applicationId, HRRequestDTO request) {
-
-        if (applicationId == null) {
-            return Result.fail("applicationId is required");
+        Optional<ApplicationWorkFlow> optional = repository.findById(applicationId);
+        if (optional.isEmpty()) {
+            return Result.fail("Application not found");
         }
 
-        Optional<ApplicationWorkFlow> optionalApp = repository.findById(applicationId);
-        if (optionalApp.isEmpty()) {
-            return Result.fail("Application not found with ID: " + applicationId);
-        }
-
-        ApplicationWorkFlow app = optionalApp.get();
-
-        // Only allow rejection if status = Pending
+        ApplicationWorkFlow app = optional.get();
         if (app.getStatus() != ApplicationStatus.Pending) {
             return Result.fail("Cannot reject application with status: " + app.getStatus());
         }
 
-        // update fields
         app.setStatus(ApplicationStatus.Rejected);
         app.setComment(request.getComment());
         app.setLastModificationDate(LocalDateTime.now());
+        ApplicationWorkFlow saved = repository.save(app);
 
-        repository.save(app);
+        // Send email notification
         sendApplicationStatusEmail(app.getEmployeeId(), "Rejected", request.getComment());
 
-        //        try {
-//            emailServiceClient.sendRejectEmail(app.getEmployeeID(), request.getComment());
-//        } catch (Exception e) {
-//            System.out.println("[Placeholder] Failed to send approval email to " +
-//                    app.getEmployeeID() + " — " + e.getMessage());
-//        }
+        // Populate the response DTO
+        UpdateApplicationStatusDTO response = new UpdateApplicationStatusDTO();
+        response.setId(saved.getId());
+        response.setStatus(ApplicationStatus.valueOf(saved.getStatus().name()));
+        response.setComment(saved.getComment());
 
-        // return DTO like approveApplication
-        UpdateApplicationStatusDTO dto = new UpdateApplicationStatusDTO(
-                app.getStatus(),
-                app.getComment()
-        );
-
-        return Result.success(dto);
+        return Result.success(response);
     }
 
     @Override

@@ -12,7 +12,8 @@ public interface ApplicationService {
     public Result<List<ApplicationListResponseDTO>> getActiveApplications(String employeeID);
     Result<ApplicationFlowDTO> getApplicationById(Long applicationId);
     Result<ApplicationFlowDTO> updateApplication(Long applicationId, UpdateApplicationDTO request);
-    Result<Void> submitApplication(Long applicationId);
+    Result<UpdateApplicationStatusDTO> submitApplication(Long applicationId);
+//    Result<Void> submitApplication(Long applicationId);
 //    Result<Void> approveApplication(Long applicationId, HRRequestDTO request);
     Result<UpdateApplicationStatusDTO> approveApplication(Long applicationId, HRRequestDTO request);
 //    Result<Void> rejectApplication(Long applicationId, HRRequestDTO request);

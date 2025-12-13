@@ -32,18 +32,12 @@ public interface EmployeeServiceClient {
 
     record EmployeeInfo(
             String id,                              // MongoDB ObjectId is String, not Long
-
-            @JsonProperty("userID")                 // Maps "userID" from JSON
-            Long userId,
-
             String firstName,
             String lastName,
             String preferredName,
             String cellPhone,
             String email,
-
-            @JsonProperty("houseID")                // Maps "houseID" from JSON (capital ID)
-            Long houseId
+            Long houseID
     ) {
         public String getDisplayName() {
             if (preferredName != null && !preferredName.isEmpty()) {
@@ -60,6 +54,11 @@ public interface EmployeeServiceClient {
             String last = lastName != null ? lastName : "";
             String full = (first + " " + last).trim();
             return full.isEmpty() ? "Unknown" : full;
+        }
+
+        // Add getter for compatibility with houseId() calls
+        public Long houseId() {
+            return houseID;
         }
     }
 }
