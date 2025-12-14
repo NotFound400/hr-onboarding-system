@@ -96,7 +96,7 @@ const OnboardingFormPage: React.FC = () => {
 
   useEffect(() => {
     if (applicationId) {
-      console.log('[Onboarding] Initialized applicationId:', applicationId);
+      console.log('[Onboarding] Using applicationId:', applicationId);
     }
   }, [applicationId]);
 

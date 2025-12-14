@@ -12,6 +12,7 @@ import { login, selectIsAuthenticated, selectAuthLoading, selectUser } from '../
 import { getApplicationsByEmployeeId, getEmployeeByUserId } from '../../../services/api';
 import type { LoginRequest } from '../../../types';
 import { useAntdMessage } from '../../../hooks/useAntdMessage';
+import { setApplicationContext } from '../../../store/slices/onboardingSlice';
 
 const { Title, Text } = Typography;
 
@@ -74,26 +75,32 @@ const LoginPage: React.FC = () => {
           
           // 2. 通过 Employee.id 查询 Application
           const applications = await getApplicationsByEmployeeId(employee.id);
-          
-          // 查找 Onboarding 类型的申请
-          const onboardingApp = applications.find(app => app.applicationType === 'Onboarding');
-          
-          if (!onboardingApp) {
-            // 没有 Onboarding 申请记录，跳转到表单填写
+
+          if (!applications || applications.length === 0) {
+            dispatch(setApplicationContext({ id: null, status: null }));
             navigate('/onboarding/form', { replace: true });
-          } else if (onboardingApp.status === 'Approved') {
-            // 已批准，进入 Personal Information Page (per Section 2.a)
+            return;
+          }
+
+          const latestApplication = applications[0];
+          dispatch(
+            setApplicationContext({
+              id: latestApplication.id,
+              status: latestApplication.status,
+            })
+          );
+
+          if (latestApplication.status === 'Approved') {
             navigate('/employee/personal-info', { replace: true });
-          } else if (onboardingApp.status === 'Rejected') {
-            // Section 3.e.iii: "The user should be able to log in and see what is wrong"
-            // 被拒绝，显示拒绝原因和缺失文档信息
+          } else if (latestApplication.status === 'Rejected') {
             navigate('/onboarding/rejected', { replace: true });
           } else {
-            // Pending/其他状态，跳转到表单页
+            // Includes "Open" and other pending-like states
             navigate('/onboarding/form', { replace: true });
           }
         } catch (error) {
           // 查询失败或没有 Employee 记录，静默跳转到 Onboarding 表单
+          dispatch(setApplicationContext({ id: null, status: null }));
           navigate('/onboarding/form', { replace: true });
         } finally {
           setCheckingOnboarding(false);

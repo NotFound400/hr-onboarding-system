@@ -10,6 +10,7 @@ import type {
   Employee,
   OnboardingFormDTO,
   UpdateEmployeeRequest,
+  Application,
 } from '../../types';
 import { updateEmployee } from '../../services/api';
 import { createApplication, submitApplication } from '../../services/api/applicationApi';
@@ -25,6 +26,8 @@ interface OnboardingState {
   employee: Employee | null;
   /** 新建申请 ID */
   applicationId: number | null;
+  /** 当前申请状态 (登录或表单流程中获取) */
+  applicationStatus: Application['status'] | null;
   /** 加载状态 */
   loading: boolean;
   /** 错误信息 */
@@ -40,6 +43,7 @@ const initialState: OnboardingState = {
   formData: null,
   employee: null,
   applicationId: null,
+  applicationStatus: null,
   loading: false,
   error: null,
   submitSuccess: false,
@@ -138,6 +142,8 @@ const onboardingSlice = createSlice({
       state.currentStep = 0;
       state.formData = null;
       state.employee = null;
+      state.applicationId = null;
+      state.applicationStatus = null;
       state.loading = false;
       state.error = null;
       state.submitSuccess = false;
@@ -147,6 +153,16 @@ const onboardingSlice = createSlice({
      */
     clearError: (state) => {
       state.error = null;
+    },
+    /**
+     * 保存从登录流程获取的申请信息
+     */
+    setApplicationContext: (
+      state,
+      action: PayloadAction<{ id: number | null; status: Application['status'] | null }>
+    ) => {
+      state.applicationId = action.payload.id;
+      state.applicationStatus = action.payload.status;
     },
   },
   extraReducers: (builder) => {
@@ -186,6 +202,7 @@ export const selectCurrentStep = (state: { onboarding: OnboardingState }) => sta
 export const selectFormData = (state: { onboarding: OnboardingState }) => state.onboarding.formData;
 export const selectEmployee = (state: { onboarding: OnboardingState }) => state.onboarding.employee;
 export const selectApplicationId = (state: { onboarding: OnboardingState }) => state.onboarding.applicationId;
+export const selectApplicationStatus = (state: { onboarding: OnboardingState }) => state.onboarding.applicationStatus;
 export const selectOnboardingLoading = (state: { onboarding: OnboardingState }) => state.onboarding.loading;
 export const selectOnboardingError = (state: { onboarding: OnboardingState }) => state.onboarding.error;
 export const selectSubmitSuccess = (state: { onboarding: OnboardingState }) => state.onboarding.submitSuccess;
@@ -199,6 +216,7 @@ export const {
   saveFormData,
   resetOnboarding,
   clearError,
+  setApplicationContext,
 } = onboardingSlice.actions;
 
 export default onboardingSlice.reducer;
