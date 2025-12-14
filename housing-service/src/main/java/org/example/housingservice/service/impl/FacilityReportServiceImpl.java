@@ -6,7 +6,6 @@ import org.example.housingservice.client.EmailServiceClient;
 import org.example.housingservice.client.EmployeeServiceClient;
 import org.example.housingservice.dto.FacilityReportDTO;
 import org.example.housingservice.dto.FacilityReportDetailDTO;
-import org.example.housingservice.dto.FacilityReportEmailRequest;
 import org.example.housingservice.entity.Facility;
 import org.example.housingservice.entity.FacilityReport;
 import org.example.housingservice.entity.FacilityReportDetail;
@@ -94,6 +93,10 @@ public class FacilityReportServiceImpl implements FacilityReportService {
         log.info("Updating report status: {}, newStatus: {}", id, request.getStatus());
 
         FacilityReport report = findReportById(id);
+        if (report == null) {
+            throw new ResourceNotFoundException("FacilityReport", "id", id);
+        }
+
         report.setStatus(request.getStatus());
 
         FacilityReport updated = reportRepository.save(report);
@@ -243,7 +246,7 @@ public class FacilityReportServiceImpl implements FacilityReportService {
         try {
             // Use getEmployeeByUserId instead of getEmployeeById
             EmployeeServiceClient.EmployeeInfo employee =
-                    employeeServiceClient.getEmployeeByUserId(userId);
+                    employeeServiceClient.getEmployeeByUserID(userId);
             if (employee != null && employee.firstName() != null) {
                 return employee.getDisplayName();
             }
@@ -320,7 +323,7 @@ public class FacilityReportServiceImpl implements FacilityReportService {
         try {
             // Get employee info by userId (stored as employeeId in report)
             EmployeeServiceClient.EmployeeInfo employee =
-                    employeeServiceClient.getEmployeeByUserId(report.getEmployeeId());
+                    employeeServiceClient.getEmployeeByUserID(report.getEmployeeId());
 
             if (employee != null && employee.email() != null) {
                 EmailServiceClient.FacilityReportEmailRequest emailRequest =
