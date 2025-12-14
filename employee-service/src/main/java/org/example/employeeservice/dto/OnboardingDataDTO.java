@@ -4,6 +4,7 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -38,8 +39,8 @@ public class OnboardingDataDTO {
     // Work Authorization
     private String workAuthorizationType;   // CITIZEN, GREEN_CARD, H1B, L2, F1_CPT, F1_OPT, H4, OTHER
     private String workAuthorizationOther;  // If type is OTHER, specify here
-    private LocalDateTime workAuthStartDate;
-    private LocalDateTime workAuthEndDate;
+    private LocalDate workAuthStartDate;
+    private LocalDate workAuthEndDate;
     
     // Driver's License
     private boolean hasDriverLicense;

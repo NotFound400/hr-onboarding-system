@@ -4,6 +4,7 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 /**
@@ -32,7 +33,7 @@ public class EmployeeSummaryDTO {
     
     // Visa status
     private String visaType;
-    private LocalDateTime visaEndDate;
+    private LocalDate visaEndDate;
     private Long daysLeftOnVisa;
     
     // Contact

@@ -14,6 +14,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
@@ -46,7 +47,7 @@ public class ProfileService {
      */
     public List<EmployeeSummaryDTO> searchProfiles(String query) {
         List<Employee> employees = employeeRepository.searchByName(query);
-        
+
         return employees.stream()
                 .map(this::toSummaryDTO)
                 .collect(Collectors.toList());

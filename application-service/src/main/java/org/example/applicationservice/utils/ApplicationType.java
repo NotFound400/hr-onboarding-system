@@ -1,5 +1,8 @@
 package org.example.applicationservice.utils;
 
+import lombok.Getter;
+
+@Getter
 public enum ApplicationType {
     ONBOARDING("Onboarding"),
     OPT("OPT");
@@ -10,7 +13,4 @@ public enum ApplicationType {
         this.value = value;
     }
 
-    public String getValue() {
-        return value;
-    }
 }

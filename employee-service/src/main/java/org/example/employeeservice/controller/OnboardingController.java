@@ -7,7 +7,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping("/employees")
+@RequestMapping()
 public class OnboardingController {
 
     private final OnboardingService onboardingService;
@@ -20,7 +20,7 @@ public class OnboardingController {
      * Update employee with onboarding data
      * Called after onboarding application is approved
      */
-    @PutMapping("/{employeeId}/onboarding")
+    @PutMapping("/employees/{employeeId}/onboarding")
     public ResponseEntity<Employee> updateOnboardingData(
             @PathVariable String employeeId,
             @RequestBody OnboardingDataDTO onboardingData) {
@@ -31,7 +31,7 @@ public class OnboardingController {
     /**
      * Update employee's address information
      */
-    @PutMapping("/{employeeId}/address")
+    @PutMapping("/employees/{employeeId}/address")
     public ResponseEntity<Employee> updateAddress(
             @PathVariable String employeeId,
             @RequestBody OnboardingDataDTO.AddressDTO addressData) {
@@ -42,7 +42,7 @@ public class OnboardingController {
     /**
      * Update employee's contact information
      */
-    @PutMapping("/{employeeId}/contacts")
+    @PutMapping("/employees/{employeeId}/contacts")
     public ResponseEntity<Employee> updateContacts(
             @PathVariable String employeeId,
             @RequestBody OnboardingDataDTO onboardingData) {
@@ -53,7 +53,7 @@ public class OnboardingController {
     /**
      * Add emergency contact
      */
-    @PostMapping("/{employeeId}/emergency-contact")
+    @PostMapping("/employees/{employeeId}/emergency-contact")
     public ResponseEntity<Employee> addEmergencyContact(
             @PathVariable String employeeId,
             @RequestBody OnboardingDataDTO.ContactDTO contact) {
@@ -64,7 +64,7 @@ public class OnboardingController {
     /**
      * Update emergency contact
      */
-    @PutMapping("/{employeeId}/emergency-contact/{contactId}")
+    @PutMapping("/employees/{employeeId}/emergency-contact/{contactId}")
     public ResponseEntity<Employee> updateEmergencyContact(
             @PathVariable String employeeId,
             @PathVariable String contactId,
@@ -76,7 +76,7 @@ public class OnboardingController {
     /**
      * Delete emergency contact
      */
-    @DeleteMapping("/{employeeId}/emergency-contact/{contactId}")
+    @DeleteMapping("/employees/{employeeId}/emergency-contact/{contactId}")
     public ResponseEntity<Void> deleteEmergencyContact(
             @PathVariable String employeeId,
             @PathVariable String contactId) {
@@ -87,7 +87,7 @@ public class OnboardingController {
     /**
      * Check if employee has completed onboarding
      */
-    @GetMapping("/{employeeId}/onboarding/status")
+    @GetMapping("/employees/{employeeId}/onboarding/status")
     public ResponseEntity<OnboardingDataDTO.OnboardingStatusResponse> getOnboardingStatus(
             @PathVariable String employeeId) {
         return ResponseEntity.ok(onboardingService.getOnboardingStatus(employeeId));

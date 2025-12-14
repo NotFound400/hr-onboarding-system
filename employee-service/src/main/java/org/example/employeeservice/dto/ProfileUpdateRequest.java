@@ -4,6 +4,7 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
@@ -45,8 +46,8 @@ public class ProfileUpdateRequest {
     
     // Work authorization
     private String workAuthType;
-    private LocalDateTime workAuthStartDate;
-    private LocalDateTime workAuthEndDate;
+    private LocalDate workAuthStartDate;
+    private LocalDate workAuthEndDate;
     
     // Driver's license
     private String driverLicenseNumber;

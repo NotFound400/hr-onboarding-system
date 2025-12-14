@@ -19,7 +19,7 @@ import java.util.List;
  * Supports both employee self-service and HR management views
  */
 @RestController
-@RequestMapping("/profiles")
+@RequestMapping("/employees")
 public class ProfileController {
 
     private final ProfileService profileService;
@@ -32,7 +32,7 @@ public class ProfileController {
      * HR: Get paginated list of employee summaries
      */
     @PreAuthorize("hasRole('HR')")
-    @GetMapping("/summary")
+    @GetMapping("/profiles/summary")
     public ResponseEntity<Page<EmployeeSummaryDTO>> getEmployeeSummaries(
             @PageableDefault(size = 10, sort = "userId", direction = Sort.Direction.ASC)
             Pageable pageable) {
@@ -43,7 +43,7 @@ public class ProfileController {
      * HR: Search employees by name
      */
     @PreAuthorize("hasRole('HR')")
-    @GetMapping("/search")
+    @GetMapping("/profiles/search")
     public ResponseEntity<List<EmployeeSummaryDTO>> searchProfiles(@RequestParam String query) {
         return ResponseEntity.ok(profileService.searchProfiles(query));
     }
@@ -52,7 +52,7 @@ public class ProfileController {
      * Get profile by employee ID
      * Employees can only view their own profile; HR can view any
      */
-    @GetMapping("/{employeeId}")
+    @GetMapping("/profiles/{employeeId}")
     public ResponseEntity<Employee> getProfile(@PathVariable String employeeId) {
         return profileService.getProfile(employeeId)
                 .map(ResponseEntity::ok)
@@ -63,7 +63,7 @@ public class ProfileController {
      * Update profile section (name, address, contact, etc.)
      * Employees can only update their own profile; HR can update any
      */
-    @PutMapping("/{employeeId}/section/{section}")
+    @PutMapping("/profiles/{employeeId}/section/{section}")
     public ResponseEntity<Employee> updateProfileSection(
             @PathVariable String employeeId,
             @PathVariable String section,
@@ -74,7 +74,7 @@ public class ProfileController {
     /**
      * Get profile summary (for home page name section)
      */
-    @GetMapping("/{employeeId}/summary")
+    @GetMapping("/profiles/{employeeId}/summary")
     public ResponseEntity<EmployeeSummaryDTO> getProfileSummary(@PathVariable String employeeId) {
         return ResponseEntity.ok(profileService.getProfileSummary(employeeId));
     }
@@ -82,7 +82,7 @@ public class ProfileController {
     /**
      * Get SSN (last 4 digits only for display)
      */
-    @GetMapping("/{employeeId}/ssn-masked")
+    @GetMapping("/profiles/{employeeId}/ssn-masked")
     public ResponseEntity<String> getMaskedSSN(@PathVariable String employeeId) {
         return ResponseEntity.ok(profileService.getMaskedSSN(employeeId));
     }

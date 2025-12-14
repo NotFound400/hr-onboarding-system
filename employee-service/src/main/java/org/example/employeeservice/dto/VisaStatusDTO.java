@@ -4,6 +4,7 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 /**
@@ -24,8 +25,8 @@ public class VisaStatusDTO {
     
     // Visa information
     private String visaType;
-    private LocalDateTime visaStartDate;
-    private LocalDateTime visaEndDate;
+    private LocalDate visaStartDate;
+    private LocalDate visaEndDate;
     private Long daysLeft;
     
     // OPT STEM application status (if applicable)

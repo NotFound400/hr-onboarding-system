@@ -11,7 +11,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@RequestMapping("/employees")
+@RequestMapping()
 public class VisaStatusController {
 
     private final VisaStatusService visaStatusService;
@@ -23,7 +23,7 @@ public class VisaStatusController {
     /**
      * Get all visa statuses for an employee
      */
-    @GetMapping("/{employeeId}/visa-status")
+    @GetMapping("/employees/{employeeId}/visa-status")
     public ResponseEntity<List<VisaStatus>> getVisaStatuses(@PathVariable String employeeId) {
         return ResponseEntity.ok(visaStatusService.getVisaStatuses(employeeId));
     }
@@ -31,7 +31,7 @@ public class VisaStatusController {
     /**
      * Get active visa status for an employee
      */
-    @GetMapping("/{employeeId}/visa-status/active")
+    @GetMapping("/employees/{employeeId}/visa-status/active")
     public ResponseEntity<VisaStatus> getActiveVisaStatus(@PathVariable String employeeId) {
         return visaStatusService.getActiveVisaStatus(employeeId)
                 .map(ResponseEntity::ok)
@@ -41,7 +41,7 @@ public class VisaStatusController {
     /**
      * Add a new visa status to an employee
      */
-    @PostMapping("/{employeeId}/visa-status")
+    @PostMapping("/employees/{employeeId}/visa-status")
     public ResponseEntity<VisaStatus> addVisaStatus(
             @PathVariable String employeeId,
             @RequestBody VisaStatusUpdateRequest request) {
@@ -51,7 +51,7 @@ public class VisaStatusController {
     /**
      * Update an existing visa status
      */
-    @PutMapping("/{employeeId}/visa-status/{visaStatusId}")
+    @PutMapping("/employees/{employeeId}/visa-status/{visaStatusId}")
     public ResponseEntity<VisaStatus> updateVisaStatus(
             @PathVariable String employeeId,
             @PathVariable String visaStatusId,
@@ -63,7 +63,7 @@ public class VisaStatusController {
      * HR: Get all employees with visa status (for HR visa management page)
      */
     @PreAuthorize("hasRole('HR')")
-    @GetMapping("/visa-status/all")
+    @GetMapping("/employees/visa-status/all")
     public ResponseEntity<List<VisaStatusDTO>> getAllEmployeesWithVisaStatus() {
         return ResponseEntity.ok(visaStatusService.getAllEmployeesWithVisaStatus());
     }
@@ -72,7 +72,7 @@ public class VisaStatusController {
      * HR: Get employees with expiring visas (within N days)
      */
     @PreAuthorize("hasRole('HR')")
-    @GetMapping("/visa-status/expiring")
+    @GetMapping("/employees/visa-status/expiring")
     public ResponseEntity<List<VisaStatusDTO>> getEmployeesWithExpiringVisas(
             @RequestParam(defaultValue = "90") int days) {
         return ResponseEntity.ok(visaStatusService.getEmployeesWithExpiringVisas(days));
@@ -82,7 +82,7 @@ public class VisaStatusController {
      * HR: Get employees by visa type (OPT, H1B, etc.)
      */
     @PreAuthorize("hasRole('HR')")
-    @GetMapping("/visa-status/type/{visaType}")
+    @GetMapping("/employees/visa-status/type/{visaType}")
     public ResponseEntity<List<VisaStatusDTO>> getEmployeesByVisaType(@PathVariable String visaType) {
         return ResponseEntity.ok(visaStatusService.getEmployeesByVisaType(visaType));
     }
@@ -90,7 +90,7 @@ public class VisaStatusController {
     /**
      * Check if employee needs visa (not citizen or green card holder)
      */
-    @GetMapping("/{employeeId}/needs-visa-management")
+    @GetMapping("/employees/{employeeId}/needs-visa-management")
     public ResponseEntity<Boolean> needsVisaManagement(@PathVariable String employeeId) {
         return ResponseEntity.ok(visaStatusService.needsVisaManagement(employeeId));
     }

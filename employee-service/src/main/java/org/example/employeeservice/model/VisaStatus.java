@@ -4,6 +4,7 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.Date;
 import java.util.UUID;
@@ -15,7 +16,7 @@ public class VisaStatus {
     private String id = UUID.randomUUID().toString();
     private String visaType;
     private String activeFlag;
-    private LocalDateTime startDate;
-    private LocalDateTime endDate;
+    private LocalDate startDate;
+    private LocalDate endDate;
     private LocalDateTime lastModificationDate;
 }

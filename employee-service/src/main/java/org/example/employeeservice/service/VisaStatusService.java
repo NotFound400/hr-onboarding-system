@@ -10,6 +10,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
@@ -135,8 +136,8 @@ public class VisaStatusService {
      * Get employees with visas expiring within N days
      */
     public List<VisaStatusDTO> getEmployeesWithExpiringVisas(int days) {
-        LocalDateTime now = LocalDateTime.now();
-        LocalDateTime threshold = now.plusDays(days);
+        LocalDate now = LocalDate.now();
+        LocalDate threshold = now.plusDays(days);
 
         List<Employee> allEmployees = employeeRepository.findAll();
         
@@ -147,7 +148,7 @@ public class VisaStatusService {
                     if (activeVisa.isEmpty() || activeVisa.get().getEndDate() == null) {
                         return false;
                     }
-                    LocalDateTime endDate = activeVisa.get().getEndDate();
+                    LocalDate endDate = activeVisa.get().getEndDate();
                     return endDate.isAfter(now) && endDate.isBefore(threshold);
                 })
                 .map(this::toVisaStatusDTO)
