@@ -35,6 +35,8 @@ public class SecurityConfig {
 
         configuration.setAllowedOrigins(Arrays.asList(
                 "http://localhost:3000",  // React
+                "http://localhost:5173",
+                "http://localhost:5174",
                 "http://localhost:5175",  // FrontEnd
                 "http://localhost:4200",  // Angular
                 "http://localhost:8080"
