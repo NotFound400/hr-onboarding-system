@@ -53,6 +53,7 @@ public class EmployeeController {
                 : ResponseEntity.notFound().build();
     }
 
+    @PreAuthorize("hasRole('EMPLOYEE')")
     @PutMapping("/employees/{id}")
     public ResponseEntity<Employee> updateEmployee(@RequestBody Employee employee, @PathVariable String id)  {
         employee.setId(id);

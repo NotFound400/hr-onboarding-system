@@ -4730,7 +4730,7 @@
 							},
 							"status": "OK",
 							"code": 200,
-							"_postman_previewlanguage": "",
+							"_postman_previewlanguage": null,
 							"header": [
 								{
 									"key": "transfer-encoding",
@@ -6490,7 +6490,7 @@
 							},
 							"status": "OK",
 							"code": 200,
-							"_postman_previewlanguage": "",
+							"_postman_previewlanguage": null,
 							"header": [
 								{
 									"key": "transfer-encoding",
@@ -7355,10 +7355,10 @@
 						],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n    \"id\": \"693ca6a43f2e47be25b6f992\",\n    \"userID\": 23,\n    \"firstName\": \"Benjamin update\",\n    \"lastName\": \"Harper update\",\n    \"middleName\": \"T\",\n    \"preferredName\": \"Ben\",\n    \"email\": \"ben.harper@example.com\",\n    \"cellPhone\": \"415-555-2099\",\n    \"alternatePhone\": \"415-555-1122\",\n    \"gender\": \"Femail\",\n    \"SSN\": \"567-89-0123\",\n    \"DOB\": \"1991-03-22T00:00:00\",\n    \"startDate\": \"2025-01-10T08:30:00\",\n    \"endDate\": null,\n    \"driverLicense\": \"H78902345\",\n    \"driverLicenseExpiration\": \"2029-03-22T00:00:00\",\n    \"houseID\": 10,\n    \"contact\": [\n        {\n            \"id\": null,\n            \"firstName\": \"Olivia\",\n            \"lastName\": \"Harper\",\n            \"cellPhone\": \"415-555-3344\",\n            \"alternatePhone\": null,\n            \"email\": \"olivia.harper@example.com\",\n            \"relationship\": \"Wife\",\n            \"type\": \"Emergency\"\n        },\n        {\n            \"id\": null,\n            \"firstName\": \"Liam\",\n            \"lastName\": \"Harper\",\n            \"cellPhone\": \"415-555-5566\",\n            \"alternatePhone\": null,\n            \"email\": \"liam.harper@example.com\",\n            \"relationship\": \"Brother\",\n            \"type\": \"Backup Emergency\"\n        }\n    ],\n    \"address\": [\n        {\n            \"id\": null,\n            \"addressLine1\": \"842 Market St\",\n            \"addressLine2\": \"Floor 5\",\n            \"city\": \"San Francisco\",\n            \"state\": \"CA\",\n            \"zipCode\": \"94103\"\n        }\n    ],\n    \"visaStatus\": [\n        {\n            \"id\": null,\n            \"visaType\": \"Green Card\",\n            \"activeFlag\": \"Yes\",\n            \"startDate\": \"2020-08-01T00:00:00\",\n            \"endDate\": null,\n            \"lastModificationDate\": \"2024-12-01T09:15:00\"\n        }\n    ],\n    \"personalDocument\": [\n        {\n            \"id\": null,\n            \"path\": \"/docs/ben/green_card.pdf\",\n            \"title\": \"Green Card\",\n            \"comment\": \"Permanent resident ID\",\n            \"createDate\": \"2024-12-01T09:20:00\"\n        },\n        {\n            \"id\": null,\n            \"path\": \"/docs/ben/driver_license.png\",\n            \"title\": \"Driver License\",\n            \"comment\": \"Scanned at HR office\",\n            \"createDate\": \"2024-12-05T12:45:00\"\n        }\n    ]\n}"
+							"raw": "{\n    \"firstName\": \"John\",\n    \"lastName\": \"Doe1\"\n}"
 						},
 						"url": {
-							"raw": "http://localhost:8080/api/employees/693d2a3962adc16ed8079f2c",
+							"raw": "http://localhost:8080/api/employees/693eb64ac28e611d003d1576",
 							"protocol": "http",
 							"host": [
 								"localhost"
@@ -7367,13 +7367,13 @@
 							"path": [
 								"api",
 								"employees",
-								"693d2a3962adc16ed8079f2c"
+								"693eb64ac28e611d003d1576"
 							]
 						}
 					},
 					"response": [
 						{
-							"name": "Update Employee",
+							"name": "Update Employee (Full)",
 							"originalRequest": {
 								"method": "PUT",
 								"header": [
@@ -7484,6 +7484,119 @@
 							],
 							"cookie": [],
 							"body": "{\n    \"id\": \"693d2a3962adc16ed8079f2c\",\n    \"userID\": 23,\n    \"firstName\": \"Benjamin update\",\n    \"lastName\": \"Harper update\",\n    \"middleName\": \"T\",\n    \"preferredName\": \"Ben\",\n    \"email\": \"ben.harper@example.com\",\n    \"cellPhone\": \"415-555-2099\",\n    \"alternatePhone\": \"415-555-1122\",\n    \"gender\": \"Femail\",\n    \"startDate\": \"2025-01-10T08:30:00\",\n    \"endDate\": null,\n    \"driverLicense\": \"H78902345\",\n    \"driverLicenseExpiration\": \"2029-03-22T00:00:00\",\n    \"houseID\": 10,\n    \"contact\": [\n        {\n            \"id\": null,\n            \"firstName\": \"Olivia\",\n            \"lastName\": \"Harper\",\n            \"cellPhone\": \"415-555-3344\",\n            \"alternatePhone\": null,\n            \"email\": \"olivia.harper@example.com\",\n            \"relationship\": \"Wife\",\n            \"type\": \"Emergency\"\n        },\n        {\n            \"id\": null,\n            \"firstName\": \"Liam\",\n            \"lastName\": \"Harper\",\n            \"cellPhone\": \"415-555-5566\",\n            \"alternatePhone\": null,\n            \"email\": \"liam.harper@example.com\",\n            \"relationship\": \"Brother\",\n            \"type\": \"Backup Emergency\"\n        }\n    ],\n    \"address\": [\n        {\n            \"id\": null,\n            \"addressLine1\": \"842 Market St\",\n            \"addressLine2\": \"Floor 5\",\n            \"city\": \"San Francisco\",\n            \"state\": \"CA\",\n            \"zipCode\": \"94103\"\n        }\n    ],\n    \"visaStatus\": [\n        {\n            \"id\": null,\n            \"visaType\": \"Green Card\",\n            \"activeFlag\": \"Yes\",\n            \"startDate\": \"2020-08-01T00:00:00\",\n            \"endDate\": null,\n            \"lastModificationDate\": \"2024-12-01T09:15:00\"\n        }\n    ],\n    \"personalDocument\": [\n        {\n            \"id\": null,\n            \"path\": \"/docs/ben/green_card.pdf\",\n            \"title\": \"Green Card\",\n            \"comment\": \"Permanent resident ID\",\n            \"createDate\": \"2024-12-01T09:20:00\"\n        },\n        {\n            \"id\": null,\n            \"path\": \"/docs/ben/driver_license.png\",\n            \"title\": \"Driver License\",\n            \"comment\": \"Scanned at HR office\",\n            \"createDate\": \"2024-12-05T12:45:00\"\n        }\n    ],\n    \"ssn\": null,\n    \"dob\": null\n}"
+						},
+						{
+							"name": "Update Employee (Partial)",
+							"originalRequest": {
+								"method": "PUT",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									},
+									{
+										"key": "Authorization",
+										"value": "Bearer {{employee_token}}",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"firstName\": \"John\",\n    \"lastName\": \"Doe1\"\n}"
+								},
+								"url": {
+									"raw": "http://localhost:8080/api/employees/693eb64ac28e611d003d1576",
+									"protocol": "http",
+									"host": [
+										"localhost"
+									],
+									"port": "8080",
+									"path": [
+										"api",
+										"employees",
+										"693eb64ac28e611d003d1576"
+									]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": null,
+							"header": [
+								{
+									"key": "transfer-encoding",
+									"value": "chunked"
+								},
+								{
+									"key": "Vary",
+									"value": "Origin"
+								},
+								{
+									"key": "Vary",
+									"value": "Access-Control-Request-Method"
+								},
+								{
+									"key": "Vary",
+									"value": "Access-Control-Request-Headers"
+								},
+								{
+									"key": "Vary",
+									"value": "Origin"
+								},
+								{
+									"key": "Vary",
+									"value": "Access-Control-Request-Method"
+								},
+								{
+									"key": "Vary",
+									"value": "Access-Control-Request-Headers"
+								},
+								{
+									"key": "X-Request-Id",
+									"value": "83482536"
+								},
+								{
+									"key": "X-Content-Type-Options",
+									"value": "nosniff"
+								},
+								{
+									"key": "X-XSS-Protection",
+									"value": "0"
+								},
+								{
+									"key": "Cache-Control",
+									"value": "no-cache, no-store, max-age=0, must-revalidate"
+								},
+								{
+									"key": "Pragma",
+									"value": "no-cache"
+								},
+								{
+									"key": "Expires",
+									"value": "0"
+								},
+								{
+									"key": "X-Frame-Options",
+									"value": "DENY"
+								},
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								},
+								{
+									"key": "Date",
+									"value": "Sun, 14 Dec 2025 13:50:35 GMT"
+								},
+								{
+									"key": "X-Gateway-Response",
+									"value": "true"
+								},
+								{
+									"key": "Referrer-Policy",
+									"value": "no-referrer"
+								}
+							],
+							"cookie": [],
+							"body": "{\n    \"id\": \"693eb64ac28e611d003d1576\",\n    \"userID\": 41,\n    \"firstName\": \"John\",\n    \"lastName\": \"Doe1\",\n    \"middleName\": null,\n    \"preferredName\": null,\n    \"email\": \"newuser17@test.com\",\n    \"cellPhone\": null,\n    \"alternatePhone\": null,\n    \"gender\": null,\n    \"startDate\": null,\n    \"endDate\": null,\n    \"driverLicense\": \"1\",\n    \"driverLicenseExpiration\": null,\n    \"houseID\": 12,\n    \"contact\": null,\n    \"address\": null,\n    \"visaStatus\": null,\n    \"personalDocument\": null,\n    \"dob\": null,\n    \"ssn\": null\n}"
 						}
 					]
 				},
@@ -7619,6 +7732,42 @@
 							"body": "1"
 						}
 					]
+				},
+				{
+					"name": "Partial Update Employee",
+					"request": {
+						"method": "PATCH",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{employee_token}}",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"firstName\": \"John\",\r\n    \"lastName\": \"Doe\",\r\n    \"middleName\": \"Michael\",\r\n    \"preferredName\": \"Johnny\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://localhost:8080/api/employees/693d7ba735977c4c2ee0bd50",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"api",
+								"employees",
+								"693d7ba735977c4c2ee0bd50"
+							]
+						}
+					},
+					"response": []
 				}
 			]
 		}

@@ -42,11 +42,99 @@ public class EmployeeService {
         return employeeRepository.save(employee);
     }
 
-    public Employee updateEmployee(Employee employee) {
-        if (employee.getId() == null) {
+    public Employee updateEmployee(Employee updatedEmployee) {
+        if (updatedEmployee.getId() == null) {
             throw new UpdateUserException("Employee id is required");
         }
-        return employeeRepository.save(employee);
+
+        // 1. Fetch existing employee
+        Employee existing = employeeRepository.findById(updatedEmployee.getId())
+                .orElseThrow(() -> new UpdateUserException("Employee not found with id: " + updatedEmployee.getId()));
+
+        // 2. Merge non-null fields only (incremental update)
+
+        // Name Section
+        if (updatedEmployee.getFirstName() != null) {
+            existing.setFirstName(updatedEmployee.getFirstName());
+        }
+        if (updatedEmployee.getLastName() != null) {
+            existing.setLastName(updatedEmployee.getLastName());
+        }
+        if (updatedEmployee.getMiddleName() != null) {
+            existing.setMiddleName(updatedEmployee.getMiddleName());
+        }
+        if (updatedEmployee.getPreferredName() != null) {
+            existing.setPreferredName(updatedEmployee.getPreferredName());
+        }
+        if (updatedEmployee.getGender() != null) {
+            existing.setGender(updatedEmployee.getGender());
+        }
+        if (updatedEmployee.getSSN() != null) {
+            existing.setSSN(updatedEmployee.getSSN());
+        }
+        if (updatedEmployee.getDOB() != null) {
+            existing.setDOB(updatedEmployee.getDOB());
+        }
+
+        // Contact Section
+        if (updatedEmployee.getEmail() != null) {
+            existing.setEmail(updatedEmployee.getEmail());
+        }
+        if (updatedEmployee.getCellPhone() != null) {
+            existing.setCellPhone(updatedEmployee.getCellPhone());
+        }
+        if (updatedEmployee.getAlternatePhone() != null) {
+            existing.setAlternatePhone(updatedEmployee.getAlternatePhone());
+        }
+
+        // Employment Section
+        if (updatedEmployee.getStartDate() != null) {
+            existing.setStartDate(updatedEmployee.getStartDate());
+        }
+        if (updatedEmployee.getEndDate() != null) {
+            existing.setEndDate(updatedEmployee.getEndDate());
+        }
+
+        // Driver License
+        if (updatedEmployee.getDriverLicense() != null) {
+            existing.setDriverLicense(updatedEmployee.getDriverLicense());
+        }
+        if (updatedEmployee.getDriverLicenseExpiration() != null) {
+            existing.setDriverLicenseExpiration(updatedEmployee.getDriverLicenseExpiration());
+        }
+
+        // Nested Lists - Address
+        if (updatedEmployee.getAddress() != null) {
+            existing.setAddress(updatedEmployee.getAddress());
+        }
+
+        // Nested Lists - Contact (includes Emergency Contacts)
+        if (updatedEmployee.getContact() != null) {
+            existing.setContact(updatedEmployee.getContact());
+        }
+
+        // Nested Lists - Visa Status
+        if (updatedEmployee.getVisaStatus() != null) {
+            existing.setVisaStatus(updatedEmployee.getVisaStatus());
+        }
+
+        // Nested Lists - Personal Documents
+        if (updatedEmployee.getPersonalDocument() != null) {
+            existing.setPersonalDocument(updatedEmployee.getPersonalDocument());
+        }
+
+        // House ID
+        if (updatedEmployee.getHouseID() != null) {
+            existing.setHouseID(updatedEmployee.getHouseID());
+        }
+
+        // User ID - typically shouldn't change
+        if (updatedEmployee.getUserID() != null) {
+            existing.setUserID(updatedEmployee.getUserID());
+        }
+
+        // 3. Save and return merged employee
+        return employeeRepository.save(existing);
     }
 
     public List<Employee> searchEmployeesByName(String name) {
