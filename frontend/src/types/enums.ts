@@ -22,7 +22,12 @@ export type ApplicationStatus = typeof ApplicationStatus[keyof typeof Applicatio
 /** 应用申请类型 */
 export const ApplicationType = {
   ONBOARDING: 'Onboarding',
-  OPT: 'OPT'
+  OPT: 'OPT',
+  I983: 'I983',
+  I20: 'I20',
+  OPTREC:'OPTREC',
+  STEMEAD: 'STEMEAD',
+  Terminate: 'Terminate'
 } as const;
 export type ApplicationType = typeof ApplicationType[keyof typeof ApplicationType];
 

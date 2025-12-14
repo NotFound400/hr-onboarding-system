@@ -1,66 +1,116 @@
 /**
- * Visa Status Page
- * 员工签证状态追踪页面
+ * Visa Status Management Page
+ * Employee Visa Document Upload and Tracking
  * 
- * Features:
- * - 仅当用户是 Non-Citizen 时显示内容
- * - 展示当前 Visa 状态
- * - 文件上传: 复用 DocumentUpload 组件
- * - 上传后提示: "已发送邮件给 HR"
+ * Specification:
+ * - Vertical layout with upload sections for I-983, I-20, OPT Receipt, STEM EAD
+ * - Fetch documents and application status on load
+ * - Enable/disable upload boxes based on applicationType
+ * - Upload new documents via POST, update existing via PUT
  */
 
 import { useState, useEffect } from 'react';
-import { Card, Descriptions, Empty, Space, Alert, Tag, Steps } from 'antd';
-import { SafetyOutlined, FileTextOutlined, CheckCircleOutlined } from '@ant-design/icons';
-import dayjs from 'dayjs';
-import type { UploadFile } from 'antd';
+import { Card, Upload, Button, Space, Alert, Spin, Typography, Divider } from 'antd';
+import { UploadOutlined, FileTextOutlined, CheckCircleOutlined, CloseCircleOutlined } from '@ant-design/icons';
+import type { UploadFile, UploadProps } from 'antd';
 import { PageContainer } from '../../../components/common/PageContainer';
-import { DocumentUpload } from '../../onboarding';
-import { getEmployeeById, getEmployeeByUserId } from '../../../services/api';
+import {
+  getApplicationById,
+  getDocumentsByApplicationId,
+  uploadDocument,
+  updateDocument,
+  getActiveApplications,
+} from '../../../services/api';
 import { useAppSelector } from '../../../store/hooks';
-import { selectUser } from '../../../store/slices/authSlice';
-import type { Employee, VisaStatus } from '../../../types';
+import type { Application, ApplicationDocument } from '../../../types';
 import { useAntdMessage } from '../../../hooks/useAntdMessage';
+
+const { Title, Text } = Typography;
+
+// Visa document types - aligned with HR management page
+const VisaDocumentType = {
+  OPT: 'OPT',
+  I983: 'I983',
+  I20: 'I20',
+  OPTREC: 'OPTREC',
+  STEMEAD: 'STEMEAD',
+  Terminate: 'Terminate'
+} as const;
+
+// Document types in specific order
+const DOCUMENT_TYPES = [
+  { type: VisaDocumentType.I983, title: 'I-983', description: 'Form I-983 for OPT STEM extension' },
+  { type: VisaDocumentType.I20, title: 'I-20', description: 'Certificate of Eligibility for Nonimmigrant Student Status' },
+  { type: VisaDocumentType.OPTREC, title: 'OPT Receipt', description: 'OPT STEM application receipt notice' },
+  { type: VisaDocumentType.STEMEAD, title: 'STEM EAD', description: 'Employment Authorization Document for STEM OPT' },
+] as const;
+
+interface DocumentSlot {
+  type: string;
+  title: string;
+  description: string;
+  existingDoc: ApplicationDocument | null;
+  enabled: boolean;
+}
 
 /**
  * VisaStatusPage Component
  */
 const VisaStatusPage: React.FC = () => {
-  const [loading, setLoading] = useState(false);
-  const [employee, setEmployee] = useState<Employee | null>(null);
-  const [isCitizen, setIsCitizen] = useState(false);
-  
-  // 文档上传状态
-  const [optReceiptFiles, setOptReceiptFiles] = useState<UploadFile[]>([]);
-  const [optEadFiles, setOptEadFiles] = useState<UploadFile[]>([]);
-  const [i983Files, setI983Files] = useState<UploadFile[]>([]);
-  const [i20Files, setI20Files] = useState<UploadFile[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [uploading, setUploading] = useState<string | null>(null);
+  const [application, setApplication] = useState<Application | null>(null);
+  const [documents, setDocuments] = useState<ApplicationDocument[]>([]);
+  const [documentSlots, setDocumentSlots] = useState<DocumentSlot[]>([]);
 
-  // 获取当前登录用户
-  const currentUser = useAppSelector(selectUser);
+  const employeeId = useAppSelector((state) => state.auth.employeeId);
   const messageApi = useAntdMessage();
 
   useEffect(() => {
-    fetchEmployeeVisaInfo();
-  }, []);
+    initializeVisaPage();
+  }, [employeeId]);
+
+  useEffect(() => {
+    if (application) {
+      updateDocumentSlots(application.comment, documents);
+    }
+  }, [application, documents]);
 
   /**
-   * 获取员工签证信息
+   * Initialize page: fetch application and documents
    */
-  const fetchEmployeeVisaInfo = async () => {
-    if (!currentUser) return;
-    
+  const initializeVisaPage = async () => {
+    if (!employeeId) {
+      messageApi.error('Employee ID not found. Please log in again.');
+      setLoading(false);
+      return;
+    }
+
     try {
       setLoading(true);
-      // 先通过 User ID 获取 Employee 记录
-      const empData = await getEmployeeByUserId(String(currentUser.id));
-      const data = await getEmployeeById(empData.id);
-      setEmployee(data);
+      
+      // Fetch active applications for this employee
+      const applications = await getActiveApplications(employeeId);
+      
+      // Find the active OPT application
+      const optApplication = applications.find(
+        app => app.applicationType === 'OPT' && app.status !== 'Rejected'
+      );
+      
+      if (!optApplication) {
+        messageApi.warning('No active OPT application found. Please contact HR.');
+        setLoading(false);
+        return;
+      }
+      
+      // Fetch application details
+      const appData = await getApplicationById(optApplication.id);
+      setApplication(appData);
 
-      // 检查是否是公民/绿卡持有者
-      // 假设: 如果没有任何签证记录，则认为是公民
-      const hasVisa = data.visaStatus && data.visaStatus.length > 0;
-      setIsCitizen(!hasVisa);
+      // Fetch documents for this application
+      const docsData = await getDocumentsByApplicationId(optApplication.id);
+      setDocuments(docsData);
+
     } catch (error: any) {
       messageApi.error(error.message || 'Failed to load visa information');
     } finally {
@@ -69,275 +119,226 @@ const VisaStatusPage: React.FC = () => {
   };
 
   /**
-   * 获取激活的签证状态
+   * Update document slots based on comment (workflow tracking field)
+   * Rules:
+   * - If comment matches a document type, enable that specific box
+   * - If comment is 'Terminate' or 'reject', disable all boxes
+   * - Default: enable I983 box
    */
-  const getActiveVisaStatus = (): VisaStatus | undefined => {
-    if (!employee?.visaStatus) return undefined;
-    return employee.visaStatus.find(visa => visa.activeFlag === 'Yes');
-  };
-
-  /**
-   * 获取签证状态标签颜色
-   */
-  const getVisaStatusColor = (visa: VisaStatus) => {
-    const endDate = dayjs(visa.endDate);
-    const now = dayjs();
-    const daysUntilExpiry = endDate.diff(now, 'day');
-
-    if (daysUntilExpiry < 0) return 'error'; // 已过期
-    if (daysUntilExpiry < 90) return 'warning'; // 90天内过期
-    return 'success'; // 有效
-  };
-
-  /**
-   * 处理文档上传变化 - 发送邮件通知
-   */
-  const handleDocumentChange = (fileList: UploadFile[], docType: string) => {
-    // 检查是否有新上传的文件
-    const hasNewUpload = fileList.some(file => file.status === 'done' && !file.url);
-    
-    if (hasNewUpload) {
-      messageApi.success(`${docType} uploaded successfully. Email notification sent to HR.`);
-    }
-
-    // 根据文档类型更新对应的状态
-    switch (docType) {
-      case 'OPT Receipt':
-        setOptReceiptFiles(fileList);
-        break;
-      case 'OPT EAD':
-        setOptEadFiles(fileList);
-        break;
-      case 'I-983':
-        setI983Files(fileList);
-        break;
-      case 'I-20':
-        setI20Files(fileList);
-        break;
-    }
-  };
-
-  /**
-   * 渲染公民/绿卡持有者提示
-   */
-  const renderCitizenNotice = () => (
-    <Empty
-      image={<SafetyOutlined style={{ fontSize: 80, color: '#52c41a' }} />}
-      description={
-        <Space direction="vertical">
-          <span style={{ fontSize: 16, fontWeight: 'bold' }}>No Visa Required</span>
-          <span style={{ color: '#666' }}>
-            You are a U.S. Citizen or Permanent Resident. No visa documentation is needed.
-          </span>
-        </Space>
+  const updateDocumentSlots = (comment: string | null, docs: ApplicationDocument[]) => {
+    const slots: DocumentSlot[] = DOCUMENT_TYPES.map((docType) => {
+      const existingDoc = docs.find((d) => d.type === docType.type) || null;
+      
+      let enabled = false;
+      if (comment === VisaDocumentType.Terminate || comment === 'reject') {
+        enabled = false;
+      } else if (comment && comment === docType.type) {
+        enabled = true;
+      } else if (!comment || comment === VisaDocumentType.OPT || comment === 'pending') {
+        // Default: enable I983
+        enabled = docType.type === VisaDocumentType.I983;
       }
-    />
+
+      return {
+        type: docType.type,
+        title: docType.title,
+        description: docType.description,
+        existingDoc,
+        enabled,
+      };
+    });
+
+    setDocumentSlots(slots);
+  };
+
+  /**
+   * Handle file upload/update
+   */
+  const handleFileUpload = async (slot: DocumentSlot, file: File) => {
+    if (!application) {
+      messageApi.error('Application not found');
+      return false;
+    }
+
+    try {
+      setUploading(slot.type);
+
+      const metadata = {
+        applicationId: application.id,
+        type: slot.type,
+        title: slot.type,
+        description: 'Pending',
+      };
+
+      if (slot.existingDoc) {
+        // UPDATE existing document
+        await updateDocument(slot.existingDoc.id, {
+          file,
+          metadata,
+        });
+        messageApi.success(`${slot.type} updated successfully`);
+      } else {
+        // CREATE new document
+        await uploadDocument({
+          file,
+          metadata,
+        });
+        messageApi.success(`${slot.type} uploaded successfully`);
+      }
+
+      // Refresh documents
+      const updatedDocs = await getDocumentsByApplicationId(application.id);
+      setDocuments(updatedDocs);
+
+      return true;
+    } catch (error: any) {
+      messageApi.error(error.message || `Failed to upload ${slot.type}`);
+      return false;
+    } finally {
+      setUploading(null);
+    }
+  };
+
+  /**
+   * Custom upload handler
+   */
+  const createUploadProps = (slot: DocumentSlot): UploadProps => ({
+    beforeUpload: (file) => {
+      handleFileUpload(slot, file);
+      return false; // Prevent automatic upload
+    },
+    showUploadList: false,
+    disabled: !slot.enabled || uploading === slot.type,
+    accept: '.pdf,.jpg,.jpeg,.png',
+  });
+
+  /**
+   * Render document upload section
+   */
+  const renderDocumentSection = (slot: DocumentSlot) => (
+    <Card
+      key={slot.type}
+      size="small"
+      style={{
+        marginBottom: 16,
+        borderLeft: slot.enabled ? '4px solid #1890ff' : '4px solid #d9d9d9',
+        opacity: slot.enabled ? 1 : 0.6,
+      }}
+    >
+      <Space direction="vertical" style={{ width: '100%' }} size="small">
+        <Space align="center" style={{ width: '100%', justifyContent: 'space-between' }}>
+          <Space>
+            <FileTextOutlined style={{ fontSize: 20, color: slot.enabled ? '#1890ff' : '#999' }} />
+            <div>
+              <Text strong style={{ fontSize: 16 }}>
+                {slot.title}
+              </Text>
+              <br />
+              <Text type="secondary" style={{ fontSize: 12 }}>
+                {slot.description}
+              </Text>
+            </div>
+          </Space>
+
+          <Space>
+            {slot.existingDoc && (
+              <Space>
+                <CheckCircleOutlined style={{ color: '#52c41a' }} />
+                <Text type="success">Uploaded</Text>
+              </Space>
+            )}
+            {!slot.enabled && (
+              <Space>
+                <CloseCircleOutlined style={{ color: '#999' }} />
+                <Text type="secondary">Not Available</Text>
+              </Space>
+            )}
+          </Space>
+        </Space>
+
+        <Upload {...createUploadProps(slot)}>
+          <Button
+            icon={<UploadOutlined />}
+            loading={uploading === slot.type}
+            disabled={!slot.enabled}
+            type={slot.enabled ? 'primary' : 'default'}
+          >
+            {slot.existingDoc ? 'Update Document' : 'Upload Document'}
+          </Button>
+        </Upload>
+
+        {slot.existingDoc && (
+          <Alert
+            message={`Current file: ${slot.existingDoc.title}`}
+            description={`Status: ${slot.existingDoc.description || 'Pending'}`}
+            type="info"
+            showIcon
+            style={{ marginTop: 8 }}
+          />
+        )}
+      </Space>
+    </Card>
   );
 
-  /**
-   * 渲染签证信息
-   */
-  const renderVisaContent = () => {
-    if (!employee) return null;
+  if (loading) {
+    return (
+      <PageContainer title="Visa Status Management">
+        <div style={{ textAlign: 'center', padding: 50 }}>
+          <Spin size="large" />
+          <p style={{ marginTop: 16 }}>Loading visa information...</p>
+        </div>
+      </PageContainer>
+    );
+  }
 
-    const activeVisa = getActiveVisaStatus();
-
-    if (!activeVisa) {
-      return (
+  if (!application) {
+    return (
+      <PageContainer title="Visa Status Management">
         <Alert
-          message="No Active Visa Status"
-          description="No active visa status found in your profile. Please contact HR if this is incorrect."
+          message="No Active OPT Application"
+          description="You don't have an active OPT application. Please contact HR for assistance."
           type="warning"
           showIcon
         />
-      );
-    }
-
-    const endDate = dayjs(activeVisa.endDate);
-    const daysUntilExpiry = endDate.diff(dayjs(), 'day');
-    const isExpiringSoon = daysUntilExpiry < 90 && daysUntilExpiry > 0;
-    const isExpired = daysUntilExpiry < 0;
-
-    return (
-      <Space direction="vertical" size="large" style={{ width: '100%' }}>
-        {/* 过期提醒 */}
-        {isExpiringSoon && (
-          <Alert
-            message="Visa Expiring Soon"
-            description={`Your ${activeVisa.visaType} will expire in ${daysUntilExpiry} days. Please prepare renewal documents.`}
-            type="warning"
-            showIcon
-          />
-        )}
-        {isExpired && (
-          <Alert
-            message="Visa Expired"
-            description={`Your ${activeVisa.visaType} expired ${Math.abs(daysUntilExpiry)} days ago. Please contact HR immediately.`}
-            type="error"
-            showIcon
-          />
-        )}
-
-        {/* 当前签证状态 */}
-        <Card title="Current Visa Status" extra={<SafetyOutlined style={{ fontSize: 20 }} />}>
-          <Descriptions column={2} bordered>
-            <Descriptions.Item label="Visa Type">
-              <Tag color={getVisaStatusColor(activeVisa)} style={{ fontSize: 14 }}>
-                {activeVisa.visaType}
-              </Tag>
-            </Descriptions.Item>
-            <Descriptions.Item label="Status">
-              <Tag color={activeVisa.activeFlag === 'Yes' ? 'success' : 'default'}>
-                {activeVisa.activeFlag === 'Yes' ? 'Active' : 'Inactive'}
-              </Tag>
-            </Descriptions.Item>
-            <Descriptions.Item label="Start Date">
-              {dayjs(activeVisa.startDate).format('YYYY-MM-DD')}
-            </Descriptions.Item>
-            <Descriptions.Item label="End Date">
-              {dayjs(activeVisa.endDate).format('YYYY-MM-DD')}
-            </Descriptions.Item>
-            <Descriptions.Item label="Days Remaining" span={2}>
-              <strong style={{ fontSize: 16, color: isExpired ? '#ff4d4f' : isExpiringSoon ? '#faad14' : '#52c41a' }}>
-                {daysUntilExpiry > 0 ? `${daysUntilExpiry} days` : 'Expired'}
-              </strong>
-            </Descriptions.Item>
-          </Descriptions>
-        </Card>
-
-        {/* Section 7.b - OPT Document Upload (I-983 → I-20 → Receipt → EAD) */}
-        {(activeVisa.visaType === 'OPT' || activeVisa.visaType === 'F1') && (
-          <Card title="OPT Documents" extra={<FileTextOutlined style={{ fontSize: 20 }} />}>
-            <Alert
-              message="Document Upload Instructions"
-              description="Please upload all required OPT documents in order. Each step must be completed before the next is unlocked. HR will be notified via email after each upload."
-              type="info"
-              showIcon
-              style={{ marginBottom: 24 }}
-            />
-
-            {/* Steps Indicator */}
-            <Steps
-              current={
-                i983Files.length > 0
-                  ? i20Files.length > 0
-                    ? optReceiptFiles.length > 0
-                      ? optEadFiles.length > 0
-                        ? 4
-                        : 3
-                      : 2
-                    : 1
-                  : 0
-              }
-              style={{ marginBottom: 32 }}
-              items={[
-                {
-                  title: 'I-983',
-                  icon: i983Files.length > 0 ? <CheckCircleOutlined /> : undefined,
-                },
-                {
-                  title: 'I-20',
-                  icon: i20Files.length > 0 ? <CheckCircleOutlined /> : undefined,
-                },
-                {
-                  title: 'OPT Receipt',
-                  icon: optReceiptFiles.length > 0 ? <CheckCircleOutlined /> : undefined,
-                },
-                {
-                  title: 'OPT EAD',
-                  icon: optEadFiles.length > 0 ? <CheckCircleOutlined /> : undefined,
-                },
-              ]}
-            />
-
-            <Space direction="vertical" size="middle" style={{ width: '100%' }}>
-              {/* Section 7.b.i - I-983 (Always enabled) */}
-              <Card type="inner" title="Step 1: I-983 (Training Plan for STEM OPT)">
-                <DocumentUpload
-                  title="I-983"
-                  fileList={i983Files}
-                  onChange={(fileList) => handleDocumentChange(fileList, 'I-983')}
-                />
-              </Card>
-
-              {/* Section 7.b.ii - I-20 (Enabled after I-983 uploaded) */}
-              <Card
-                type="inner"
-                title="Step 2: I-20 (Certificate of Eligibility)"
-                style={{ opacity: i983Files.length > 0 ? 1 : 0.5 }}
-              >
-                {i983Files.length > 0 ? (
-                  <DocumentUpload
-                    title="I-20"
-                    required
-                    fileList={i20Files}
-                    onChange={(fileList) => handleDocumentChange(fileList, 'I-20')}
-                  />
-                ) : (
-                  <Alert
-                    message="Locked"
-                    description="Please upload I-983 first to unlock this step."
-                    type="warning"
-                    showIcon
-                  />
-                )}
-              </Card>
-
-              {/* Section 7.b.iii - OPT Receipt (Enabled after I-20 uploaded) */}
-              <Card
-                type="inner"
-                title="Step 3: OPT Receipt"
-                style={{ opacity: i20Files.length > 0 ? 1 : 0.5 }}
-              >
-                {i20Files.length > 0 ? (
-                  <DocumentUpload
-                    title="OPT Receipt"
-                    required
-                    fileList={optReceiptFiles}
-                    onChange={(fileList) => handleDocumentChange(fileList, 'OPT Receipt')}
-                  />
-                ) : (
-                  <Alert
-                    message="Locked"
-                    description="Please upload I-20 first to unlock this step."
-                    type="warning"
-                    showIcon
-                  />
-                )}
-              </Card>
-
-              {/* Section 7.b.iv - OPT EAD (Enabled after OPT Receipt uploaded) */}
-              <Card
-                type="inner"
-                title="Step 4: OPT EAD (Employment Authorization Document)"
-                style={{ opacity: optReceiptFiles.length > 0 ? 1 : 0.5 }}
-              >
-                {optReceiptFiles.length > 0 ? (
-                  <DocumentUpload
-                    title="OPT EAD"
-                    required
-                    fileList={optEadFiles}
-                    onChange={(fileList) => handleDocumentChange(fileList, 'OPT EAD')}
-                  />
-                ) : (
-                  <Alert
-                    message="Locked"
-                    description="Please upload OPT Receipt first to unlock this step."
-                    type="warning"
-                    showIcon
-                  />
-                )}
-              </Card>
-            </Space>
-          </Card>
-        )}
-      </Space>
+      </PageContainer>
     );
-  };
+  }
 
   return (
-    <PageContainer title="Visa Status Tracking" loading={loading}>
-      {isCitizen ? renderCitizenNotice() : renderVisaContent()}
+    <PageContainer title="Visa Status Management">
+      <Space direction="vertical" size="large" style={{ width: '100%' }}>
+        {/* Application Status Card */}
+        <Card title="Application Status" extra={<FileTextOutlined />}>
+          <Space direction="vertical" style={{ width: '100%' }}>
+            <Space>
+              <Text strong>Application Type:</Text>
+              <Text>{application.applicationType || 'N/A'}</Text>
+            </Space>
+            <Space>
+              <Text strong>Status:</Text>
+              <Text>{application.status}</Text>
+            </Space>
+            <Space>
+              <Text strong>Current Workflow Step:</Text>
+              <Text>{application.comment || 'Not Started'}</Text>
+            </Space>
+          </Space>
+        </Card>
+
+        {/* Instructions */}
+        <Alert
+          message="Document Upload Instructions"
+          description="Upload your visa documents in the order shown below. Only enabled sections can be uploaded based on your current application status."
+          type="info"
+          showIcon
+          closable
+        />
+
+        {/* Document Upload Sections */}
+        <Card title="Required Documents">
+          {documentSlots.map(renderDocumentSection)}
+        </Card>
+      </Space>
     </PageContainer>
   );
 };

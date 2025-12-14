@@ -18,17 +18,16 @@ import { restoreAuth } from './store/slices/authSlice';
 import AuthGuard from './app/routes/AuthGuard';
 import MainLayout from './components/layout/MainLayout';
 import { LoginPage, RegistrationPage } from './features/auth';
-import { 
-  OnboardingFormPage, 
-  OnboardingDocsPage, 
+import {
+  OnboardingFormPage,
   OnboardingSubmitResultPage,
-  OnboardingRejectedPage
+  OnboardingRejectedPage,
 } from './features/onboarding';
 import {
   HRHomePage,
   EmployeeProfilePage,
   EmployeeProfileDetailPage,
-  VisaManagementPage,
+  HRVisaManagementPage,
   HiringPage,
   HouseManagementPage,
   ApplicationReviewDetailPage,
@@ -99,7 +98,7 @@ function App() {
             <Route path="home" element={<HRHomePage />} />
             <Route path="employees" element={<EmployeeProfilePage />} />
             <Route path="employees/:id" element={<EmployeeProfileDetailPage />} />
-            <Route path="visa" element={<VisaManagementPage />} />
+            <Route path="visa" element={<HRVisaManagementPage />} />
             <Route path="hiring" element={<HiringPage />} />
             {/* HR Section 5.b: Application Review Detail */}
             <Route path="applications/:employeeId/:applicationId" element={<ApplicationReviewSummaryPage />} />
@@ -124,7 +123,6 @@ function App() {
             {/* 修复：访问 /onboarding 自动重定向到 /onboarding/form */}
             <Route index element={<Navigate to="form" replace />} />
             <Route path="form" element={<OnboardingFormPage />} />
-            <Route path="docs" element={<OnboardingDocsPage />} />
             <Route path="submit-result" element={<OnboardingSubmitResultPage />} />
             {/* Section 3.e.iii: Show rejection feedback */}
             <Route path="rejected" element={<OnboardingRejectedPage />} />

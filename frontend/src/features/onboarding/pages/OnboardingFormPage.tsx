@@ -31,6 +31,7 @@ import {
   Card,
 } from 'antd';
 import type { UploadFile } from 'antd';
+import type { UploadChangeParam } from 'antd/es/upload';
 import { PlusOutlined, MinusCircleOutlined, UploadOutlined, ArrowLeftOutlined } from '@ant-design/icons';
 import { PageContainer } from '../../../components/common/PageContainer';
 import { useAppDispatch, useAppSelector } from '../../../store/hooks';
@@ -50,6 +51,7 @@ import type {
 } from '../../../types';
 import dayjs, { Dayjs } from 'dayjs';
 import { useAntdMessage } from '../../../hooks/useAntdMessage';
+import { uploadDocument } from '../../../services/api/applicationApi';
 
 /**
  * OnboardingFormPage Component
@@ -60,7 +62,7 @@ import { useAntdMessage } from '../../../hooks/useAntdMessage';
  * - Driver License 条件显示 (Section 3.c.viii)
  * - Reference (只允许一个人，包含 Address)
  * - Emergency Contact (至少一个，支持多个)
- * - 提交后跳转 /onboarding/docs (Section 3.d)
+ * - 提交后跳转 /onboarding/submit-result (Section 3.d 更新)
  */
 const OnboardingFormPage: React.FC = () => {
   const [form] = Form.useForm();
@@ -73,6 +75,51 @@ const OnboardingFormPage: React.FC = () => {
   const [hasDriverLicense, setHasDriverLicense] = useState<'Yes' | 'No' | undefined>(undefined);
   const [workAuthType, setWorkAuthType] = useState<string | undefined>(undefined);
   const [avatarFileList, setAvatarFileList] = useState<UploadFile[]>([]);
+  const [eadFiles, setEadFiles] = useState<UploadFile[]>([]);
+  const [driverLicenseFiles, setDriverLicenseFiles] = useState<UploadFile[]>([]);
+  const [eadPreviewUrl, setEadPreviewUrl] = useState<string | null>(null);
+  const [driverLicensePreviewUrl, setDriverLicensePreviewUrl] = useState<string | null>(null);
+
+  const updatePreview = (
+    file: File | undefined,
+    setPreview: (url: string | null) => void,
+    currentUrl: string | null
+  ) => {
+    if (currentUrl) {
+      URL.revokeObjectURL(currentUrl);
+    }
+    if (file) {
+      const newUrl = URL.createObjectURL(file);
+      setPreview(newUrl);
+    } else {
+      setPreview(null);
+    }
+  };
+
+  const normalizeSingleFile = (
+    event: UploadChangeParam<UploadFile> | UploadFile[]
+  ): UploadFile[] => {
+    if (Array.isArray(event)) {
+      return event;
+    }
+    return event?.fileList?.slice(-1) || [];
+  };
+
+  const handleDriverLicenseUploadChange = (info: UploadChangeParam<UploadFile>) => {
+    const list = info.fileList.slice(-1);
+    setDriverLicenseFiles(list);
+    updatePreview(
+      list[0]?.originFileObj as File | undefined,
+      setDriverLicensePreviewUrl,
+      driverLicensePreviewUrl
+    );
+  };
+
+  const handleEadUploadChange = (info: UploadChangeParam<UploadFile>) => {
+    const list = info.fileList.slice(-1);
+    setEadFiles(list);
+    updatePreview(list[0]?.originFileObj as File | undefined, setEadPreviewUrl, eadPreviewUrl);
+  };
 
   const loading = useAppSelector(selectOnboardingLoading);
   const error = useAppSelector(selectOnboardingError);
@@ -100,6 +147,39 @@ const OnboardingFormPage: React.FC = () => {
     }
   }, [applicationId]);
 
+  useEffect(() => {
+    if (hasDriverLicense !== 'Yes') {
+      setDriverLicenseFiles([]);
+      form.setFieldValue('driverLicenseCopy', []);
+      if (driverLicensePreviewUrl) {
+        URL.revokeObjectURL(driverLicensePreviewUrl);
+        setDriverLicensePreviewUrl(null);
+      }
+    }
+  }, [hasDriverLicense, form, driverLicensePreviewUrl]);
+
+  useEffect(() => {
+    if (isCitizenOrPR !== 'No') {
+      setEadFiles([]);
+      form.setFieldValue('eadDocument', []);
+      if (eadPreviewUrl) {
+        URL.revokeObjectURL(eadPreviewUrl);
+        setEadPreviewUrl(null);
+      }
+    }
+  }, [isCitizenOrPR, form, eadPreviewUrl]);
+
+  useEffect(() => {
+    return () => {
+      if (eadPreviewUrl) {
+        URL.revokeObjectURL(eadPreviewUrl);
+      }
+      if (driverLicensePreviewUrl) {
+        URL.revokeObjectURL(driverLicensePreviewUrl);
+      }
+    };
+  }, [eadPreviewUrl, driverLicensePreviewUrl]);
+
   // 显示错误信息
   useEffect(() => {
     if (error) {
@@ -107,6 +187,46 @@ const OnboardingFormPage: React.FC = () => {
       dispatch(clearError());
     }
   }, [error, dispatch, messageApi]);
+
+  const uploadSupportingDocuments = async (appId: number) => {
+    const uploads: Promise<unknown>[] = [];
+
+    if (isCitizenOrPR === 'No') {
+      const eadFile = eadFiles[0]?.originFileObj as File | undefined;
+      if (eadFile) {
+        uploads.push(
+          uploadDocument({
+            file: eadFile,
+            metadata: {
+              applicationId: appId,
+              type: 'EAD',
+              title: 'EAD Document',
+              description: 'Employment Authorization Document',
+            },
+          })
+        );
+      }
+    }
+
+    if (hasDriverLicense === 'Yes') {
+      const driverLicenseFile = driverLicenseFiles[0]?.originFileObj as File | undefined;
+      if (driverLicenseFile) {
+        uploads.push(
+          uploadDocument({
+            file: driverLicenseFile,
+            metadata: {
+              applicationId: appId,
+              type: 'driverLicense',
+              title: 'Driver License',
+              description: 'Driver License Copy',
+            },
+          })
+        );
+      }
+    }
+
+    await Promise.all(uploads);
+  };
 
   /**
    * 处理表单提交 - Tech Lead Fix
@@ -290,6 +410,15 @@ const OnboardingFormPage: React.FC = () => {
 
       console.log('✅ Submitting employee update payload:', employeePayload);
 
+      // Upload supporting documents BEFORE updating employee
+      try {
+        await uploadSupportingDocuments(applicationId);
+      } catch (uploadError: any) {
+        console.error('❌ Failed to upload supporting documents:', uploadError);
+        messageApi.error(uploadError?.message || 'Failed to upload supporting documents');
+        return;
+      }
+
       const targetEmployeeId = authEmployeeId;
       const payloadWithIds: UpdateEmployeeRequest = {
         ...(employeePayload as unknown as UpdateEmployeeRequest),
@@ -305,7 +434,7 @@ const OnboardingFormPage: React.FC = () => {
       ).unwrap();
 
       messageApi.success('Onboarding form submitted successfully!');
-      navigate('/onboarding/docs');
+      navigate('/onboarding/submit-result');
       
     } catch (error) {
       console.error('❌ Form validation or submission failed:', error);
@@ -337,6 +466,8 @@ const OnboardingFormPage: React.FC = () => {
               workAuthStartDate: dayjs(),
               workAuthEndDate: dayjs().add(1, 'year'),
               driverLicenseExpiration: dayjs().add(1, 'year'),
+              driverLicenseCopy: [],
+              eadDocument: [],
               emergencyContacts: [{}], // 至少一个 Emergency Contact
             }}
           >
@@ -585,7 +716,31 @@ const OnboardingFormPage: React.FC = () => {
                   </Form.Item>
                 </Col>
               </Row>
-
+              <Form.Item
+                name="eadDocument"
+                label="Upload Employment Authorization Document (EAD)"
+                valuePropName="fileList"
+                getValueFromEvent={normalizeSingleFile}
+                rules={[{ required: true, message: 'EAD document is required' }]}
+              >
+                <Upload
+                  beforeUpload={() => false}
+                  maxCount={1}
+                  fileList={eadFiles}
+                  onChange={handleEadUploadChange}
+                >
+                  <Button icon={<UploadOutlined />}>Click to Upload</Button>
+                </Upload>
+              </Form.Item>
+              {eadPreviewUrl && (
+                <Button
+                  type="link"
+                  style={{ paddingLeft: 0 }}
+                  onClick={() => window.open(eadPreviewUrl, '_blank', 'noopener,noreferrer')}
+                >
+                  Preview EAD
+                </Button>
+              )}
             </>
           )}
 
@@ -630,12 +785,30 @@ const OnboardingFormPage: React.FC = () => {
               <Form.Item
                 name="driverLicenseCopy"
                 label="Upload Driver License Copy"
+                valuePropName="fileList"
+                getValueFromEvent={normalizeSingleFile}
                 rules={[{ required: true, message: 'Document upload is required' }]}
               >
-                <Upload beforeUpload={() => false} maxCount={1}>
+                <Upload
+                  beforeUpload={() => false}
+                  maxCount={1}
+                  fileList={driverLicenseFiles}
+                  onChange={handleDriverLicenseUploadChange}
+                >
                   <Button icon={<UploadOutlined />}>Click to Upload</Button>
                 </Upload>
               </Form.Item>
+              {driverLicensePreviewUrl && (
+                <Button
+                  type="link"
+                  style={{ paddingLeft: 0 }}
+                  onClick={() =>
+                    window.open(driverLicensePreviewUrl, '_blank', 'noopener,noreferrer')
+                  }
+                >
+                  Preview Driver License
+                </Button>
+              )}
             </>
           )}
 
