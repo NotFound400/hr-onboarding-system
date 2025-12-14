@@ -86,7 +86,7 @@
 							},
 							"status": "OK",
 							"code": 200,
-							"_postman_previewlanguage": "",
+							"_postman_previewlanguage": null,
 							"header": [
 								{
 									"key": "transfer-encoding",
@@ -244,7 +244,7 @@
 							},
 							"status": "OK",
 							"code": 200,
-							"_postman_previewlanguage": "",
+							"_postman_previewlanguage": null,
 							"header": [
 								{
 									"key": "transfer-encoding",
@@ -359,7 +359,7 @@
 						],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n    \"email\": \"newuser12@test.com\",\n    \"houseId\": 10\n}"
+							"raw": "{\n    \"email\": \"newuser13@test.com\",\n    \"houseId\": 11\n}"
 						},
 						"url": {
 							"raw": "{{gateway_url}}/api/auth/registration-token",
@@ -406,7 +406,7 @@
 							},
 							"status": "OK",
 							"code": 200,
-							"_postman_previewlanguage": "",
+							"_postman_previewlanguage": null,
 							"header": [
 								{
 									"key": "transfer-encoding",
@@ -525,7 +525,7 @@
 							},
 							"status": "OK",
 							"code": 200,
-							"_postman_previewlanguage": "",
+							"_postman_previewlanguage": null,
 							"header": [
 								{
 									"key": "transfer-encoding",
@@ -617,7 +617,7 @@
 						],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n    \"token\": \"{{registration_token}}\",\n    \"username\": \"newuser12\",\n    \"email\": \"newuser12@test.com\",\n    \"password\": \"password123\"\n}"
+							"raw": "{\n    \"token\": \"{{registration_token}}\",\n    \"username\": \"newuser13\",\n    \"email\": \"newuser13@test.com\",\n    \"password\": \"password123\"\n}"
 						},
 						"url": {
 							"raw": "{{gateway_url}}/api/auth/register",
@@ -660,7 +660,7 @@
 							},
 							"status": "Created",
 							"code": 201,
-							"_postman_previewlanguage": "",
+							"_postman_previewlanguage": null,
 							"header": [
 								{
 									"key": "transfer-encoding",
@@ -787,7 +787,7 @@
 							},
 							"status": "OK",
 							"code": 200,
-							"_postman_previewlanguage": "",
+							"_postman_previewlanguage": null,
 							"header": [
 								{
 									"key": "transfer-encoding",
@@ -943,7 +943,7 @@
 							},
 							"status": "OK",
 							"code": 200,
-							"_postman_previewlanguage": "",
+							"_postman_previewlanguage": null,
 							"header": [
 								{
 									"key": "transfer-encoding",
@@ -1058,7 +1058,7 @@
 							},
 							"status": "OK",
 							"code": 200,
-							"_postman_previewlanguage": "",
+							"_postman_previewlanguage": null,
 							"header": [
 								{
 									"key": "transfer-encoding",
@@ -1200,7 +1200,7 @@
 							},
 							"status": "OK",
 							"code": 200,
-							"_postman_previewlanguage": "",
+							"_postman_previewlanguage": null,
 							"header": [
 								{
 									"key": "transfer-encoding",
@@ -1317,7 +1317,7 @@
 							},
 							"status": "OK",
 							"code": 200,
-							"_postman_previewlanguage": "",
+							"_postman_previewlanguage": null,
 							"header": [
 								{
 									"key": "transfer-encoding",
@@ -1434,7 +1434,7 @@
 							},
 							"status": "OK",
 							"code": 200,
-							"_postman_previewlanguage": "",
+							"_postman_previewlanguage": null,
 							"header": [
 								{
 									"key": "transfer-encoding",
@@ -1565,7 +1565,7 @@
 							},
 							"status": "Created",
 							"code": 201,
-							"_postman_previewlanguage": "",
+							"_postman_previewlanguage": null,
 							"header": [
 								{
 									"key": "transfer-encoding",
@@ -1743,7 +1743,7 @@
 							},
 							"status": "OK",
 							"code": 200,
-							"_postman_previewlanguage": "",
+							"_postman_previewlanguage": null,
 							"header": [
 								{
 									"key": "transfer-encoding",
@@ -1860,7 +1860,7 @@
 							},
 							"status": "OK",
 							"code": 200,
-							"_postman_previewlanguage": "",
+							"_postman_previewlanguage": null,
 							"header": [
 								{
 									"key": "transfer-encoding",
@@ -1991,7 +1991,7 @@
 							},
 							"status": "Created",
 							"code": 201,
-							"_postman_previewlanguage": "",
+							"_postman_previewlanguage": null,
 							"header": [
 								{
 									"key": "transfer-encoding",
@@ -2124,7 +2124,7 @@
 							},
 							"status": "OK",
 							"code": 200,
-							"_postman_previewlanguage": "",
+							"_postman_previewlanguage": null,
 							"header": [
 								{
 									"key": "transfer-encoding",
@@ -2241,7 +2241,7 @@
 							},
 							"status": "OK",
 							"code": 200,
-							"_postman_previewlanguage": "",
+							"_postman_previewlanguage": null,
 							"header": [
 								{
 									"key": "transfer-encoding",
@@ -2387,7 +2387,7 @@
 							},
 							"status": "OK",
 							"code": 200,
-							"_postman_previewlanguage": "",
+							"_postman_previewlanguage": null,
 							"header": [
 								{
 									"key": "transfer-encoding",
@@ -2506,7 +2506,7 @@
 							},
 							"status": "OK",
 							"code": 200,
-							"_postman_previewlanguage": "",
+							"_postman_previewlanguage": null,
 							"header": [
 								{
 									"key": "transfer-encoding",
@@ -2637,7 +2637,7 @@
 							},
 							"status": "Created",
 							"code": 201,
-							"_postman_previewlanguage": "",
+							"_postman_previewlanguage": null,
 							"header": [
 								{
 									"key": "transfer-encoding",
@@ -2770,7 +2770,7 @@
 							},
 							"status": "OK",
 							"code": 200,
-							"_postman_previewlanguage": "",
+							"_postman_previewlanguage": null,
 							"header": [
 								{
 									"key": "transfer-encoding",
@@ -2887,7 +2887,7 @@
 							},
 							"status": "OK",
 							"code": 200,
-							"_postman_previewlanguage": "",
+							"_postman_previewlanguage": null,
 							"header": [
 								{
 									"key": "transfer-encoding",
@@ -3023,7 +3023,7 @@
 							},
 							"status": "Created",
 							"code": 201,
-							"_postman_previewlanguage": "",
+							"_postman_previewlanguage": null,
 							"header": [
 								{
 									"key": "transfer-encoding",
@@ -3140,7 +3140,7 @@
 							},
 							"status": "OK",
 							"code": 200,
-							"_postman_previewlanguage": "",
+							"_postman_previewlanguage": null,
 							"header": [
 								{
 									"key": "transfer-encoding",
@@ -3508,7 +3508,7 @@
 							},
 							"status": "OK",
 							"code": 200,
-							"_postman_previewlanguage": "",
+							"_postman_previewlanguage": null,
 							"header": [
 								{
 									"key": "transfer-encoding",
@@ -3645,7 +3645,7 @@
 							},
 							"status": "OK",
 							"code": 200,
-							"_postman_previewlanguage": "",
+							"_postman_previewlanguage": null,
 							"header": [
 								{
 									"key": "transfer-encoding",
@@ -3782,7 +3782,7 @@
 							},
 							"status": "Created",
 							"code": 201,
-							"_postman_previewlanguage": "",
+							"_postman_previewlanguage": null,
 							"header": [
 								{
 									"key": "transfer-encoding",
@@ -3903,7 +3903,7 @@
 							},
 							"status": "OK",
 							"code": 200,
-							"_postman_previewlanguage": "",
+							"_postman_previewlanguage": null,
 							"header": [
 								{
 									"key": "transfer-encoding",
@@ -4042,7 +4042,7 @@
 							},
 							"status": "OK",
 							"code": 200,
-							"_postman_previewlanguage": "",
+							"_postman_previewlanguage": null,
 							"header": [
 								{
 									"key": "transfer-encoding",
@@ -4583,7 +4583,7 @@
 							},
 							"status": "OK",
 							"code": 200,
-							"_postman_previewlanguage": "",
+							"_postman_previewlanguage": null,
 							"header": [
 								{
 									"key": "transfer-encoding",
@@ -4730,7 +4730,7 @@
 							},
 							"status": "OK",
 							"code": 200,
-							"_postman_previewlanguage": "",
+							"_postman_previewlanguage": null,
 							"header": [
 								{
 									"key": "transfer-encoding",
@@ -4897,7 +4897,7 @@
 							},
 							"status": "OK",
 							"code": 200,
-							"_postman_previewlanguage": "",
+							"_postman_previewlanguage": null,
 							"header": [
 								{
 									"key": "transfer-encoding",
@@ -5050,7 +5050,7 @@
 							},
 							"status": "OK",
 							"code": 200,
-							"_postman_previewlanguage": "",
+							"_postman_previewlanguage": null,
 							"header": [
 								{
 									"key": "transfer-encoding",
@@ -5185,7 +5185,7 @@
 							},
 							"status": "OK",
 							"code": 200,
-							"_postman_previewlanguage": "",
+							"_postman_previewlanguage": null,
 							"header": [
 								{
 									"key": "transfer-encoding",
@@ -5338,7 +5338,7 @@
 							},
 							"status": "OK",
 							"code": 200,
-							"_postman_previewlanguage": "",
+							"_postman_previewlanguage": null,
 							"header": [
 								{
 									"key": "transfer-encoding",
@@ -5489,7 +5489,7 @@
 							},
 							"status": "OK",
 							"code": 200,
-							"_postman_previewlanguage": "",
+							"_postman_previewlanguage": null,
 							"header": [
 								{
 									"key": "transfer-encoding",
@@ -5666,7 +5666,7 @@
 							},
 							"status": "OK",
 							"code": 200,
-							"_postman_previewlanguage": "",
+							"_postman_previewlanguage": null,
 							"header": [
 								{
 									"key": "transfer-encoding",
@@ -5799,7 +5799,7 @@
 							},
 							"status": "OK",
 							"code": 200,
-							"_postman_previewlanguage": "",
+							"_postman_previewlanguage": null,
 							"header": [
 								{
 									"key": "transfer-encoding",
@@ -5936,7 +5936,7 @@
 							},
 							"status": "OK",
 							"code": 200,
-							"_postman_previewlanguage": "",
+							"_postman_previewlanguage": null,
 							"header": [
 								{
 									"key": "transfer-encoding",
@@ -6071,7 +6071,7 @@
 							},
 							"status": "OK",
 							"code": 200,
-							"_postman_previewlanguage": "",
+							"_postman_previewlanguage": null,
 							"header": [
 								{
 									"key": "transfer-encoding",
@@ -6224,7 +6224,7 @@
 							},
 							"status": "OK",
 							"code": 200,
-							"_postman_previewlanguage": "",
+							"_postman_previewlanguage": null,
 							"header": [
 								{
 									"key": "transfer-encoding",
@@ -6357,7 +6357,7 @@
 							},
 							"status": "OK",
 							"code": 200,
-							"_postman_previewlanguage": "",
+							"_postman_previewlanguage": null,
 							"header": [
 								{
 									"key": "transfer-encoding",
@@ -6436,6 +6436,139 @@
 							"body": "{\n    \"success\": true,\n    \"message\": \"Success\",\n    \"data\": [\n        {\n            \"id\": 26,\n            \"employeeId\": \"693d2a3962adc16ed8079f2c\",\n            \"createDate\": \"2025-12-13T01:43:51\",\n            \"lastModificationDate\": \"2025-12-13T01:57:41\",\n            \"status\": \"Pending\",\n            \"comment\": \"OPT Pending 222\",\n            \"applicationType\": \"OPT\"\n        },\n        {\n            \"id\": 25,\n            \"employeeId\": \"693cf0f802bc4445bcbf5160\",\n            \"createDate\": \"2025-12-12T23:56:27\",\n            \"lastModificationDate\": \"2025-12-12T23:57:20\",\n            \"status\": \"Pending\",\n            \"comment\": \"Updated remark before submission\",\n            \"applicationType\": \"OPT\"\n        },\n        {\n            \"id\": 23,\n            \"employeeId\": \"693cf0f802bc4445bcbf5160\",\n            \"createDate\": \"2025-12-12T23:40:35\",\n            \"lastModificationDate\": \"2025-12-12T23:45:09\",\n            \"status\": \"Pending\",\n            \"comment\": \"Updated remark before submission\",\n            \"applicationType\": \"OPT\"\n        },\n        {\n            \"id\": 21,\n            \"employeeId\": \"693cf0f802bc4445bcbf5160\",\n            \"createDate\": \"2025-12-12T23:23:16\",\n            \"lastModificationDate\": \"2025-12-12T23:23:16\",\n            \"status\": \"Open\",\n            \"comment\": \"OPT Pending 222\",\n            \"applicationType\": \"OPT\"\n        },\n        {\n            \"id\": 20,\n            \"employeeId\": \"693cf0f802bc4445bcbf5160\",\n            \"createDate\": \"2025-12-12T23:02:14\",\n            \"lastModificationDate\": \"2025-12-12T23:02:14\",\n            \"status\": \"Open\",\n            \"comment\": \"OPT Pending 222\",\n            \"applicationType\": \"OPT\"\n        },\n        {\n            \"id\": 16,\n            \"employeeId\": \"693cf0f802bc4445bcbf5160\",\n            \"createDate\": \"2025-12-12T21:54:46\",\n            \"lastModificationDate\": \"2025-12-12T22:03:51\",\n            \"status\": \"Pending\",\n            \"comment\": \"OPT Pending 222\",\n            \"applicationType\": \"OPT\"\n        },\n        {\n            \"id\": 14,\n            \"employeeId\": \"693ca6a43f2e47be25b6f992\",\n            \"createDate\": \"2025-12-12T20:57:59\",\n            \"lastModificationDate\": \"2025-12-12T20:57:59\",\n            \"status\": \"Pending\",\n            \"comment\": \"OPT Pending 222\",\n            \"applicationType\": \"OPT\"\n        },\n        {\n            \"id\": 13,\n            \"employeeId\": \"693ca6a43f2e47be25b6f992\",\n            \"createDate\": \"2025-12-12T16:23:19\",\n            \"lastModificationDate\": \"2025-12-12T19:26:57\",\n            \"status\": \"Pending\",\n            \"comment\": \"Updated remark before submission\",\n            \"applicationType\": \"OPT\"\n        },\n        {\n            \"id\": 12,\n            \"employeeId\": \"693ca6a43f2e47be25b6f992\",\n            \"createDate\": \"2025-12-12T15:39:11\",\n            \"lastModificationDate\": \"2025-12-12T15:39:11\",\n            \"status\": \"Pending\",\n            \"comment\": \"OPT Pending 222\",\n            \"applicationType\": \"OPT\"\n        },\n        {\n            \"id\": 6,\n            \"employeeId\": \"6936fd1151aab8bb4fad7293\",\n            \"createDate\": \"2025-12-10T13:48:09\",\n            \"lastModificationDate\": \"2025-12-10T13:48:09\",\n            \"status\": \"Pending\",\n            \"comment\": \"OPT Pending\",\n            \"applicationType\": \"OPT\"\n        },\n        {\n            \"id\": 5,\n            \"employeeId\": \"6935ab81bb163e670e6c5be2\",\n            \"createDate\": \"2025-12-10T13:47:33\",\n            \"lastModificationDate\": \"2025-12-10T13:47:33\",\n            \"status\": \"Pending\",\n            \"comment\": \"Start Onboarding\",\n            \"applicationType\": \"ONBOARDING\"\n        },\n        {\n            \"id\": 4,\n            \"employeeId\": \"6935ab37bb163e670e6c5be1\",\n            \"createDate\": \"2025-12-10T13:47:12\",\n            \"lastModificationDate\": \"2025-12-10T13:47:12\",\n            \"status\": \"Pending\",\n            \"comment\": \"Start Onboarding\",\n            \"applicationType\": \"ONBOARDING\"\n        },\n        {\n            \"id\": 3,\n            \"employeeId\": \"69349799cdc561de9cddb191\",\n            \"createDate\": \"2025-12-10T13:46:43\",\n            \"lastModificationDate\": \"2025-12-10T13:46:43\",\n            \"status\": \"Pending\",\n            \"comment\": \"Start Onboarding\",\n            \"applicationType\": \"ONBOARDING\"\n        },\n        {\n            \"id\": 2,\n            \"employeeId\": \"693495f1cdc561de9cddb190\",\n            \"createDate\": \"2025-12-10T13:44:03\",\n            \"lastModificationDate\": \"2025-12-10T13:44:03\",\n            \"status\": \"Pending\",\n            \"comment\": \"Start OPT STEM\",\n            \"applicationType\": \"OPT\"\n        }\n    ]\n}"
 						}
 					]
+				},
+				{
+					"name": "Get all applications by employee",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{employee_token}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{gateway_url}}/api/applications/employee/693e41bda3d0b40b98a1951c/all",
+							"host": [
+								"{{gateway_url}}"
+							],
+							"path": [
+								"api",
+								"applications",
+								"employee",
+								"693e41bda3d0b40b98a1951c",
+								"all"
+							]
+						}
+					},
+					"response": [
+						{
+							"name": "Get all applications by employee",
+							"originalRequest": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer {{employee_token}}",
+										"type": "text"
+									}
+								],
+								"url": {
+									"raw": "{{gateway_url}}/api/applications/employee/693e41bda3d0b40b98a1951c/all",
+									"host": [
+										"{{gateway_url}}"
+									],
+									"path": [
+										"api",
+										"applications",
+										"employee",
+										"693e41bda3d0b40b98a1951c",
+										"all"
+									]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "",
+							"header": [
+								{
+									"key": "transfer-encoding",
+									"value": "chunked"
+								},
+								{
+									"key": "Vary",
+									"value": "Origin"
+								},
+								{
+									"key": "Vary",
+									"value": "Access-Control-Request-Method"
+								},
+								{
+									"key": "Vary",
+									"value": "Access-Control-Request-Headers"
+								},
+								{
+									"key": "Vary",
+									"value": "Origin"
+								},
+								{
+									"key": "Vary",
+									"value": "Access-Control-Request-Method"
+								},
+								{
+									"key": "Vary",
+									"value": "Access-Control-Request-Headers"
+								},
+								{
+									"key": "X-Request-Id",
+									"value": "bd62e8c6"
+								},
+								{
+									"key": "X-Content-Type-Options",
+									"value": "nosniff"
+								},
+								{
+									"key": "X-XSS-Protection",
+									"value": "0"
+								},
+								{
+									"key": "Cache-Control",
+									"value": "no-cache, no-store, max-age=0, must-revalidate"
+								},
+								{
+									"key": "Pragma",
+									"value": "no-cache"
+								},
+								{
+									"key": "Expires",
+									"value": "0"
+								},
+								{
+									"key": "X-Frame-Options",
+									"value": "DENY"
+								},
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								},
+								{
+									"key": "Date",
+									"value": "Sun, 14 Dec 2025 05:11:41 GMT"
+								},
+								{
+									"key": "X-Gateway-Response",
+									"value": "true"
+								},
+								{
+									"key": "Referrer-Policy",
+									"value": "no-referrer"
+								}
+							],
+							"cookie": [],
+							"body": "{\n    \"success\": true,\n    \"message\": \"Success\",\n    \"data\": [\n        {\n            \"id\": 55,\n            \"employeeId\": \"693e41bda3d0b40b98a1951c\",\n            \"createDate\": \"2025-12-13T21:04:04\",\n            \"lastModificationDate\": \"2025-12-13T21:04:20\",\n            \"status\": \"Rejected\",\n            \"comment\": \"Denied, more documents needed!\",\n            \"applicationType\": \"OPT\"\n        },\n        {\n            \"id\": 54,\n            \"employeeId\": \"693e41bda3d0b40b98a1951c\",\n            \"createDate\": \"2025-12-13T21:03:35\",\n            \"lastModificationDate\": \"2025-12-13T21:03:59\",\n            \"status\": \"Approved\",\n            \"comment\": \"Approved, welcome aboard!\",\n            \"applicationType\": \"OPT\"\n        },\n        {\n            \"id\": 53,\n            \"employeeId\": \"693e41bda3d0b40b98a1951c\",\n            \"createDate\": \"2025-12-13T20:52:32\",\n            \"lastModificationDate\": \"2025-12-13T21:03:22\",\n            \"status\": \"Pending\",\n            \"comment\": \"OPT Pending 222\",\n            \"applicationType\": \"OPT\"\n        },\n        {\n            \"id\": 52,\n            \"employeeId\": \"693e41bda3d0b40b98a1951c\",\n            \"createDate\": \"2025-12-13T20:51:35\",\n            \"lastModificationDate\": \"2025-12-13T20:51:35\",\n            \"status\": \"Open\",\n            \"comment\": \"OPT Pending 222\",\n            \"applicationType\": \"OPT\"\n        }\n    ]\n}"
+						}
+					]
 				}
 			]
 		},
@@ -6497,7 +6630,7 @@
 							},
 							"status": "OK",
 							"code": 200,
-							"_postman_previewlanguage": "",
+							"_postman_previewlanguage": null,
 							"header": [
 								{
 									"key": "transfer-encoding",
@@ -6630,7 +6763,7 @@
 							},
 							"status": "OK",
 							"code": 200,
-							"_postman_previewlanguage": "",
+							"_postman_previewlanguage": null,
 							"header": [
 								{
 									"key": "transfer-encoding",
@@ -6775,7 +6908,7 @@
 							},
 							"status": "OK",
 							"code": 200,
-							"_postman_previewlanguage": "",
+							"_postman_previewlanguage": null,
 							"header": [
 								{
 									"key": "transfer-encoding",
@@ -6910,7 +7043,7 @@
 							},
 							"status": "OK",
 							"code": 200,
-							"_postman_previewlanguage": "",
+							"_postman_previewlanguage": null,
 							"header": [
 								{
 									"key": "transfer-encoding",
@@ -7057,7 +7190,7 @@
 							},
 							"status": "Created",
 							"code": 201,
-							"_postman_previewlanguage": "",
+							"_postman_previewlanguage": null,
 							"header": [
 								{
 									"key": "transfer-encoding",
@@ -7274,7 +7407,7 @@
 							},
 							"status": "OK",
 							"code": 200,
-							"_postman_previewlanguage": "",
+							"_postman_previewlanguage": null,
 							"header": [
 								{
 									"key": "transfer-encoding",
@@ -7407,7 +7540,7 @@
 							},
 							"status": "OK",
 							"code": 200,
-							"_postman_previewlanguage": "",
+							"_postman_previewlanguage": null,
 							"header": [
 								{
 									"key": "transfer-encoding",
