@@ -139,7 +139,8 @@ public class ApplicationServiceImpl implements ApplicationService {
         List<ApplicationStatus> activeStatuses = Arrays.asList(
                 ApplicationStatus.Open,
                 ApplicationStatus.Pending,
-                ApplicationStatus.Rejected
+                ApplicationStatus.Rejected,
+                ApplicationStatus.Approved
         );
 
         List<ApplicationWorkFlow> apps =

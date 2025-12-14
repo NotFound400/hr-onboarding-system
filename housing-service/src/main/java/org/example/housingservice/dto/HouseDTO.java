@@ -176,7 +176,7 @@ public class HouseDTO {
     @NoArgsConstructor
     @AllArgsConstructor
     public static class ResidentInfo {
-        private String employeeId;
+        private Long userID;
         private String name;  // Preferred Name, if empty then use First Name
         private String phone;
     }

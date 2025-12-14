@@ -280,7 +280,7 @@ public class HouseServiceImpl implements HouseService {
         log.debug("Getting house for userId: {}", userId);
 
         // Get employee by Auth User ID
-        EmployeeServiceClient.EmployeeInfo employee = employeeServiceClient.getEmployeeByUserId(userId);
+        EmployeeServiceClient.EmployeeInfo employee = employeeServiceClient.getEmployeeByUserID(userId);
 
         Long houseId = employee != null ? employee.houseId() : null;
         if (houseId == null) {
@@ -352,7 +352,7 @@ public class HouseServiceImpl implements HouseService {
     private Long getEmployeeHouseId(Long userId) {
         try {
             EmployeeServiceClient.EmployeeInfo employee =
-                    employeeServiceClient.getEmployeeByUserId(userId);  // Use getEmployeeByUserId
+                    employeeServiceClient.getEmployeeByUserID(userId);  // Use getEmployeeByUserId
             return employee != null ? employee.houseId() : null;
         } catch (Exception e) {
             log.warn("Failed to get employee info for userId: {}", userId, e);
@@ -369,7 +369,7 @@ public class HouseServiceImpl implements HouseService {
 
         return employees.stream()
                 .map(emp -> HouseDTO.ResidentInfo.builder()
-                        .employeeId(emp.id())
+                        .userID(emp.userID())
                         .name(emp.getDisplayName())
                         .phone(emp.cellPhone())
                         .build())
