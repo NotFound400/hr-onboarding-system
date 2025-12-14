@@ -158,11 +158,14 @@ const HRVisaManagementPage: React.FC = () => {
         ) || null;
       });
 
+      // Filter out rows without a current document
+      const filteredRows = rows.filter(row => row.currentDocument !== null);
+
       console.log('=== HR Visa Management Merged Data ===');
-      console.log('Merged table data:', rows);
+      console.log('Merged table data:', filteredRows);
       console.log('======================================');
 
-      setTableData(rows);
+      setTableData(filteredRows);
     } catch (error: any) {
       messageApi.error(error.message || 'Failed to load visa management data');
     } finally {
@@ -269,12 +272,10 @@ const HRVisaManagementPage: React.FC = () => {
         try {
           setActionLoading(record.applicationId);
 
-          // API 1: Update Application - update comment to "reject"
-          await updateApplication(record.applicationId, {
-            comment: 'reject', // Keep as "reject" to signal rejection
-          });
+          // Keep application comment at current step (no update needed)
+          // Employee will re-upload the document for the same step
 
-          // API 2: Update Document
+          // Update Document with 'reject' description
           const fileBlob = await downloadDocument(currentDoc.id);
           const file = new File([fileBlob], `${currentDoc.type}.pdf`, {
             type: fileBlob.type,
@@ -416,6 +417,8 @@ const HRVisaManagementPage: React.FC = () => {
         const isLoading = actionLoading === record.applicationId;
         const hasDocument = !!record.currentDocument;
         const isNone = record.nextStep === 'None';
+        const isPending = record.currentDocument?.description?.toLowerCase() === 'pending';
+        const canTakeAction = hasDocument && !isNone && isPending;
 
         return (
           <Space>
@@ -424,7 +427,7 @@ const HRVisaManagementPage: React.FC = () => {
               size="small"
               icon={<CheckOutlined />}
               loading={isLoading}
-              disabled={!hasDocument || isNone}
+              disabled={!canTakeAction}
               onClick={() => handleApprove(record)}
             >
               Approve
@@ -434,7 +437,7 @@ const HRVisaManagementPage: React.FC = () => {
               size="small"
               icon={<CloseOutlined />}
               loading={isLoading}
-              disabled={!hasDocument || isNone}
+              disabled={!canTakeAction}
               onClick={() => handleReject(record)}
             >
               Reject

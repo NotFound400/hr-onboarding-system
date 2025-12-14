@@ -19,6 +19,7 @@ import {
   getDocumentsByApplicationId,
   uploadDocument,
   updateDocument,
+  updateApplication,
   getActiveApplications,
 } from '../../../services/api';
 import { useAppSelector } from '../../../store/hooks';
@@ -122,20 +123,24 @@ const VisaStatusPage: React.FC = () => {
    * Update document slots based on comment (workflow tracking field)
    * Rules:
    * - If comment matches a document type, enable that specific box
-   * - If comment is 'Terminate' or 'reject', disable all boxes
-   * - Default: enable I983 box
+   * - If comment is 'Terminate', disable all boxes
+   * - If comment is not in VisaDocumentType values (except Terminate), enable I983 box
    */
   const updateDocumentSlots = (comment: string | null, docs: ApplicationDocument[]) => {
+    const visaDocumentValues = Object.values(VisaDocumentType);
+    
     const slots: DocumentSlot[] = DOCUMENT_TYPES.map((docType) => {
       const existingDoc = docs.find((d) => d.type === docType.type) || null;
       
       let enabled = false;
-      if (comment === VisaDocumentType.Terminate || comment === 'reject') {
+      if (comment === VisaDocumentType.Terminate) {
+        // Terminate: disable all
         enabled = false;
-      } else if (comment && comment === docType.type) {
-        enabled = true;
-      } else if (!comment || comment === VisaDocumentType.OPT || comment === 'pending') {
-        // Default: enable I983
+      } else if (comment && visaDocumentValues.includes(comment as any)) {
+        // Comment matches a specific visa document type: enable that box
+        enabled = comment === docType.type;
+      } else {
+        // Comment is not in VisaDocumentType (or null/empty): enable I983 by default
         enabled = docType.type === VisaDocumentType.I983;
       }
 
@@ -186,9 +191,17 @@ const VisaStatusPage: React.FC = () => {
         messageApi.success(`${slot.type} uploaded successfully`);
       }
 
-      // Refresh documents
+      // Update application comment to the document type (workflow tracking)
+      await updateApplication(application.id, {
+        comment: slot.type,
+      });
+
+      // Refresh documents and application
       const updatedDocs = await getDocumentsByApplicationId(application.id);
       setDocuments(updatedDocs);
+      
+      const updatedApp = await getApplicationById(application.id);
+      setApplication(updatedApp);
 
       return true;
     } catch (error: any) {
