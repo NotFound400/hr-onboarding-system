@@ -1,6 +1,7 @@
 package org.example.applicationservice.domain;
 
 import lombok.*;
+import org.example.applicationservice.dto.DigitalDocumentDTO;
 import org.example.applicationservice.utils.*;
 import jakarta.persistence.*;
 
@@ -31,6 +32,20 @@ public class ApplicationWorkFlow {
     @OneToMany(mappedBy = "application", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<DigitalDocument> documents = new ArrayList<>();
 
+    public List<DigitalDocumentDTO> getDocumentsDTO() {
+        List<DigitalDocumentDTO> result = new ArrayList<>();
 
+        result = documents.stream().map(doc -> new DigitalDocumentDTO(
+                doc.getId(),
+                doc.getType(),
+                doc.getIsRequired(),
+                doc.getPath(),
+                doc.getDescription(),
+                doc.getTitle(),
+                doc.getId()
+        )).toList();
+
+        return result;
+    }
 
 }

@@ -171,5 +171,14 @@ public class ApplicationFlowController {
         return ResponseEntity.ok(result);
     }
 
+    @Operation(summary = "Get application and document",
+            description = "Retrieve full onboarding application and document data by its ID")
+    @PreAuthorize("hasRole('Employee')")
+    @GetMapping("/application-document/{employeeId}")
+    public ResponseEntity<Result<List<ApplicationAndDocumentDTO>>> getApplicationAndDocumentsByEmployeeId(@PathVariable String employeeId) {
+        Result<List<ApplicationAndDocumentDTO>> res = applicationService.getApplicationAndDocumentsByEmployeeId(employeeId);
+
+        return ResponseEntity.ok(res);
+    }
 
 }
