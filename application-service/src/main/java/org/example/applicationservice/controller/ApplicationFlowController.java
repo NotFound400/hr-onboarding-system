@@ -141,8 +141,8 @@ public class ApplicationFlowController {
     }
 
     @Operation(summary = "Get all applications by employee",
-            description = "HR or Employee can view all applications belonging to an employee")
-    @PreAuthorize("hasAnyRole('HR', 'EMPLOYEE')")
+            description = "HR can view all applications belonging to an employee")
+    @PreAuthorize("hasRole('HR')")
     @GetMapping("/employee/{employeeId}/all")
     public ResponseEntity<Result<List<ApplicationFlowDTO>>> getApplicationsByEmployee(
             @PathVariable String employeeId) {
