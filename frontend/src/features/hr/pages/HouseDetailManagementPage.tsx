@@ -4,17 +4,46 @@
  */
 
 import { useEffect, useState } from 'react';
-import { Card, Descriptions, Table, Button, Space, Tag } from 'antd';
+import dayjs from 'dayjs';
+import {
+  Card,
+  Descriptions,
+  Table,
+  Button,
+  Space,
+  Tag,
+  InputNumber,
+  Modal,
+  List,
+  Typography,
+  Empty,
+  Spin,
+} from 'antd';
 import { HomeOutlined } from '@ant-design/icons';
 import type { ColumnsType } from 'antd/es/table';
 import { useParams, useNavigate } from 'react-router-dom';
 import { PageContainer } from '../../../components/common/PageContainer';
-import { getHouseById, getAllEmployees } from '../../../services/api';
-import type { HouseDetail, HouseDetailHR, Employee, Facility } from '../../../types';
+import {
+  getHouseById,
+  getAllEmployees,
+  createFacility,
+  updateFacility,
+  getFacilityReportsByHouse,
+  getFacilityReportById,
+} from '../../../services/api';
+import type {
+  HouseDetail,
+  HouseDetailHR,
+  Employee,
+  FacilityReportListItem,
+  FacilityReportDetail,
+} from '../../../types';
 import { useAntdMessage } from '../../../hooks/useAntdMessage';
 
 const isHouseDetailHR = (detail: HouseDetail): detail is HouseDetailHR =>
   detail.viewType === 'HR_VIEW';
+
+const KEY_FACILITY_TYPES = ['Bed', 'Mattress', 'Desk'];
 
 const HouseDetailManagementPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -23,8 +52,16 @@ const HouseDetailManagementPage: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [houseDetail, setHouseDetail] = useState<HouseDetailHR | null>(null);
   const [residents, setResidents] = useState<Employee[]>([]);
+  const [facilityReports, setFacilityReports] = useState<FacilityReportListItem[]>([]);
+  const [reportsLoading, setReportsLoading] = useState(false);
   const [residentsLoading, setResidentsLoading] = useState(false);
+  const [reportDetailModalVisible, setReportDetailModalVisible] = useState(false);
+  const [reportDetailLoading, setReportDetailLoading] = useState(false);
+  const [selectedReportDetail, setSelectedReportDetail] = useState<FacilityReportDetail | null>(null);
   const messageApi = useAntdMessage();
+  const [facilityQuantities, setFacilityQuantities] = useState<Record<string, number>>({});
+  const [editingFacilities, setEditingFacilities] = useState<Record<string, boolean>>({});
+  const [updatingFacility, setUpdatingFacility] = useState<string | null>(null);
 
   useEffect(() => {
     if (id) {
@@ -38,13 +75,16 @@ const HouseDetailManagementPage: React.FC = () => {
   const fetchHouseDetail = async (houseId: number) => {
     try {
       setLoading(true);
+      await ensureFacilityTypes(houseId);
       const detail = await getHouseById(houseId);
-      if (isHouseDetailHR(detail)) {
-        setHouseDetail(detail);
-      } else {
+      if (!isHouseDetailHR(detail)) {
         throw new Error('Invalid house detail payload');
       }
+      setHouseDetail(detail);
+      setFacilityQuantities(buildFacilityQuantities(detail));
+      setEditingFacilities(buildInitialEditingState(detail));
       fetchResidents(houseId);
+      fetchFacilityReports(houseId);
     } catch (error: any) {
       messageApi.error(error.message || 'Failed to load house details');
     } finally {
@@ -65,24 +105,118 @@ const HouseDetailManagementPage: React.FC = () => {
     }
   };
 
-  const facilityColumns: ColumnsType<Facility> = [
-    {
-      title: 'Type',
-      dataIndex: 'type',
-      key: 'type',
-    },
-    {
-      title: 'Description',
-      dataIndex: 'description',
-      key: 'description',
-    },
-    {
-      title: 'Quantity',
-      dataIndex: 'quantity',
-      key: 'quantity',
-      width: 120,
-    },
-  ];
+  const fetchFacilityReports = async (houseId: number, page = 0) => {
+    try {
+      setReportsLoading(true);
+      const reportPage = await getFacilityReportsByHouse(houseId, page);
+      setFacilityReports(reportPage?.content || []);
+    } catch (error: any) {
+      messageApi.error(error.message || 'Failed to load facility reports');
+    } finally {
+      setReportsLoading(false);
+    }
+  };
+
+  const buildFacilityQuantities = (detail: HouseDetailHR) => {
+    const map: Record<string, number> = {};
+    KEY_FACILITY_TYPES.forEach((type) => {
+      const facility = detail.facilities?.find(
+        (item) => item.type?.toLowerCase() === type.toLowerCase()
+      );
+      map[type] = facility?.quantity ?? 0;
+    });
+    return map;
+  };
+
+  const buildInitialEditingState = (detail: HouseDetailHR) => {
+    const map: Record<string, boolean> = {};
+    KEY_FACILITY_TYPES.forEach((type) => {
+      const facilityExists = detail.facilities?.some(
+        (item) => item.type?.toLowerCase() === type.toLowerCase()
+      );
+      map[type] = !facilityExists;
+    });
+    return map;
+  };
+
+  const ensureFacilityTypes = async (houseId: number) => {
+    const detail = await getHouseById(houseId);
+    if (!isHouseDetailHR(detail)) {
+      return;
+    }
+
+    const existingTypes =
+      detail.facilities?.map((facility) => facility.type?.toLowerCase() || '') || [];
+    const missingTypes = KEY_FACILITY_TYPES.filter(
+      (type) => !existingTypes.includes(type.toLowerCase())
+    );
+
+    for (const type of missingTypes) {
+      await createFacility({
+        houseId,
+        type,
+        description: `${type} placeholder`,
+        quantity: 0,
+      });
+    }
+  };
+
+  const handleUpdateFacilityQuantity = async (type: string) => {
+    if (!houseDetail) return;
+    const facility = houseDetail.facilities?.find(
+      (item) => item.type?.toLowerCase() === type.toLowerCase()
+    );
+    if (!facility) {
+      messageApi.error(`Facility record for ${type} not found`);
+      return;
+    }
+
+    try {
+      setUpdatingFacility(type);
+      await updateFacility(facility.id, {
+        quantity: facilityQuantities[type] ?? 0,
+      });
+      messageApi.success(`${type} quantity updated`);
+    } catch (error: any) {
+      messageApi.error(error.message || `Failed to update ${type}`);
+    } finally {
+      setUpdatingFacility(null);
+      fetchHouseDetail(houseDetail.id);
+    }
+  };
+
+  const handleQuantityChange = (type: string, value: number | null) => {
+    setFacilityQuantities((prev) => ({
+      ...prev,
+      [type]: value ?? 0,
+    }));
+  };
+
+  const toggleEditFacility = (type: string) => {
+    setEditingFacilities((prev) => ({
+      ...prev,
+      [type]: !prev[type],
+    }));
+  };
+
+  const handleViewReportDetail = async (reportId: number) => {
+    setReportDetailModalVisible(true);
+    setReportDetailLoading(true);
+    setSelectedReportDetail(null);
+    try {
+      const detail = await getFacilityReportById(reportId);
+      setSelectedReportDetail(detail);
+    } catch (error: any) {
+      messageApi.error(error.message || 'Failed to load report detail');
+    } finally {
+      setReportDetailLoading(false);
+    }
+  };
+
+  const handleCloseReportModal = () => {
+    setReportDetailModalVisible(false);
+    setSelectedReportDetail(null);
+  };
 
   const residentColumns: ColumnsType<Employee> = [
     {
@@ -107,6 +241,35 @@ const HouseDetailManagementPage: React.FC = () => {
       render: (_, employee) => (
         <Button type="link" onClick={() => navigate(`/hr/employees/${employee.id}`)}>
           View Profile
+        </Button>
+      ),
+    },
+  ];
+
+  const reportColumns: ColumnsType<FacilityReportListItem> = [
+    {
+      title: 'Title',
+      dataIndex: 'title',
+      key: 'title',
+    },
+    {
+      title: 'Status',
+      dataIndex: 'statusDisplayName',
+      key: 'statusDisplayName',
+      render: (value: string) => <Tag color="blue">{value}</Tag>,
+    },
+    {
+      title: 'Created',
+      dataIndex: 'createDate',
+      key: 'createDate',
+      render: (date: string) => dayjs(date).format('YYYY-MM-DD HH:mm'),
+    },
+    {
+      title: 'Action',
+      key: 'action',
+      render: (_, report) => (
+        <Button type="link" onClick={() => handleViewReportDetail(report.id)}>
+          View
         </Button>
       ),
     },
@@ -159,31 +322,54 @@ const HouseDetailManagementPage: React.FC = () => {
           </Card>
 
           <Card title="Facility Information">
-            {houseDetail.facilitySummary ? (
-              <Descriptions column={4} bordered>
-                {Object.entries(houseDetail.facilitySummary).map(([type, count]) => (
-                  <Descriptions.Item key={type} label={type}>
-                    <strong>{count}</strong>
-                  </Descriptions.Item>
-                ))}
-              </Descriptions>
-            ) : (
-              <div style={{ textAlign: 'center', color: '#999' }}>No facility data</div>
-            )}
-          </Card>
-
-          <Card title="Facility Details">
-            {houseDetail.facilities && houseDetail.facilities.length > 0 ? (
-              <Table
-                columns={facilityColumns}
-                dataSource={houseDetail.facilities}
-                rowKey="id"
-                pagination={false}
-                locale={{ emptyText: 'No facility records' }}
-              />
-            ) : (
-              <div style={{ textAlign: 'center', color: '#999' }}>No facility records</div>
-            )}
+            <div
+              style={{
+                display: 'flex',
+                justifyContent: 'space-between',
+                width: '80%',
+                margin: '0 auto',
+                gap: 24,
+              }}
+            >
+              {KEY_FACILITY_TYPES.map((type) => (
+                <div
+                  key={type}
+                  style={{
+                    flex: 1,
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center',
+                    padding: 16,
+                    border: '1px solid #f0f0f0',
+                    borderRadius: 8,
+                    background: '#fafafa',
+                  }}
+                >
+                  <span style={{ fontWeight: 600, marginBottom: 12 }}>{type}</span>
+                  <InputNumber
+                    min={0}
+                    disabled={!editingFacilities[type]}
+                    value={facilityQuantities[type] ?? 0}
+                    onChange={(value) => handleQuantityChange(type, value)}
+                    style={{ width: '100%', marginBottom: 12 }}
+                  />
+                  {editingFacilities[type] ? (
+                    <Space>
+                      <Button
+                        type="primary"
+                        loading={updatingFacility === type}
+                        onClick={() => handleUpdateFacilityQuantity(type)}
+                      >
+                        Update
+                      </Button>
+                      <Button onClick={() => toggleEditFacility(type)}>Cancel</Button>
+                    </Space>
+                  ) : (
+                    <Button onClick={() => toggleEditFacility(type)}>Edit</Button>
+                  )}
+                </div>
+              ))}
+            </div>
           </Card>
 
           <Card title="Residents">
@@ -196,11 +382,80 @@ const HouseDetailManagementPage: React.FC = () => {
               locale={{ emptyText: 'No residents assigned' }}
             />
           </Card>
+
+          <Card title="Facility Reports">
+            <Table
+              columns={reportColumns}
+              dataSource={facilityReports}
+              rowKey="id"
+              loading={reportsLoading}
+              pagination={false}
+              locale={{ emptyText: 'No facility reports for this house' }}
+            />
+          </Card>
         </Space>
       ) : (
         <div style={{ textAlign: 'center', padding: 48 }}>No house data found.</div>
       )}
 
+      <Modal
+        open={reportDetailModalVisible}
+        onCancel={handleCloseReportModal}
+        footer={null}
+        title={
+          selectedReportDetail ? `Facility Report - ${selectedReportDetail.title}` : 'Facility Report'
+        }
+        width={720}
+        destroyOnClose
+      >
+        {reportDetailLoading ? (
+          <div style={{ textAlign: 'center', padding: 48 }}>
+            <Spin />
+          </div>
+        ) : selectedReportDetail ? (
+          <>
+            <Descriptions column={2} bordered size="small" style={{ marginBottom: 16 }}>
+              <Descriptions.Item label="Facility Type">
+                {selectedReportDetail.facilityType}
+              </Descriptions.Item>
+              <Descriptions.Item label="Status">
+                <Tag color="blue">{selectedReportDetail.statusDisplayName}</Tag>
+              </Descriptions.Item>
+              <Descriptions.Item label="Created">
+                {dayjs(selectedReportDetail.createDate).format('YYYY-MM-DD HH:mm')}
+              </Descriptions.Item>
+              <Descriptions.Item label="Created By">
+                {selectedReportDetail.createdBy}
+              </Descriptions.Item>
+            </Descriptions>
+
+            <Typography.Title level={5}>Description</Typography.Title>
+            <Typography.Paragraph>{selectedReportDetail.description}</Typography.Paragraph>
+
+            <Typography.Title level={5}>Comments</Typography.Title>
+            {selectedReportDetail.comments?.length ? (
+              <List
+                itemLayout="vertical"
+                dataSource={selectedReportDetail.comments}
+                renderItem={(comment) => (
+                  <List.Item key={comment.id}>
+                    <List.Item.Meta
+                      title={`${comment.createdBy} • ${dayjs(
+                        comment.displayDate || comment.createDate
+                      ).format('YYYY-MM-DD HH:mm')}`}
+                      description={comment.comment}
+                    />
+                  </List.Item>
+                )}
+              />
+            ) : (
+              <Empty description="No comments yet" />
+            )}
+          </>
+        ) : (
+          <Empty description="Unable to load report detail" />
+        )}
+      </Modal>
     </PageContainer>
   );
 };

@@ -154,12 +154,6 @@ const MainLayout: React.FC = () => {
       onClick: () => navigate('/employee/housing'),
     },
     {
-      key: '/employee/house-detail',
-      icon: <HomeOutlined />,
-      label: 'House Detail',
-      onClick: () => navigate('/employee/house-detail'),
-    },
-    {
       key: '/employee/facility-report',
       icon: <SettingOutlined />,
       label: 'Report Issue',

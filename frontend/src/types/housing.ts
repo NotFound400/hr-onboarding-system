@@ -121,13 +121,11 @@ interface HouseDetailBase {
 
 /** 房屋详情 (HR 视角) */
 export interface HouseDetailHR extends HouseDetailBase {
-  viewType: 'HR_VIEW';
   maxOccupant: number;
-  /** 后端可能同时返回 numberOfEmployees 或 currentOccupant，两个字段都保留 */
-  numberOfEmployees?: number;
+  numberOfEmployees: number;
   currentOccupant?: number;
-  landlord: Landlord;
   landlordId?: number;
+  landlord?: Landlord;
   facilitySummary?: FacilitySummary;
   facilities: Facility[];
 }
@@ -213,4 +211,25 @@ export interface FacilityReportDetail {
   statusDisplayName: string;
   /** 评论列表 */
   comments: FacilityReportComment[];
+}
+
+/** 设施报修分页响应 */
+export interface FacilityReportPage {
+  content: FacilityReportListItem[];
+  pageable?: {
+    pageNumber: number;
+    pageSize: number;
+    offset: number;
+    paged: boolean;
+    unpaged: boolean;
+    sort?: unknown;
+  };
+  totalElements: number;
+  totalPages: number;
+  size: number;
+  number: number;
+  first: boolean;
+  last: boolean;
+  numberOfElements: number;
+  empty: boolean;
 }

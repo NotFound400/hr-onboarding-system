@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Table, Button, Modal, Form, Input, Space, Popconfirm, Card } from 'antd';
+import { Table, Button, Modal, Form, Input, Space, Popconfirm, Card, Select } from 'antd';
 import { PlusOutlined } from '@ant-design/icons';
 import type { ColumnsType } from 'antd/es/table';
 import { useNavigate } from 'react-router-dom';
@@ -14,6 +14,8 @@ import {
 } from '../../../services/api';
 import type { House, CreateHouseRequest, Landlord, CreateLandlordRequest } from '../../../types';
 import { useAntdMessage } from '../../../hooks/useAntdMessage';
+
+const { Option } = Select;
 
 /**
  * HR 房屋管理页面
@@ -76,6 +78,10 @@ export const HouseManagementPage: React.FC = () => {
    * 打开添加房屋弹窗
    */
   const handleAddHouse = () => {
+    if (landlords.length === 0) {
+      messageApi.warning('Please add a landlord before creating a new house.');
+      return;
+    }
     form.resetFields();
     setIsModalOpen(true);
   };
@@ -94,14 +100,24 @@ export const HouseManagementPage: React.FC = () => {
   const handleSubmit = async () => {
     try {
       const values = await form.validateFields();
+      if (!values.landlordId) {
+        messageApi.error('Please select a landlord');
+        return;
+      }
+
+      const selectedLandlord = landlords.find((landlord) => landlord.id === values.landlordId);
+      if (!selectedLandlord) {
+        messageApi.error('Selected landlord not found');
+        return;
+      }
       
       const request: CreateHouseRequest = {
         address: values.address,
         landlord: {
-          firstName: values.landlordFirstName,
-          lastName: values.landlordLastName,
-          phoneNumber: values.landlordPhone,
-          email: values.landlordEmail,
+          firstName: selectedLandlord.firstName,
+          lastName: selectedLandlord.lastName,
+          phoneNumber: selectedLandlord.cellPhone || '',
+          email: selectedLandlord.email || '',
         },
         facilityInfo: values.facilityInfo || '',
         maxOccupant: parseInt(values.maxOccupant, 10),
@@ -400,51 +416,33 @@ export const HouseManagementPage: React.FC = () => {
             />
           </Form.Item>
 
-          <Space.Compact block>
-            <Form.Item
-              label="Landlord First Name"
-              name="landlordFirstName"
-              rules={[{ required: true, message: 'Required' }]}
-              style={{ width: '50%', marginRight: 8 }}
+          <Form.Item
+            label="Select Landlord"
+            name="landlordId"
+            rules={[{ required: true, message: 'Please select a landlord' }]}
+            extra={
+              landlords.length === 0 ? (
+                <span style={{ color: '#999' }}>
+                  No landlords available. Please add a landlord first.
+                </span>
+              ) : null
+            }
+          >
+            <Select
+              placeholder="Choose an existing landlord"
+              loading={landlordLoading}
+              disabled={landlords.length === 0}
+              optionFilterProp="children"
+              showSearch
             >
-              <Input placeholder="John" />
-            </Form.Item>
-
-            <Form.Item
-              label="Landlord Last Name"
-              name="landlordLastName"
-              rules={[{ required: true, message: 'Required' }]}
-              style={{ width: '50%' }}
-            >
-              <Input placeholder="Smith" />
-            </Form.Item>
-          </Space.Compact>
-
-          <Space.Compact block>
-            <Form.Item
-              label="Landlord Phone"
-              name="landlordPhone"
-              rules={[
-                { required: true, message: 'Required' },
-                { pattern: /^\d{10}$/, message: 'Phone must be 10 digits' },
-              ]}
-              style={{ width: '50%', marginRight: 8 }}
-            >
-              <Input placeholder="1234567890" maxLength={10} />
-            </Form.Item>
-
-            <Form.Item
-              label="Landlord Email"
-              name="landlordEmail"
-              rules={[
-                { required: true, message: 'Required' },
-                { type: 'email', message: 'Invalid email' },
-              ]}
-              style={{ width: '50%' }}
-            >
-              <Input placeholder="landlord@example.com" />
-            </Form.Item>
-          </Space.Compact>
+              {landlords.map((landlord) => (
+                <Option key={landlord.id} value={landlord.id}>
+                  {landlord.fullName || `${landlord.firstName} ${landlord.lastName}`} (
+                  {landlord.email || 'no-email'})
+                </Option>
+              ))}
+            </Select>
+          </Form.Item>
 
           <Form.Item
             label="Max Occupancy"

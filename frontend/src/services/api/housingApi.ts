@@ -18,6 +18,7 @@ import type {
   FacilityReportListItem,
   FacilityReportDetail,
   FacilityReportComment,
+  FacilityReportPage,
   CreateHouseRequest,
   UpdateHouseRequest,
   CreateLandlordRequest,
@@ -404,6 +405,38 @@ export const getFacilityReportsByStatus = async (
   }
   
   return axiosClient.get(buildHousingPath(`/facility-reports?status=${status}`)) as Promise<FacilityReportListItem[]>;
+};
+
+export const getFacilityReportsByHouse = async (
+  houseId: number,
+  page = 0
+): Promise<FacilityReportPage> => {
+  if (isMockMode()) {
+    await delay(500);
+    const reports = HousingMocks.MOCK_FACILITY_REPORT_LIST.data!;
+    return {
+      content: reports,
+      pageable: {
+        pageNumber: page,
+        pageSize: reports.length,
+        offset: page * reports.length,
+        paged: true,
+        unpaged: false,
+        sort: [],
+      },
+      totalElements: reports.length,
+      totalPages: 1,
+      size: reports.length,
+      number: page,
+      numberOfElements: reports.length,
+      first: true,
+      last: true,
+      empty: reports.length === 0,
+    };
+  }
+  return axiosClient.get(buildHousingPath(`/facility-reports/house/${houseId}`), {
+    params: { page },
+  }) as Promise<FacilityReportPage>;
 };
 
 /**

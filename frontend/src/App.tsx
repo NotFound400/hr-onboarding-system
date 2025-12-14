@@ -40,7 +40,6 @@ import {
   PersonalInfoPage, 
   VisaStatusPage, 
   HousingPage,
-  HouseDetailPage,
   FacilityReportPage,
 } from './features/employee';
 import './App.css';
@@ -84,7 +83,6 @@ function App() {
             <Route path="personal-info" element={<PersonalInfoPage />} />
             <Route path="visa" element={<VisaStatusPage />} />
             <Route path="housing" element={<HousingPage />} />
-            <Route path="house-detail" element={<HouseDetailPage />} />
             <Route path="facility-report" element={<FacilityReportPage />} />
             <Route index element={<Navigate to="home" replace />} />
           </Route>
