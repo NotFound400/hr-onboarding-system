@@ -90,13 +90,19 @@ const LoginPage: React.FC = () => {
             })
           );
 
-          if (latestApplication.status === 'Approved') {
-            navigate('/employee/personal-info', { replace: true });
-          } else if (latestApplication.status === 'Rejected') {
-            navigate('/onboarding/rejected', { replace: true });
-          } else {
-            // Includes "Open" and other pending-like states
-            navigate('/onboarding/form', { replace: true });
+          switch (latestApplication.status) {
+            case 'Approved':
+              navigate('/employee/personal-info', { replace: true });
+              break;
+            case 'Rejected':
+              navigate('/onboarding/rejected', { replace: true });
+              break;
+            case 'Pending':
+              navigate('/onboarding/submit-result', { replace: true });
+              break;
+            default:
+              // Includes "Open" and other pending-like states
+              navigate('/onboarding/form', { replace: true });
           }
         } catch (error) {
           // 查询失败或没有 Employee 记录，静默跳转到 Onboarding 表单

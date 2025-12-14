@@ -202,7 +202,10 @@ export const selectCurrentStep = (state: { onboarding: OnboardingState }) => sta
 export const selectFormData = (state: { onboarding: OnboardingState }) => state.onboarding.formData;
 export const selectEmployee = (state: { onboarding: OnboardingState }) => state.onboarding.employee;
 export const selectApplicationId = (state: { onboarding: OnboardingState }) => state.onboarding.applicationId;
-export const selectApplicationStatus = (state: { onboarding: OnboardingState }) => state.onboarding.applicationStatus;
+export const selectExistingApplicationInfo = (state: { onboarding: OnboardingState }) => ({
+  id: state.onboarding.applicationId,
+  status: state.onboarding.applicationStatus,
+});
 export const selectOnboardingLoading = (state: { onboarding: OnboardingState }) => state.onboarding.loading;
 export const selectOnboardingError = (state: { onboarding: OnboardingState }) => state.onboarding.error;
 export const selectSubmitSuccess = (state: { onboarding: OnboardingState }) => state.onboarding.submitSuccess;

@@ -104,6 +104,10 @@ export const RegistrationPage: React.FC = () => {
       await registerUser(request);
       
       messageApi.success('Registration successful! Redirecting to login page...');
+
+      ['token', 'tokenType', 'tokenExpiresAt', 'role', 'roles', 'houseId', 'employeeId', 'user'].forEach((key) =>
+        localStorage.removeItem(key)
+      );
       
       // 延迟跳转，让用户看到成功提示
       setTimeout(() => {

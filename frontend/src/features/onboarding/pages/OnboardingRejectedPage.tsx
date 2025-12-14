@@ -9,23 +9,33 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card, Alert, Descriptions, Button, Space, Tag, Empty } from 'antd';
-import { CloseCircleOutlined, FileTextOutlined, ReloadOutlined } from '@ant-design/icons';
+import { CloseCircleOutlined, FileTextOutlined } from '@ant-design/icons';
 import dayjs from 'dayjs';
 import { PageContainer } from '../../../components/common/PageContainer';
 import { getApplicationsByEmployeeId, getEmployeeByUserId } from '../../../services/api';
-import { useAppSelector } from '../../../store/hooks';
-import { selectUser } from '../../../store/slices/authSlice';
+import { useAppDispatch, useAppSelector } from '../../../store/hooks';
+import { logout, selectUser } from '../../../store/slices/authSlice';
 import type { ApplicationWorkFlow } from '../../../types';
+import { selectExistingApplicationInfo } from '../../../store/slices/onboardingSlice';
+
+const statusTagColors: Record<string, string> = {
+  Approved: 'green',
+  Rejected: 'red',
+  Pending: 'orange',
+  Open: 'blue',
+};
 
 /**
  * OnboardingRejectedPage Component
  */
 const OnboardingRejectedPage: React.FC = () => {
   const navigate = useNavigate();
+  const dispatch = useAppDispatch();
   const [loading, setLoading] = useState(true);
   const [application, setApplication] = useState<ApplicationWorkFlow | null>(null);
 
   const currentUser = useAppSelector(selectUser);
+  const existingApplicationInfo = useAppSelector(selectExistingApplicationInfo);
 
   useEffect(() => {
     fetchRejectedApplication();
@@ -39,19 +49,25 @@ const OnboardingRejectedPage: React.FC = () => {
 
     try {
       setLoading(true);
-      
-      // 1. 获取 Employee 记录
+
       const employee = await getEmployeeByUserId(String(currentUser.id));
-      
-      // 2. 获取所有申请
       const applications = await getApplicationsByEmployeeId(employee.id);
-      
-      // 3. 找到被拒绝的 Onboarding 申请
-      const rejectedApp = applications.find(
-        app => app.applicationType === 'Onboarding' && app.status === 'Rejected'
-      );
-      
-      setApplication(rejectedApp || null);
+
+      let targetApplication: ApplicationWorkFlow | undefined;
+
+      if (existingApplicationInfo.id) {
+        targetApplication = applications.find(
+          (app) => app.id === existingApplicationInfo.id
+        );
+      }
+
+      if (!targetApplication) {
+        targetApplication = applications.find(
+          (app) => app.applicationType === 'Onboarding' && app.status === 'Rejected'
+        );
+      }
+
+      setApplication(targetApplication || null);
     } catch (error) {
       console.error('Failed to fetch rejected application:', error);
     } finally {
@@ -62,8 +78,14 @@ const OnboardingRejectedPage: React.FC = () => {
   /**
    * 重新提交申请
    */
-  const handleResubmit = () => {
-    navigate('/onboarding/form', { replace: true });
+  const handleBackToLogin = async () => {
+    try {
+      await dispatch(logout()).unwrap();
+    } catch {
+      // ignore logout errors, still navigate
+    } finally {
+      navigate('/login', { replace: true });
+    }
   };
 
   /**
@@ -160,7 +182,7 @@ const OnboardingRejectedPage: React.FC = () => {
                 <Tag color="blue">{application.applicationType}</Tag>
               </Descriptions.Item>
               <Descriptions.Item label="Status">
-                <Tag color="red">{application.status}</Tag>
+                <Tag color={statusTagColors[application.status] || 'red'}>{application.status}</Tag>
               </Descriptions.Item>
               <Descriptions.Item label="Submission Date">
                 {dayjs(application.createDate).format('YYYY-MM-DD HH:mm')}
@@ -179,22 +201,9 @@ const OnboardingRejectedPage: React.FC = () => {
 
           {/* 操作按钮 */}
           <Card>
-            <Space size="middle">
-              <Button
-                type="primary"
-                size="large"
-                icon={<ReloadOutlined />}
-                onClick={handleResubmit}
-              >
-                Resubmit Application
-              </Button>
-              <Button
-                size="large"
-                onClick={() => navigate('/employee/personal-info')}
-              >
-                View My Profile
-              </Button>
-            </Space>
+            <Button type="primary" size="large" onClick={handleBackToLogin}>
+              Back to Login
+            </Button>
           </Card>
         </Space>
       ) : (

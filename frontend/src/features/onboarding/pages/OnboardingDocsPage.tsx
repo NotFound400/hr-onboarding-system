@@ -10,6 +10,8 @@ import { PageContainer } from '../../../components/common/PageContainer';
 import DocumentUpload from '../components/DocumentUpload';
 import type { UploadFile } from 'antd';
 import { useAntdMessage } from '../../../hooks/useAntdMessage';
+import { useAppDispatch } from '../../../store/hooks';
+import { logout } from '../../../store/slices/authSlice';
 
 /**
  * OnboardingDocsPage Component
@@ -22,6 +24,7 @@ import { useAntdMessage } from '../../../hooks/useAntdMessage';
  */
 const OnboardingDocsPage: React.FC = () => {
   const navigate = useNavigate();
+  const dispatch = useAppDispatch();
 
   // 文档状态管理
   const [i983Files, setI983Files] = useState<UploadFile[]>([]);
@@ -52,7 +55,8 @@ const OnboardingDocsPage: React.FC = () => {
       await new Promise(resolve => setTimeout(resolve, 1500));
       
       messageApi.success('All documents uploaded successfully!');
-      navigate('/onboarding/submit-result');
+      await dispatch(logout()).unwrap();
+      navigate('/login');
     } catch (error) {
       messageApi.error('Failed to submit documents');
     } finally {
