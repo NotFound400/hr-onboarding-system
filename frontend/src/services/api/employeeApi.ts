@@ -7,9 +7,9 @@
 import axiosClient from './axiosClient';
 import { isMockMode, delay } from '../../utils/mockUtils';
 import * as EmployeeMocks from '../mocks/employeeMocks';
-import type { 
-  Employee, 
-  CreateEmployeeRequest, 
+import type {
+  Employee,
+  CreateEmployeeRequest,
   UpdateEmployeeRequest,
   PersonalDocument,
 } from '../../types';
@@ -53,6 +53,63 @@ export interface PageQueryParams {
   sort?: string;
 }
 
+const normalizeEmployeeResponse = (
+  data: Employee | (Employee & { dob?: string; ssn?: string })
+): Employee => {
+  if (!data) {
+    return data as Employee;
+  }
+
+  const { dob, ssn, ...rest } = data as Employee & { dob?: string; ssn?: string };
+  return {
+    ...rest,
+    DOB: data.DOB ?? dob ?? '',
+    SSN: data.SSN ?? ssn ?? '',
+  };
+};
+
+const normalizeEmployeeArray = (employees: Employee[]): Employee[] =>
+  employees.map(normalizeEmployeeResponse);
+
+const normalizeEmployeePage = (page: PageResponse<Employee>): PageResponse<Employee> => ({
+  ...page,
+  content: normalizeEmployeeArray(page.content),
+});
+
+const transformEmployeeRequestPayload = <
+  T extends { DOB?: string; dob?: string; SSN?: string; ssn?: string }
+>(
+  payload: T
+) => {
+  const { DOB, SSN, ...rest } = payload;
+  const normalized = {
+    ...rest,
+    dob: DOB ?? payload.dob,
+    ssn: SSN ?? payload.ssn,
+  };
+
+  const changes = (payload as unknown as { changedFields?: string[] }).changedFields;
+  if (Array.isArray(changes) && changes.length > 0) {
+    const allowed = new Set(['id', 'userID', 'houseID']);
+    const filtered: Record<string, unknown> = {};
+    changes.forEach((field) => {
+      if (allowed.has(field)) {
+        filtered[field] = (payload as Record<string, unknown>)[field];
+      } else if (field === 'DOB' || field === 'dob') {
+        filtered['dob'] = normalized.dob;
+      } else if (field === 'SSN' || field === 'ssn') {
+        filtered['ssn'] = normalized.ssn;
+      } else {
+        filtered[field] = (payload as Record<string, unknown>)[field];
+      }
+    });
+
+    return filtered;
+  }
+
+  return normalized;
+};
+
 // ==================== API Functions ==
 
 /**
@@ -68,7 +125,8 @@ export const getAllEmployees = async (
     return EmployeeMocks.MOCK_EMPLOYEE_LIST.data!;
   }
   
-  return axiosClient.get('/employees') as Promise<Employee[]>;
+  const response = (await axiosClient.get('/employees')) as Employee[];
+  return normalizeEmployeeArray(response);
 };
 
 /**
@@ -118,7 +176,8 @@ export const getEmployeesPage = async (params?: PageQueryParams): Promise<PageRe
   const queryString = queryParams.toString();
   const url = queryString ? `/employees/page?${queryString}` : '/employees/page';
   
-  return axiosClient.get(url) as Promise<PageResponse<Employee>>;
+  const pageResponse = (await axiosClient.get(url)) as PageResponse<Employee>;
+  return normalizeEmployeePage(pageResponse);
 };
 
 /**
@@ -134,7 +193,8 @@ export const getEmployeeById = async (id: string): Promise<Employee> => {
     return employee || EmployeeMocks.MOCK_EMPLOYEE.data!;
   }
   
-  return axiosClient.get(`/employees/${id}`) as Promise<Employee>;
+  const employee = (await axiosClient.get(`/employees/${id}`)) as Employee;
+  return normalizeEmployeeResponse(employee);
 };
 
 /**
@@ -156,7 +216,8 @@ export const getEmployeeByUserId = async (
     return employee;
   }
 
-  return axiosClient.get(`/employees/user/${userId}`) as Promise<Employee>;
+  const employee = (await axiosClient.get(`/employees/user/${userId}`)) as Employee;
+  return normalizeEmployeeResponse(employee);
 };
 
 /**
@@ -176,7 +237,8 @@ export const searchEmployees = async (name: string): Promise<Employee[]> => {
     );
   }
   
-  return axiosClient.get(`/employees/search?name=${encodeURIComponent(name)}`) as Promise<Employee[]>;
+  const result = (await axiosClient.get(`/employees/search?name=${encodeURIComponent(name)}`)) as Employee[];
+  return normalizeEmployeeArray(result);
 };
 
 /**
@@ -191,7 +253,8 @@ export const getEmployeesByHouseId = async (houseId: number): Promise<Employee[]
     return EmployeeMocks.MOCK_EMPLOYEE_LIST.data!.filter(emp => emp.houseID === houseId);
   }
   
-  return axiosClient.get(`/employees/house/${houseId}`) as Promise<Employee[]>;
+  const employees = (await axiosClient.get(`/employees/house/${houseId}`)) as Employee[];
+  return normalizeEmployeeArray(employees);
 };
 
 /**
@@ -227,7 +290,11 @@ export const createEmployee = async (data: CreateEmployeeRequest): Promise<Emplo
     };
   }
   
-  return axiosClient.post('/employees', data) as Promise<Employee>;
+  const employee = (await axiosClient.post(
+    '/employees',
+    transformEmployeeRequestPayload(data)
+  )) as Employee;
+  return normalizeEmployeeResponse(employee);
 };
 
 /**
@@ -248,7 +315,11 @@ export const updateEmployee = async (id: string, data: UpdateEmployeeRequest): P
     };
   }
   
-  return axiosClient.put(`/employees/${id}`, data) as Promise<Employee>;
+  const employee = (await axiosClient.put(
+    `/employees/${id}`,
+    transformEmployeeRequestPayload(data)
+  )) as Employee;
+  return normalizeEmployeeResponse(employee);
 };
 
 /**

@@ -177,7 +177,30 @@ const PersonalInfoPage: React.FC = () => {
       }
 
       // Call API to update
-      await updateEmployee(currentEmployeeId, updatePayload as UpdateEmployeeRequest);
+      if (!currentEmployeeId) {
+        messageApi.error('Employee ID is missing. Please refresh and try again.');
+        return;
+      }
+
+      const payloadWithIds: UpdateEmployeeRequest = {
+        ...(updatePayload as UpdateEmployeeRequest),
+        id: currentEmployeeId,
+        userID: currentUser?.id,
+      };
+
+      const changedFields = Object.keys(updatePayload).filter(
+        (key) =>
+          updatePayload[key as keyof UpdateEmployeeRequest] !== undefined &&
+          updatePayload[key as keyof UpdateEmployeeRequest] !== employee[key as keyof Employee]
+      );
+
+      console.log('[PersonalInfo] Submitting update payload:', {
+        id: currentEmployeeId,
+        changedFields,
+        payload: payloadWithIds,
+      });
+
+      await updateEmployee(currentEmployeeId, payloadWithIds, { changedFields });
       messageApi.success('Information updated successfully');
 
       // Refresh data and exit edit mode

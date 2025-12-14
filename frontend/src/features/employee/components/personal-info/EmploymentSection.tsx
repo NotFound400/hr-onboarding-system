@@ -13,6 +13,7 @@ import { Form, Input, DatePicker, Row, Col, Descriptions, Tag } from 'antd';
 import type { FormInstance } from 'antd';
 import type { Employee } from '../../../../types';
 import dayjs from 'dayjs';
+import type { Dayjs } from 'dayjs';
 
 interface EmploymentSectionProps {
   employee: Employee | null;
@@ -164,13 +165,14 @@ const EmploymentSection: React.FC<EmploymentSectionProps> = ({
 /**
  * 导出雇佣信息数据提取函数
  */
+const formatDateTime = (value?: Dayjs) =>
+  value ? dayjs(value).startOf('day').format('YYYY-MM-DD[T]HH:mm:ss') : undefined;
+
 export const extractEmploymentData = (formValues: any) => {
   return {
     title: formValues.title,
-    startDate: formValues.startDate
-      ? dayjs(formValues.startDate).format('YYYY-MM-DD')
-      : undefined,
-    endDate: formValues.endDate ? dayjs(formValues.endDate).format('YYYY-MM-DD') : undefined,
+    startDate: formatDateTime(formValues.startDate),
+    endDate: formatDateTime(formValues.endDate),
   };
 };
 

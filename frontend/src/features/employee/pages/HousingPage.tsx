@@ -13,7 +13,7 @@ import { Card, Descriptions, List, Avatar, Button, Empty, Space, Tag, Alert } fr
 import { HomeOutlined, UserOutlined, ToolOutlined, PhoneOutlined } from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
 import { PageContainer } from '../../../components/common/PageContainer';
-import { getHouseById, getMyHouse } from '../../../services/api';
+import { getHouseById } from '../../../services/api';
 import { useAppSelector } from '../../../store/hooks';
 import { selectUser } from '../../../store/slices/authSlice';
 import type { HouseDetail, HouseEmployeeView } from '../../../types';
@@ -32,6 +32,9 @@ const HousingPage: React.FC = () => {
   const currentUser = useAppSelector(selectUser);
   const assignedEmployeeId = useAppSelector((state) => state.auth.employeeId);
   const assignedHouseId = useAppSelector((state) => state.auth.houseId);
+  useEffect(() => {
+    console.log('[HousingPage] Current Redux houseId:', assignedHouseId);
+  }, [assignedHouseId]);
 
   useEffect(() => {
     fetchHousingInfo();
@@ -44,21 +47,21 @@ const HousingPage: React.FC = () => {
     if (!currentUser) return;
 
     try {
-      setLoading(true);
-      let houseData: HouseEmployeeView | null = null;
-
-      if (assignedHouseId) {
-        const detail: HouseDetail = await getHouseById(Number(assignedHouseId));
-        if ('roommates' in detail) {
-          houseData = detail as HouseEmployeeView;
-        } else {
-          houseData = await getMyHouse();
-        }
-      } else {
-        houseData = await getMyHouse();
+      if (!assignedHouseId) {
+        setHouseInfo(null);
+        return;
       }
 
-      setHouseInfo(houseData);
+      console.log('[HousingPage] Assigned house ID:', assignedHouseId);
+
+      setLoading(true);
+      const detail: HouseDetail = await getHouseById(Number(assignedHouseId));
+      if ('roommates' in detail) {
+        setHouseInfo(detail as HouseEmployeeView);
+      } else {
+        setHouseInfo(null);
+        messageApi.warning('You are not assigned to this house.');
+      }
     } catch (error: any) {
       setHouseInfo(null);
       messageApi.error(error.message || 'Failed to load housing information');

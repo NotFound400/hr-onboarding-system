@@ -14,6 +14,7 @@ import { Form, Input, Row, Col, DatePicker, Select, Descriptions } from 'antd';
 import type { FormInstance } from 'antd';
 import type { Employee } from '../../../../types';
 import dayjs from 'dayjs';
+import type { Dayjs } from 'dayjs';
 
 const { Option } = Select;
 
@@ -164,14 +165,17 @@ const NameSection: React.FC<NameSectionProps> = ({ employee, form, isEditing }) 
  * 导出姓名数据提取函数
  */
 export const extractNameData = (formValues: any) => {
+  const formatDate = (value?: Dayjs) =>
+    value ? dayjs(value).startOf('day').format('YYYY-MM-DD[T]HH:mm:ss') : undefined;
+
   return {
     firstName: formValues.firstName,
     lastName: formValues.lastName,
     middleName: formValues.middleName || '',
     preferredName: formValues.preferredName || '',
     gender: formValues.gender,
-    dateOfBirth: formValues.dateOfBirth
-      ? dayjs(formValues.dateOfBirth).format('YYYY-MM-DD')
+    DOB: formValues.dateOfBirth
+      ? formatDate(formValues.dateOfBirth)
       : undefined,
   };
 };

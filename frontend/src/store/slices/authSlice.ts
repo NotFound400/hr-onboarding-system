@@ -99,6 +99,7 @@ export const login = createAsyncThunk<
       localStorage.setItem('tokenExpiresAt', response.expiresAt);
       localStorage.setItem('role', normalizedRole);
       localStorage.setItem('roles', JSON.stringify(response.roles));
+      localStorage.setItem('user', JSON.stringify(response.user));
       if (response.houseId !== null && response.houseId !== undefined) {
         localStorage.setItem('houseId', String(response.houseId));
       } else {
@@ -174,6 +175,7 @@ export const logout = createAsyncThunk<
       localStorage.removeItem('roles');
       localStorage.removeItem('houseId');
       localStorage.removeItem('employeeId');
+      localStorage.removeItem('user');
     } catch (error: any) {
       // 即使 API 调用失败，也要清除本地状态
       localStorage.removeItem('token');
@@ -183,6 +185,7 @@ export const logout = createAsyncThunk<
       localStorage.removeItem('roles');
       localStorage.removeItem('houseId');
       localStorage.removeItem('employeeId');
+      localStorage.removeItem('user');
       return rejectWithValue(error.message || 'Logout failed');
     }
   }
@@ -216,6 +219,14 @@ const authSlice = createSlice({
         const storedHouseId = localStorage.getItem('houseId');
         state.houseId = storedHouseId ? Number(storedHouseId) : null;
         state.employeeId = localStorage.getItem('employeeId');
+        const storedUser = localStorage.getItem('user');
+        if (storedUser) {
+          try {
+            state.user = JSON.parse(storedUser);
+          } catch {
+            state.user = null;
+          }
+        }
         state.isAuthenticated = true;
       }
     },
@@ -271,6 +282,7 @@ const authSlice = createSlice({
       .addCase(fetchUserProfile.fulfilled, (state, action: PayloadAction<User>) => {
         state.loading = false;
         state.user = action.payload;
+        localStorage.setItem('user', JSON.stringify(action.payload));
         state.error = null;
       })
       .addCase(fetchUserProfile.rejected, (state, action) => {
@@ -292,6 +304,7 @@ const authSlice = createSlice({
         localStorage.removeItem('roles');
         localStorage.removeItem('houseId');
         localStorage.removeItem('employeeId');
+        localStorage.removeItem('user');
       });
 
     // ===== Logout =====

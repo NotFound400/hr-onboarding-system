@@ -434,9 +434,7 @@ export const getMyFacilityReports = async (): Promise<
     return HousingMocks.MOCK_FACILITY_REPORT_LIST.data!;
   }
 
-  return axiosClient.get(
-    buildHousingPath('/facility-reports/my-reports')
-  ) as Promise<FacilityReportListItem[]>;
+  return axiosClient.get(buildHousingPath('/facility-reports/my-reports')) as Promise<FacilityReportListItem[]>;
 };
 
 /**
@@ -523,10 +521,7 @@ export const addFacilityReportComment = async (
     };
   }
   
-  return axiosClient.post(
-    buildHousingPath('/facility-reports/comments'),
-    data
-  ) as Promise<FacilityReportDetail>;
+  return axiosClient.post(buildHousingPath('/facility-reports/comments'), data) as Promise<FacilityReportDetail>;
 };
 
 /**
@@ -547,10 +542,7 @@ export const updateFacilityReportComment = async (
     return HousingMocks.MOCK_FACILITY_REPORT_DETAIL.data!;
   }
   
-  return axiosClient.put(
-    buildHousingPath(`/facility-reports/comments/${commentId}`),
-    { comment }
-  ) as Promise<FacilityReportDetail>;
+  return axiosClient.put(buildHousingPath(`/facility-reports/comments/${commentId}`), { comment }) as Promise<FacilityReportDetail>;
 };
 
 /**
