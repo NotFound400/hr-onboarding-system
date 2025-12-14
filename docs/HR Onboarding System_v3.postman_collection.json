@@ -4709,7 +4709,7 @@
 								],
 								"body": {
 									"mode": "raw",
-									"raw": "{\r\n  \"employeeId\": \"693d2a3962adc16ed8079f2c\",\r\n  \"applicationType\": \"OPT\",\r\n  \"comment\": \"OPT Pending 222\"\r\n}\r\n",
+									"raw": "{\r\n  \"employeeId\": \"693e517efbf9480f44bc98dd\",\r\n  \"applicationType\": \"OPT\",\r\n  \"comment\": \"OPT Pending 222\"\r\n}\r\n",
 									"options": {
 										"raw": {
 											"language": "json"
@@ -4730,7 +4730,7 @@
 							},
 							"status": "OK",
 							"code": 200,
-							"_postman_previewlanguage": null,
+							"_postman_previewlanguage": "",
 							"header": [
 								{
 									"key": "transfer-encoding",
@@ -4762,7 +4762,7 @@
 								},
 								{
 									"key": "X-Request-Id",
-									"value": "9468563a"
+									"value": "196b619d"
 								},
 								{
 									"key": "X-Content-Type-Options",
@@ -4794,7 +4794,7 @@
 								},
 								{
 									"key": "Date",
-									"value": "Sat, 13 Dec 2025 09:43:50 GMT"
+									"value": "Sun, 14 Dec 2025 06:14:35 GMT"
 								},
 								{
 									"key": "X-Gateway-Response",
@@ -4806,7 +4806,7 @@
 								}
 							],
 							"cookie": [],
-							"body": "{\n    \"success\": true,\n    \"message\": \"Success\",\n    \"data\": {\n        \"id\": 26,\n        \"employeeId\": \"693d2a3962adc16ed8079f2c\",\n        \"createDate\": \"2025-12-13T01:43:50.6082668\",\n        \"lastModificationDate\": \"2025-12-13T01:43:50.6082668\",\n        \"status\": \"Open\",\n        \"comment\": \"OPT Pending 222\",\n        \"applicationType\": \"OPT\"\n    }\n}"
+							"body": "{\n    \"success\": true,\n    \"message\": \"Success\",\n    \"data\": {\n        \"id\": 60,\n        \"employeeId\": \"693e517efbf9480f44bc98dd\",\n        \"createDate\": \"2025-12-13T22:14:35.7065974\",\n        \"lastModificationDate\": \"2025-12-13T22:14:35.7065974\",\n        \"status\": \"Open\",\n        \"comment\": \"OPT Pending 222\",\n        \"applicationType\": \"OPT\"\n    }\n}"
 						}
 					]
 				},
@@ -6444,12 +6444,12 @@
 						"header": [
 							{
 								"key": "Authorization",
-								"value": "Bearer {{employee_token}}",
+								"value": "Bearer {{hr_token}}",
 								"type": "text"
 							}
 						],
 						"url": {
-							"raw": "{{gateway_url}}/api/applications/employee/693e41bda3d0b40b98a1951c/all",
+							"raw": "{{gateway_url}}/api/applications/employee/693e517efbf9480f44bc98dd/all",
 							"host": [
 								"{{gateway_url}}"
 							],
@@ -6457,7 +6457,7 @@
 								"api",
 								"applications",
 								"employee",
-								"693e41bda3d0b40b98a1951c",
+								"693e517efbf9480f44bc98dd",
 								"all"
 							]
 						}
@@ -6470,12 +6470,12 @@
 								"header": [
 									{
 										"key": "Authorization",
-										"value": "Bearer {{employee_token}}",
+										"value": "Bearer {{hr_token}}",
 										"type": "text"
 									}
 								],
 								"url": {
-									"raw": "{{gateway_url}}/api/applications/employee/693e41bda3d0b40b98a1951c/all",
+									"raw": "{{gateway_url}}/api/applications/employee/693e517efbf9480f44bc98dd/all",
 									"host": [
 										"{{gateway_url}}"
 									],
@@ -6483,7 +6483,7 @@
 										"api",
 										"applications",
 										"employee",
-										"693e41bda3d0b40b98a1951c",
+										"693e517efbf9480f44bc98dd",
 										"all"
 									]
 								}
@@ -6522,7 +6522,7 @@
 								},
 								{
 									"key": "X-Request-Id",
-									"value": "bd62e8c6"
+									"value": "f3370e3e"
 								},
 								{
 									"key": "X-Content-Type-Options",
@@ -6554,7 +6554,7 @@
 								},
 								{
 									"key": "Date",
-									"value": "Sun, 14 Dec 2025 05:11:41 GMT"
+									"value": "Sun, 14 Dec 2025 06:13:11 GMT"
 								},
 								{
 									"key": "X-Gateway-Response",
@@ -6566,7 +6566,7 @@
 								}
 							],
 							"cookie": [],
-							"body": "{\n    \"success\": true,\n    \"message\": \"Success\",\n    \"data\": [\n        {\n            \"id\": 55,\n            \"employeeId\": \"693e41bda3d0b40b98a1951c\",\n            \"createDate\": \"2025-12-13T21:04:04\",\n            \"lastModificationDate\": \"2025-12-13T21:04:20\",\n            \"status\": \"Rejected\",\n            \"comment\": \"Denied, more documents needed!\",\n            \"applicationType\": \"OPT\"\n        },\n        {\n            \"id\": 54,\n            \"employeeId\": \"693e41bda3d0b40b98a1951c\",\n            \"createDate\": \"2025-12-13T21:03:35\",\n            \"lastModificationDate\": \"2025-12-13T21:03:59\",\n            \"status\": \"Approved\",\n            \"comment\": \"Approved, welcome aboard!\",\n            \"applicationType\": \"OPT\"\n        },\n        {\n            \"id\": 53,\n            \"employeeId\": \"693e41bda3d0b40b98a1951c\",\n            \"createDate\": \"2025-12-13T20:52:32\",\n            \"lastModificationDate\": \"2025-12-13T21:03:22\",\n            \"status\": \"Pending\",\n            \"comment\": \"OPT Pending 222\",\n            \"applicationType\": \"OPT\"\n        },\n        {\n            \"id\": 52,\n            \"employeeId\": \"693e41bda3d0b40b98a1951c\",\n            \"createDate\": \"2025-12-13T20:51:35\",\n            \"lastModificationDate\": \"2025-12-13T20:51:35\",\n            \"status\": \"Open\",\n            \"comment\": \"OPT Pending 222\",\n            \"applicationType\": \"OPT\"\n        }\n    ]\n}"
+							"body": "{\n    \"success\": true,\n    \"message\": \"Success\",\n    \"data\": [\n        {\n            \"id\": 59,\n            \"employeeId\": \"693e517efbf9480f44bc98dd\",\n            \"createDate\": \"2025-12-13T22:12:33\",\n            \"lastModificationDate\": \"2025-12-13T22:12:33\",\n            \"status\": \"Open\",\n            \"comment\": \"OPT Pending 222\",\n            \"applicationType\": \"OPT\"\n        },\n        {\n            \"id\": 58,\n            \"employeeId\": \"693e517efbf9480f44bc98dd\",\n            \"createDate\": \"2025-12-13T22:09:13\",\n            \"lastModificationDate\": \"2025-12-13T22:10:26\",\n            \"status\": \"Approved\",\n            \"comment\": \"Approved, welcome aboard!\",\n            \"applicationType\": \"OPT\"\n        },\n        {\n            \"id\": 57,\n            \"employeeId\": \"693e517efbf9480f44bc98dd\",\n            \"createDate\": \"2025-12-13T22:01:20\",\n            \"lastModificationDate\": \"2025-12-13T22:05:23\",\n            \"status\": \"Approved\",\n            \"comment\": \"Approved, welcome aboard!\",\n            \"applicationType\": \"OPT\"\n        },\n        {\n            \"id\": 56,\n            \"employeeId\": \"693e517efbf9480f44bc98dd\",\n            \"createDate\": \"2025-12-13T21:57:59\",\n            \"lastModificationDate\": \"2025-12-13T22:01:07\",\n            \"status\": \"Approved\",\n            \"comment\": \"Approved, welcome aboard!\",\n            \"applicationType\": \"OPT\"\n        }\n    ]\n}"
 						}
 					]
 				}

@@ -53,6 +53,27 @@ public class ApplicationServiceImpl implements ApplicationService {
 
         ownershipValidator.checkOwnership(request.getEmployeeId());
 
+        // Check if there is an existing ongoing application
+        List<ApplicationStatus> ongoingStatuses = Arrays.asList(
+                ApplicationStatus.Open,
+                ApplicationStatus.Pending,
+                ApplicationStatus.Rejected
+        );
+
+        List<ApplicationWorkFlow> existingOngoing =
+                repository.findByEmployeeIdAndStatusInOrderByCreateDateDesc(
+                        request.getEmployeeId(),
+                        ongoingStatuses
+                );
+
+        if (existingOngoing != null && !existingOngoing.isEmpty()) {
+            ApplicationWorkFlow existing = existingOngoing.get(0);
+            String statusMessage = existing.getStatus() == ApplicationStatus.Rejected
+                    ? "You have a rejected application that needs to be fixed and resubmitted."
+                    : "You already have an ongoing application (Status: " + existing.getStatus() + ").";
+            return Result.fail(statusMessage + " Please complete your existing application before creating a new one.");
+        }
+
         ApplicationWorkFlow entity = new ApplicationWorkFlow();
         entity.setEmployeeId(request.getEmployeeId());
         entity.setApplicationType(request.getApplicationType());
@@ -117,7 +138,8 @@ public class ApplicationServiceImpl implements ApplicationService {
 
         List<ApplicationStatus> activeStatuses = Arrays.asList(
                 ApplicationStatus.Open,
-                ApplicationStatus.Pending
+                ApplicationStatus.Pending,
+                ApplicationStatus.Rejected
         );
 
         List<ApplicationWorkFlow> apps =
