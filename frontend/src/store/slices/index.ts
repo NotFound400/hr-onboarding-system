@@ -24,7 +24,7 @@ export {
 export { default as onboardingReducer } from './onboardingSlice';
 export {
   submitOnboardingForm,
-  fetchEmployeeByUserId,
+  initializeOnboardingApplication,
   setCurrentStep,
   nextStep,
   prevStep,
@@ -34,6 +34,7 @@ export {
   selectCurrentStep,
   selectFormData,
   selectEmployee,
+  selectApplicationId,
   selectOnboardingLoading,
   selectOnboardingError,
   selectSubmitSuccess,

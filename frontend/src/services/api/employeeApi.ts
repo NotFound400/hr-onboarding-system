@@ -59,8 +59,11 @@ export interface PageQueryParams {
  * 获取所有员工列表（无分页）
  * @returns Promise<Employee[]>
  */
-export const getAllEmployees = async (): Promise<Employee[]> => {
-  if (isMockMode()) {
+export const getAllEmployees = async (
+  options?: { forceReal?: boolean }
+): Promise<Employee[]> => {
+  const shouldUseMock = !options?.forceReal && isMockMode();
+  if (shouldUseMock) {
     await delay(500);
     return EmployeeMocks.MOCK_EMPLOYEE_LIST.data!;
   }
@@ -140,7 +143,9 @@ export const getEmployeeById = async (id: string): Promise<Employee> => {
  * @param userId 用户 ID (Long)
  * @returns Promise<Employee>
  */
-export const getEmployeeByUserId = async (userId: string): Promise<Employee> => {
+export const getEmployeeByUserId = async (
+  userId: string
+): Promise<Employee> => {
   if (isMockMode()) {
     await delay(300);
     const userIdNum = parseInt(userId, 10);
@@ -150,7 +155,7 @@ export const getEmployeeByUserId = async (userId: string): Promise<Employee> => 
     }
     return employee;
   }
-  
+
   return axiosClient.get(`/employees/user/${userId}`) as Promise<Employee>;
 };
 

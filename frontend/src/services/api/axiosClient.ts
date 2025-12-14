@@ -4,7 +4,13 @@
  */
 
 import axios from 'axios';
-import type { AxiosInstance, AxiosError, AxiosResponse, InternalAxiosRequestConfig } from 'axios';
+import type {
+  AxiosInstance,
+  AxiosError,
+  AxiosResponse,
+  AxiosRequestConfig,
+  InternalAxiosRequestConfig,
+} from 'axios';
 import type { ApiResponse } from '../../types';
 import { getGlobalMessageApi } from '../../utils/messageApi';
 
@@ -52,17 +58,25 @@ axiosClient.interceptors.request.use(
  */
 axiosClient.interceptors.response.use(
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  (response: AxiosResponse<ApiResponse<any>>) => {
+  (response: AxiosResponse<any>) => {
     // HTTP Status 200
-    const apiResponse = response.data;
+    const responseData = response.data;
 
-    // 检查业务状态
-    if (apiResponse.success) {
-      // 业务成功: 剥离 ApiResponse 外壳，直接返回 Payload
-      return apiResponse.data;
+    // 检查是否为包装的 ApiResponse 格式
+    if (responseData && typeof responseData === 'object' && 'success' in responseData) {
+      // 有 success 字段，说明是包装的 ApiResponse<T>
+      if (responseData.success) {
+        // 业务成功: 剥离 ApiResponse 外壳，直接返回 Payload
+        return responseData.data;
+      } else {
+        // 业务失败
+        const message = responseData.message || '操作失败';
+        showErrorMessage(message);
+        return Promise.reject(new Error(message));
+      }
     } else {
-      showErrorMessage(apiResponse.message || '操作失败');
-      return Promise.reject(new Error(apiResponse.message || '操作失败'));
+      // 没有 success 字段，说明是直接返回的数据（如 Employee API）
+      return responseData;
     }
   },
   (error: AxiosError) => {
@@ -70,10 +84,13 @@ axiosClient.interceptors.response.use(
     if (error.response) {
       const status = error.response.status;
       const apiResponse = error.response.data as ApiResponse<unknown>;
+      const emitError = (msg: string) => {
+        showErrorMessage(msg);
+      };
 
       switch (status) {
         case 401:
-          showErrorMessage('未授权，请重新登录');
+          emitError('未授权，请重新登录');
           // 清除本地 Token
           localStorage.removeItem('token');
           localStorage.removeItem('role');
@@ -86,16 +103,16 @@ axiosClient.interceptors.response.use(
           window.location.href = '/login';
           break;
         case 403:
-          showErrorMessage('没有权限访问该资源');
+          emitError('没有权限访问该资源');
           break;
         case 404:
-          showErrorMessage('请求的资源不存在');
+          emitError('请求的资源不存在');
           break;
         case 500:
-          showErrorMessage('服务器内部错误，请稍后重试');
+          emitError('服务器内部错误，请稍后重试');
           break;
         default:
-          showErrorMessage(apiResponse?.message || `请求失败 (${status})`);
+          emitError(apiResponse?.message || `请求失败 (${status})`);
       }
 
       return Promise.reject(error);

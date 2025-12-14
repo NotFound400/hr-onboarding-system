@@ -12,3 +12,4 @@ export { HouseManagementPage } from './HouseManagementPage';
 // New pages with default exports
 export { default as ApplicationReviewDetailPage } from './ApplicationReviewDetailPage';
 export { default as HouseDetailManagementPage } from './HouseDetailManagementPage';
+export { default as ApplicationReviewSummaryPage } from './ApplicationReviewSummaryPage';

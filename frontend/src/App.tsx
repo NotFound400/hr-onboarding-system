@@ -33,6 +33,7 @@ import {
   HouseManagementPage,
   ApplicationReviewDetailPage,
   HouseDetailManagementPage,
+  ApplicationReviewSummaryPage,
 } from './features/hr';
 import { 
   EmployeeHomePage, 
@@ -103,7 +104,7 @@ function App() {
             <Route path="visa" element={<VisaManagementPage />} />
             <Route path="hiring" element={<HiringPage />} />
             {/* HR Section 5.b: Application Review Detail */}
-            <Route path="applications/:id" element={<ApplicationReviewDetailPage />} />
+            <Route path="applications/:employeeId/:applicationId" element={<ApplicationReviewSummaryPage />} />
             <Route path="housing" element={<HouseManagementPage />} />
             {/* HR Section 6.c: House Detail Management */}
             <Route path="houses/:id" element={<HouseDetailManagementPage />} />

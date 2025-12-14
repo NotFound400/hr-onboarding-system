@@ -332,7 +332,7 @@ const ApplicationReviewDetailPage: React.FC = () => {
             </Descriptions.Item>
             <Descriptions.Item label="Gender">{employee.gender || '-'}</Descriptions.Item>
             <Descriptions.Item label="Work Authorization">
-              {employee.visaStatus?.find(v => v.activeFlag)?.visaType || '-'}
+              {employee.visaStatus?.find(v => v.activeFlag === 'Yes')?.visaType || '-'}
             </Descriptions.Item>
           </Descriptions>
         </Card>

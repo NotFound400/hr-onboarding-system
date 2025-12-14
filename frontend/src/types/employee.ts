@@ -48,8 +48,8 @@ export interface VisaStatus {
   id: string;
   /** 签证类型 (H1B/F1/L1/OPT) */
   visaType: string;
-  /** 激活标志 ('Y'/'N') */
-  activeFlag: 'Y' | 'N';
+  /** 激活标志 ('Yes'/'No') */
+  activeFlag: 'Yes' | 'No';
   /** 开始日期 */
   startDate: string;
   /** 结束日期 */

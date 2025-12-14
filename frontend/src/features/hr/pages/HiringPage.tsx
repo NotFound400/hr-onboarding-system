@@ -13,12 +13,16 @@ import { UserAddOutlined, CopyOutlined, ReloadOutlined } from '@ant-design/icons
 import type { ColumnsType } from 'antd/es/table';
 import { PageContainer } from '../../../components/common/PageContainer';
 import {
-  getAllApplications,
   generateRegistrationToken,
-  getAvailableHouses,
+  getHouseList,
   getHouseAvailability,
+  getApplicationsWithEmployeesByStatus,
 } from '../../../services/api';
-import type { ApplicationDetail, ApplicationStatus, HouseSummary } from '../../../types';
+import type {
+  ApplicationWithEmployeeInfo,
+  ApplicationStatus,
+  House,
+} from '../../../types';
 import { useAntdMessage } from '../../../hooks/useAntdMessage';
 
 /**
@@ -27,11 +31,11 @@ import { useAntdMessage } from '../../../hooks/useAntdMessage';
 const HiringPage: React.FC = () => {
   const [form] = Form.useForm();
   const [loading, setLoading] = useState(false);
-  const [applications, setApplications] = useState<ApplicationDetail[]>([]);
+  const [applications, setApplications] = useState<ApplicationWithEmployeeInfo[]>([]);
   const [generatedToken, setGeneratedToken] = useState('');
   const [tokenExpiry, setTokenExpiry] = useState('');
   const [generating, setGenerating] = useState(false);
-  const [houses, setHouses] = useState<HouseSummary[]>([]);
+  const [houses, setHouses] = useState<House[]>([]);
   const [housesLoading, setHousesLoading] = useState(false);
   const [assignedHouseAddress, setAssignedHouseAddress] = useState('');
   const messageApi = useAntdMessage();
@@ -45,12 +49,10 @@ const HiringPage: React.FC = () => {
   const fetchOnboardingApplications = async () => {
     try {
       setLoading(true);
-      const data = await getAllApplications();
-      
-      // 过滤出 Onboarding 类型的申请
-      const onboardingApps = data.filter((app) => app.applicationType === 'Onboarding');
-      
-      setApplications(onboardingApps);
+      const data = await getApplicationsWithEmployeesByStatus('Open');
+      console.log('[Hiring] Pending applications:', data);
+      console.log('[Hiring] Open applications:', data);
+      setApplications(data);
     } catch (error: any) {
       messageApi.error(error.message || 'Failed to load onboarding applications');
     } finally {
@@ -61,10 +63,8 @@ const HiringPage: React.FC = () => {
   const fetchAvailableHouses = async () => {
     try {
       setHousesLoading(true);
-      const summaries = await getAvailableHouses();
-      // 双重保险：前端再过滤一次 availableSpots <= 0
-      const available = summaries.filter((house) => house.availableSpots > 0);
-      setHouses(available);
+      const list = await getHouseList();
+      setHouses(list);
     } catch (error: any) {
       messageApi.error(error.message || 'Failed to load available houses');
     } finally {
@@ -118,6 +118,20 @@ const HiringPage: React.FC = () => {
     messageApi.success('Token copied to clipboard');
   };
 
+  const getAvailableSpots = (house: House): number => {
+    const max = house.maxOccupant ?? 0;
+    const current =
+      house.numberOfEmployees ??
+      house.employeeList?.length ??
+      0;
+    return Math.max(0, (max || 0) - (current || 0));
+  };
+
+  const availableHouses = houses.filter((house) => getAvailableSpots(house) > 0);
+  const registrationLink = generatedToken
+    ? `${window.location.origin}/register?token=${generatedToken}`
+    : '';
+
   /**
    * 获取状态标签颜色
    */
@@ -139,17 +153,11 @@ const HiringPage: React.FC = () => {
   /**
    * Onboarding 申请列表列定义
    */
-  const columns: ColumnsType<Application> = [
-    {
-      title: 'Employee Name',
-      dataIndex: 'employeeName',
-      key: 'employeeName',
-      sorter: (a, b) => a.employeeName.localeCompare(b.employeeName),
-    },
+  const columns: ColumnsType<ApplicationWithEmployeeInfo> = [
     {
       title: 'Email',
-      dataIndex: 'employeeEmail',
       key: 'employeeEmail',
+      render: (_, record) => record.employee?.email || 'N/A',
     },
     {
       title: 'Status',
@@ -181,28 +189,6 @@ const HiringPage: React.FC = () => {
       key: 'lastModificationDate',
       render: (date: string) => new Date(date).toLocaleDateString(),
       sorter: (a, b) => new Date(a.lastModificationDate).getTime() - new Date(b.lastModificationDate).getTime(),
-    },
-    {
-      title: 'Comment',
-      dataIndex: 'comment',
-      key: 'comment',
-      ellipsis: true,
-      render: (comment: string) => comment || '-',
-    },
-    {
-      title: 'Action',
-      key: 'action',
-      render: (_, record) => (
-        <Button 
-          type="link" 
-          onClick={() => {
-            // HR Section 5.b: Navigate to review detail page
-            window.location.href = `/hr/applications/${record.id}`;
-          }}
-        >
-          Review →
-        </Button>
-      ),
     },
   ];
 
@@ -240,15 +226,22 @@ const HiringPage: React.FC = () => {
               placeholder="Select a house to assign"
               size="large"
               loading={housesLoading}
-              disabled={houses.length === 0}
+              disabled={availableHouses.length === 0}
               showSearch
               optionFilterProp="children"
             >
-              {houses.map((house) => (
-                <Select.Option key={house.id} value={house.id}>
-                  {house.address} ({house.availableSpots} spots)
-                </Select.Option>
-              ))}
+              {houses.map((house) => {
+                const spots = getAvailableSpots(house);
+                return (
+                  <Select.Option
+                    key={house.id}
+                    value={house.id}
+                    disabled={spots <= 0}
+                  >
+                    {house.address} ({spots > 0 ? `${spots} spots` : 'Full'})
+                  </Select.Option>
+                );
+              })}
             </Select>
           </Form.Item>
 
@@ -258,7 +251,7 @@ const HiringPage: React.FC = () => {
               htmlType="submit"
               icon={<UserAddOutlined />}
               loading={generating}
-              disabled={houses.length === 0}
+              disabled={availableHouses.length === 0}
               size="large"
             >
               Generate Token
@@ -266,7 +259,7 @@ const HiringPage: React.FC = () => {
           </Form.Item>
         </Form>
 
-        {!housesLoading && houses.length === 0 && (
+        {!housesLoading && availableHouses.length === 0 && (
           <Alert
             type="warning"
             showIcon
@@ -301,6 +294,24 @@ const HiringPage: React.FC = () => {
             </Descriptions.Item>
             <Descriptions.Item label="Valid Until">
               <strong>{tokenExpiry}</strong> <span style={{ color: '#999' }}>(3 hours)</span>
+            </Descriptions.Item>
+            <Descriptions.Item label="Registration Link">
+              <Space>
+                <a href={registrationLink} target="_blank" rel="noreferrer">
+                  {registrationLink}
+                </a>
+                <Button
+                  type="text"
+                  icon={<CopyOutlined />}
+                  onClick={() => {
+                    navigator.clipboard.writeText(registrationLink);
+                    messageApi.success('Registration link copied');
+                  }}
+                  size="small"
+                >
+                  Copy
+                </Button>
+              </Space>
             </Descriptions.Item>
             {assignedHouseAddress && (
               <Descriptions.Item label="Assigned House">

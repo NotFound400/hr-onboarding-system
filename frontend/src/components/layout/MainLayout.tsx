@@ -105,7 +105,9 @@ const MainLayout: React.FC = () => {
     if (!employeeData || !employeeData.visaStatus || employeeData.visaStatus.length === 0) {
       return false; // Default: hide if no visa data
     }
-    const activeVisa = employeeData.visaStatus.find((v: VisaStatus) => v.activeFlag);
+    const activeVisa = employeeData.visaStatus.find(
+      (v: VisaStatus) => v.activeFlag === 'Yes'
+    );
     if (!activeVisa) return false;
     
     // Hide for Citizen and Green Card holders

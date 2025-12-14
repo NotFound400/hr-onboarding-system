@@ -5,6 +5,7 @@
  */
 
 import axiosClient from './axiosClient';
+import type { AxiosError } from 'axios';
 import { isMockMode, delay } from '../../utils/mockUtils';
 import type { 
   Application,
@@ -16,11 +17,15 @@ import type {
   RejectApplicationRequest,
   UploadDocumentRequest,
   UpdateDocumentRequest,
+  ApplicationWithEmployeeInfo,
+  ApplicationStatus,
+  Employee,
 } from '../../types';
 import {
   MOCK_APPLICATION,
   MOCK_APPLICATION_LIST,
 } from '../mocks/applicationMocks';
+import { getAllEmployees } from './employeeApi';
 
 // ==================== Application Flow API (10 endpoints) ====================
 
@@ -46,7 +51,15 @@ export const createApplication = async (
     };
   }
   
-  return axiosClient.post('/applications', data);
+  try {
+    return (await axiosClient.post('/applications/', data)) as Application;
+  } catch (error) {
+    const axiosError = error as AxiosError;
+    if (axiosError.response?.status === 404) {
+      return axiosClient.post('/', data) as Promise<Application>;
+    }
+    throw error;
+  }
 };
 
 /**
@@ -191,6 +204,54 @@ export const getOngoingApplications = async (): Promise<Application[]> => {
   }
   
   return axiosClient.get('/applications/ongoing');
+};
+
+/**
+ * 9b. 根据状态获取申请
+ * GET /api/status/{status}
+ * Role: HR
+ */
+export const getApplicationsByStatus = async (
+  status: ApplicationStatus
+): Promise<Application[]> => {
+  if (isMockMode()) {
+    await delay(300);
+    return (MOCK_APPLICATION_LIST.data || []).filter(app => app.status === status);
+  }
+
+  return axiosClient.get(`/applications/status/${status}`);
+};
+
+/**
+ * Combination helper: applications by status with employee info
+ */
+export const getApplicationsWithEmployeesByStatus = async (
+  status: ApplicationStatus
+): Promise<ApplicationWithEmployeeInfo[]> => {
+  const [applications, employees] = await Promise.all([
+    getApplicationsByStatus(status),
+    getAllEmployees({ forceReal: true }),
+  ]);
+
+  const employeeMap = new Map<string, typeof employees[number]>();
+  employees.forEach((emp) => {
+    if (emp.id) {
+      employeeMap.set(emp.id, emp);
+    }
+  });
+
+  return applications.map((app) => {
+    const employee = employeeMap.get(app.employeeId);
+    const employeeName = employee
+      ? `${employee.firstName || ''} ${employee.lastName || ''}`.trim() || 'N/A'
+      : 'N/A';
+    return {
+      ...app,
+      employee,
+      employeeName,
+      employeeEmail: employee?.email,
+    };
+  });
 };
 
 /**

@@ -5,8 +5,14 @@
 
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import type { PayloadAction } from '@reduxjs/toolkit';
-import type { Employee, OnboardingFormDTO, CreateEmployeeRequest } from '../../types';
-import { createEmployee, getEmployeeByUserId } from '../../services/api';
+import type { RootState } from '..';
+import type {
+  Employee,
+  OnboardingFormDTO,
+  UpdateEmployeeRequest,
+} from '../../types';
+import { updateEmployee } from '../../services/api';
+import { createApplication, submitApplication } from '../../services/api/applicationApi';
 
 // ==================== State Interface ====================
 
@@ -17,6 +23,8 @@ interface OnboardingState {
   formData: Partial<OnboardingFormDTO> | null;
   /** 提交后的 Employee 信息 (Employee ID 为 string - MongoDB) */
   employee: Employee | null;
+  /** 新建申请 ID */
+  applicationId: number | null;
   /** 加载状态 */
   loading: boolean;
   /** 错误信息 */
@@ -31,6 +39,7 @@ const initialState: OnboardingState = {
   currentStep: 0,
   formData: null,
   employee: null,
+  applicationId: null,
   loading: false,
   error: null,
   submitSuccess: false,
@@ -46,14 +55,14 @@ const initialState: OnboardingState = {
  */
 export const submitOnboardingForm = createAsyncThunk<
   Employee,
-  CreateEmployeeRequest,
+  { id: string; data: UpdateEmployeeRequest; applicationId: number },
   { rejectValue: string }
 >(
   'onboarding/submitForm',
-  async (createEmployeeRequest, { rejectWithValue }) => {
+  async ({ id, data, applicationId }, { rejectWithValue }) => {
     try {
-      // 直接调用 API，不再执行数据转换
-      const employee = await createEmployee(createEmployeeRequest);
+      const employee = await updateEmployee(id, data);
+      await submitApplication(applicationId);
       return employee;
     } catch (error: any) {
       return rejectWithValue(error.message || 'Failed to submit onboarding form');
@@ -61,23 +70,28 @@ export const submitOnboardingForm = createAsyncThunk<
   }
 );
 
-/**
- * 根据 User ID 获取 Employee 信息
- * 用于检查用户是否已完成 Onboarding
- */
-export const fetchEmployeeByUserId = createAsyncThunk<
-  Employee,
-  number, // userId 参数 (User.id 为 number，传给 API 时转为 string)
-  { rejectValue: string }
+export const initializeOnboardingApplication = createAsyncThunk<
+  number,
+  void,
+  { rejectValue: string; state: RootState }
 >(
-  'onboarding/fetchEmployeeByUserId',
-  async (userId, { rejectWithValue }) => {
+  'onboarding/initializeApplication',
+  async (_, { rejectWithValue, getState }) => {
     try {
-      // User.id 是 number，转换为 string 传给 API (API 内部会转为 MongoDB 查询)
-      const employee = await getEmployeeByUserId(String(userId));
-      return employee;
+      const employeeId = getState().auth.employeeId;
+
+      if (!employeeId) {
+        return rejectWithValue('Employee ID is missing. Please log in again.');
+      }
+
+      const response = await createApplication({
+        employeeId,
+        applicationType: 'OPT',
+        comment: 'OPT Pending 222',
+      });
+      return response.id;
     } catch (error: any) {
-      return rejectWithValue(error.message || 'Failed to fetch employee');
+      return rejectWithValue(error.message || 'Failed to initialize application');
     }
   }
 );
@@ -155,23 +169,14 @@ const onboardingSlice = createSlice({
         state.loading = false;
         state.error = action.payload || 'Failed to submit onboarding form';
         state.submitSuccess = false;
+      })
+      .addCase(initializeOnboardingApplication.fulfilled, (state, action) => {
+        state.applicationId = action.payload;
+      })
+      .addCase(initializeOnboardingApplication.rejected, (state, action) => {
+        state.error = action.payload || 'Failed to initialize application';
       });
 
-    // ===== Fetch Employee By UserId =====
-    builder
-      .addCase(fetchEmployeeByUserId.pending, (state) => {
-        state.loading = true;
-        state.error = null;
-      })
-      .addCase(fetchEmployeeByUserId.fulfilled, (state, action: PayloadAction<Employee>) => {
-        state.loading = false;
-        state.employee = action.payload;
-        state.error = null;
-      })
-      .addCase(fetchEmployeeByUserId.rejected, (state, action) => {
-        state.loading = false;
-        state.error = action.payload || 'Failed to fetch employee';
-      });
   },
 });
 
@@ -180,6 +185,7 @@ const onboardingSlice = createSlice({
 export const selectCurrentStep = (state: { onboarding: OnboardingState }) => state.onboarding.currentStep;
 export const selectFormData = (state: { onboarding: OnboardingState }) => state.onboarding.formData;
 export const selectEmployee = (state: { onboarding: OnboardingState }) => state.onboarding.employee;
+export const selectApplicationId = (state: { onboarding: OnboardingState }) => state.onboarding.applicationId;
 export const selectOnboardingLoading = (state: { onboarding: OnboardingState }) => state.onboarding.loading;
 export const selectOnboardingError = (state: { onboarding: OnboardingState }) => state.onboarding.error;
 export const selectSubmitSuccess = (state: { onboarding: OnboardingState }) => state.onboarding.submitSuccess;

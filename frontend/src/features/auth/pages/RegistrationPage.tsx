@@ -33,6 +33,7 @@ export const RegistrationPage: React.FC = () => {
   const [email, setEmail] = useState('');
   const [errorMessage, setErrorMessage] = useState('');
   const [assignedHouseId, setAssignedHouseId] = useState<number | null>(null);
+  const [assignedHouseAddress, setAssignedHouseAddress] = useState<string | null>(null);
   const [houseContext, setHouseContext] = useState<RegistrationTokenHouseContext | null>(null);
   const messageApi = useAntdMessage();
 
@@ -63,6 +64,7 @@ export const RegistrationPage: React.FC = () => {
         const houseId = tokenInfo.houseId ?? tokenInfo.houseContext?.id ?? null;
         setAssignedHouseId(houseId);
         setHouseContext(tokenInfo.houseContext ?? null);
+        setAssignedHouseAddress(tokenInfo.houseContext?.address ?? tokenInfo.houseAddress ?? null);
       } else {
         setTokenValid(false);
         setErrorMessage('Token is invalid or expired. Please request a new registration link.');
@@ -109,6 +111,11 @@ export const RegistrationPage: React.FC = () => {
       }, 1500);
     } catch (error: any) {
       messageApi.error(error.message || 'Registration failed. Please try again.');
+      setTokenValid(false);
+      setAssignedHouseId(null);
+      setAssignedHouseAddress(null);
+      setHouseContext(null);
+      setErrorMessage(error.message || 'Registration failed. Please try again.');
       console.error('Registration error:', error);
     } finally {
       setSubmitting(false);
@@ -194,9 +201,9 @@ export const RegistrationPage: React.FC = () => {
           <Alert
             message="Housing Assignment"
             description={
-              houseContext?.address
-                ? `您被分配到了 ${houseContext.address}`
-                : `House ID: ${assignedHouseId}`
+              assignedHouseAddress
+                ? `You have been assigned to ${assignedHouseAddress}.`
+                : 'Your housing assignment has been recorded. HR will share the address with you shortly.'
             }
             type="info"
             showIcon

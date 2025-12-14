@@ -5,6 +5,7 @@
  */
 
 import { ApplicationStatus, ApplicationType } from './enums';
+import type { Employee } from './employee';
 
 // Re-export request types
 export type { 
@@ -46,6 +47,13 @@ export interface ApplicationListItem {
   status: ApplicationStatus;
   comment: string;
   applicationType: ApplicationType;
+}
+
+/** Application combined with employee info (frontend convenience) */
+export interface ApplicationWithEmployeeInfo extends Application {
+  employee?: Employee;
+  employeeName?: string;
+  employeeEmail?: string;
 }
 
 // ==================== Document Management Types ====================

@@ -62,7 +62,15 @@ const LoginPage: React.FC = () => {
           setCheckingOnboarding(true);
           
           // 1. 先通过 User.id 获取 Employee 记录（获取 MongoDB ObjectId）
+          console.log('[Login] User ID:', user.id);
           const employee = await getEmployeeByUserId(String(user.id));
+          console.log('[Login] Employee ID:', employee.id);
+
+          if (!employee.id) {
+            // 没有 Employee 记录，跳转到 Onboarding 表单
+            navigate('/onboarding/form', { replace: true });
+            return;
+          }
           
           // 2. 通过 Employee.id 查询 Application
           const applications = await getApplicationsByEmployeeId(employee.id);
@@ -85,8 +93,7 @@ const LoginPage: React.FC = () => {
             navigate('/onboarding/form', { replace: true });
           }
         } catch (error) {
-          // 查询失败或没有 Employee 记录，跳转到 Onboarding 表单
-          console.error('Failed to check onboarding status:', error);
+          // 查询失败或没有 Employee 记录，静默跳转到 Onboarding 表单
           navigate('/onboarding/form', { replace: true });
         } finally {
           setCheckingOnboarding(false);
@@ -105,6 +112,7 @@ const LoginPage: React.FC = () => {
       const resultAction = await dispatch(login(values));
       
       if (login.fulfilled.match(resultAction)) {
+        console.log('[Login] JWT Token:', resultAction.payload.token);
         messageApi.success('Login successful');
         // 跳转逻辑由 useEffect 处理
       } else if (login.rejected.match(resultAction)) {

@@ -165,7 +165,7 @@ const EmployeeHomePage: React.FC = () => {
             <Col span={8}>
               <Text type="secondary">Work Authorization</Text>
               <div style={{ fontSize: 16, fontWeight: 500, marginTop: 4 }}>
-                {employee.visaStatus?.find(v => v.activeFlag)?.visaType || 'N/A'}
+                {employee.visaStatus?.find(v => v.activeFlag === 'Yes')?.visaType || 'N/A'}
               </div>
             </Col>
           </Row>

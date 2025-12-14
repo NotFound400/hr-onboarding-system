@@ -60,7 +60,7 @@ export const EmployeeProfileDetailPage: React.FC = () => {
       
       // 获取所有员工 (for <10/100> navigation)
       const { getAllEmployees } = await import('../../../services/api');
-      const allEmps = await getAllEmployees();
+      const allEmps = await getAllEmployees({ forceReal: true });
       // Sort by userID per Section HR.3.a.ii requirement
       const sortedEmps = allEmps.sort((a, b) => (a.userID || 0) - (b.userID || 0));
       setAllEmployees(sortedEmps);
@@ -323,7 +323,7 @@ export const EmployeeProfileDetailPage: React.FC = () => {
       <Card title="Visa Status" style={{ marginBottom: 24 }}>
         {(() => {
           const activeVisa = employee.visaStatus && employee.visaStatus.length > 0 
-            ? employee.visaStatus.find(v => v.activeFlag) || employee.visaStatus[0]
+            ? employee.visaStatus.find(v => v.activeFlag === 'Yes') || employee.visaStatus[0]
             : null;
           // Check if visa type suggests citizenship
           const isCitizen = !activeVisa || activeVisa.visaType === 'Other';

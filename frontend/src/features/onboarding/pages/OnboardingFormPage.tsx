@@ -17,33 +17,38 @@
 
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { 
-  Form, 
-  Input, 
-  Select, 
-  DatePicker, 
-  Button, 
-  Row, 
-  Col, 
-  Divider, 
-  Radio, 
-  Upload, 
-  Card
+import {
+  Form,
+  Input,
+  Select,
+  DatePicker,
+  Button,
+  Row,
+  Col,
+  Divider,
+  Radio,
+  Upload,
+  Card,
 } from 'antd';
 import type { UploadFile } from 'antd';
-import { PlusOutlined, MinusCircleOutlined, UploadOutlined } from '@ant-design/icons';
+import { PlusOutlined, MinusCircleOutlined, UploadOutlined, ArrowLeftOutlined } from '@ant-design/icons';
 import { PageContainer } from '../../../components/common/PageContainer';
 import { useAppDispatch, useAppSelector } from '../../../store/hooks';
 import {
   submitOnboardingForm,
   selectOnboardingLoading,
   selectOnboardingError,
-  selectSubmitSuccess,
   clearError,
+  initializeOnboardingApplication,
+  selectApplicationId,
 } from '../../../store/slices/onboardingSlice';
-import { selectUser } from '../../../store/slices/authSlice';
-import type { OnboardingFormDTO, VisaStatusType } from '../../../types';
-import dayjs from 'dayjs';
+import { logout, selectUser } from '../../../store/slices/authSlice';
+import type {
+  OnboardingFormDTO,
+  VisaStatusType,
+  UpdateEmployeeRequest,
+} from '../../../types';
+import dayjs, { Dayjs } from 'dayjs';
 import { useAntdMessage } from '../../../hooks/useAntdMessage';
 
 /**
@@ -64,15 +69,16 @@ const OnboardingFormPage: React.FC = () => {
   const messageApi = useAntdMessage();
   
   // 监听条件字段状态
-  const [isCitizenOrPR, setIsCitizenOrPR] = useState<boolean | undefined>(undefined);
-  const [hasDriverLicense, setHasDriverLicense] = useState<boolean | undefined>(undefined);
+  const [isCitizenOrPR, setIsCitizenOrPR] = useState<'Yes' | 'No' | undefined>(undefined);
+  const [hasDriverLicense, setHasDriverLicense] = useState<'Yes' | 'No' | undefined>(undefined);
   const [workAuthType, setWorkAuthType] = useState<string | undefined>(undefined);
   const [avatarFileList, setAvatarFileList] = useState<UploadFile[]>([]);
 
   const loading = useAppSelector(selectOnboardingLoading);
   const error = useAppSelector(selectOnboardingError);
-  const submitSuccess = useAppSelector(selectSubmitSuccess);
   const user = useAppSelector(selectUser);
+  const applicationId = useAppSelector(selectApplicationId);
+  const authEmployeeId = useAppSelector((state) => state.auth.employeeId);
 
   // 初始化表单数据
   useEffect(() => {
@@ -83,11 +89,16 @@ const OnboardingFormPage: React.FC = () => {
 
   // 提交成功后跳转到文档页面 (Section 3.d)
   useEffect(() => {
-    if (submitSuccess) {
-      messageApi.success('Onboarding form submitted successfully!');
-      navigate('/onboarding/docs');
+    if (!applicationId) {
+      dispatch(initializeOnboardingApplication());
     }
-  }, [submitSuccess, navigate, messageApi]);
+  }, [dispatch, applicationId]);
+
+  useEffect(() => {
+    if (applicationId) {
+      console.log('[Onboarding] Initialized applicationId:', applicationId);
+    }
+  }, [applicationId]);
 
   // 显示错误信息
   useEffect(() => {
@@ -107,10 +118,25 @@ const OnboardingFormPage: React.FC = () => {
    */
   const handleSubmit = async () => {
     try {
+      if (!applicationId) {
+        messageApi.error('Application is not initialized yet. Please try again later.');
+        return;
+      }
+      if (!authEmployeeId) {
+        messageApi.error('Employee ID is missing. Please log in again.');
+        return;
+      }
+
       // ✅ 直接从 validateFields() 获取值，不依赖 getFieldsValue()
       const values = await form.validateFields();
 
-      // ✅ 构建 OnboardingFormDTO - 所有日期对象立即转换为字符串
+      const isCitizen = values.isCitizenOrPR === 'Yes';
+      const hasLicense = values.hasDriverLicense === 'Yes';
+
+      const formatDateTime = (input?: Dayjs) =>
+        input ? dayjs(input).format('YYYY-MM-DD[T]HH:mm:ss') : '';
+
+      // ✅ 构建 OnboardingFormDTO - 所有日期对象立即转换为后端要求的 LocalDateTime 格式
       const onboardingData: OnboardingFormDTO = {
         // Section 3.c.i - Name fields
         firstName: values.firstName,
@@ -137,34 +163,32 @@ const OnboardingFormPage: React.FC = () => {
         
         // Section 3.c.vi - Personal Info (✅ 关键修复: dayjs → string)
         ssn: values.ssn,
-        dob: values.dob ? dayjs(values.dob).format('YYYY-MM-DD') : '', // ✅ 立即转换
+        dob: formatDateTime(values.dob),
         gender: values.gender,
         
         // 添加 startDate (必需字段)
-        startDate: values.startDate ? dayjs(values.startDate).format('YYYY-MM-DD') : dayjs().format('YYYY-MM-DD'),
+        startDate: formatDateTime(values.startDate) || formatDateTime(dayjs()),
         
         // Section 3.c.vii - Citizenship/Work Authorization
-        isCitizenOrPR: values.isCitizenOrPR,
-        citizenshipType: values.isCitizenOrPR ? values.citizenshipType : undefined,
-        visaType: !values.isCitizenOrPR ? values.workAuthorizationType : undefined,
-        workAuthorizationTitle: (!values.isCitizenOrPR && values.workAuthorizationType === 'Other') 
+        isCitizenOrPR: isCitizen,
+        citizenshipType: isCitizen ? values.citizenshipType : undefined,
+        visaType: !isCitizen ? values.workAuthorizationType : undefined,
+        workAuthorizationTitle: (!isCitizen && values.workAuthorizationType === 'Other') 
           ? values.workAuthorizationTitle 
           : undefined,
-        visaStartDate: !values.isCitizenOrPR && values.workAuthStartDate
-          ? dayjs(values.workAuthStartDate).format('YYYY-MM-DD') // ✅ 立即转换
+        visaStartDate: !isCitizen && values.workAuthStartDate
+          ? formatDateTime(values.workAuthStartDate)
           : undefined,
-        visaEndDate: !values.isCitizenOrPR && values.workAuthEndDate
-          ? dayjs(values.workAuthEndDate).format('YYYY-MM-DD') // ✅ 立即转换
+        visaEndDate: !isCitizen && values.workAuthEndDate
+          ? formatDateTime(values.workAuthEndDate)
           : undefined,
-        workAuthorizationDocument: !values.isCitizenOrPR ? values.workAuthDocument : undefined,
-        
         // Section 3.c.viii - Driver License
-        hasDriverLicense: values.hasDriverLicense,
-        driverLicense: values.hasDriverLicense ? values.driverLicenseNumber : undefined,
-        driverLicenseExpiration: values.hasDriverLicense && values.driverLicenseExpiration
-          ? dayjs(values.driverLicenseExpiration).format('YYYY-MM-DD') // ✅ 立即转换
+        hasDriverLicense: hasLicense,
+        driverLicense: hasLicense ? values.driverLicenseNumber : undefined,
+        driverLicenseExpiration: hasLicense && values.driverLicenseExpiration
+          ? formatDateTime(values.driverLicenseExpiration)
           : undefined,
-        driverLicenseCopy: values.hasDriverLicense ? values.driverLicenseCopy : undefined,
+        driverLicenseCopy: hasLicense ? values.driverLicenseCopy : undefined,
         
         // Section 3.c.ix - Reference (only one person, includes Address)
         referenceFirstName: values.referenceFirstName,
@@ -185,7 +209,7 @@ const OnboardingFormPage: React.FC = () => {
       };
 
       // ✅ 将 OnboardingFormDTO 转换为 CreateEmployeeRequest (嵌套结构)
-      const createEmployeeRequest: import('../../../types').CreateEmployeeRequest = {
+      const employeePayload: UpdateEmployeeRequest = {
         userID: user?.id || 0,
         firstName: onboardingData.firstName,
         lastName: onboardingData.lastName,
@@ -246,9 +270,9 @@ const OnboardingFormPage: React.FC = () => {
               {
                 id: '', // Will be generated by backend
                 visaType: onboardingData.citizenshipType as VisaStatusType || 'Citizen',
-                activeFlag: 'Y',
+                activeFlag: 'Yes',
                 startDate: onboardingData.startDate,
-                endDate: '9999-12-31',
+                endDate: onboardingData.startDate,
                 lastModificationDate: new Date().toISOString(),
               },
             ]
@@ -256,7 +280,7 @@ const OnboardingFormPage: React.FC = () => {
               {
                 id: '', // Will be generated by backend
                 visaType: onboardingData.visaType as VisaStatusType || 'Other',
-                activeFlag: 'Y',
+                activeFlag: 'Yes',
                 startDate: onboardingData.visaStartDate || onboardingData.startDate,
                 endDate: onboardingData.visaEndDate || '',
                 lastModificationDate: new Date().toISOString(),
@@ -264,10 +288,24 @@ const OnboardingFormPage: React.FC = () => {
             ],
       };
 
-      console.log('✅ Submitting CreateEmployeeRequest (nested structure):', createEmployeeRequest);
+      console.log('✅ Submitting employee update payload:', employeePayload);
 
-      // ✅ 提交嵌套结构的数据到 Redux
-      await dispatch(submitOnboardingForm(createEmployeeRequest)).unwrap();
+      const targetEmployeeId = authEmployeeId;
+      const payloadWithIds: UpdateEmployeeRequest = {
+        ...(employeePayload as unknown as UpdateEmployeeRequest),
+        id: authEmployeeId,
+        userID: user?.id,
+      };
+      await dispatch(
+        submitOnboardingForm({
+          id: targetEmployeeId,
+          data: payloadWithIds,
+          applicationId,
+        })
+      ).unwrap();
+
+      messageApi.success('Onboarding form submitted successfully!');
+      navigate('/onboarding/docs');
       
     } catch (error) {
       console.error('❌ Form validation or submission failed:', error);
@@ -278,11 +316,27 @@ const OnboardingFormPage: React.FC = () => {
   return (
     <div style={{ width: '80%', margin: '0 auto' }}>
       <PageContainer title="Employee Onboarding Application">
+        <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 16 }}>
+          <Button
+            icon={<ArrowLeftOutlined />}
+            onClick={async () => {
+              await dispatch(logout());
+              navigate('/login', { replace: true });
+            }}
+          >
+            Back to Login
+          </Button>
+        </div>
         <Card>
           <Form 
             form={form} 
             layout="vertical"
             initialValues={{
+              startDate: dayjs(),
+              dob: dayjs('1995-01-01'),
+              workAuthStartDate: dayjs(),
+              workAuthEndDate: dayjs().add(1, 'year'),
+              driverLicenseExpiration: dayjs().add(1, 'year'),
               emergencyContacts: [{}], // 至少一个 Emergency Contact
             }}
           >
@@ -457,14 +511,16 @@ const OnboardingFormPage: React.FC = () => {
             label="Are you a citizen or permanent resident of the U.S.?"
             rules={[{ required: true, message: 'Required' }]}
           >
-            <Radio.Group onChange={(e) => setIsCitizenOrPR(e.target.value)}>
-              <Radio value={true}>Yes</Radio>
-              <Radio value={false}>No</Radio>
+            <Radio.Group
+              onChange={(e) => setIsCitizenOrPR(e.target.value as 'Yes' | 'No')}
+            >
+              <Radio value="Yes">Yes</Radio>
+              <Radio value="No">No</Radio>
             </Radio.Group>
           </Form.Item>
 
           {/* If Yes: Choose Citizen or Green Card */}
-          {isCitizenOrPR === true && (
+          {isCitizenOrPR === 'Yes' && (
             <Form.Item
               name="citizenshipType"
               label="Citizenship Type"
@@ -478,7 +534,7 @@ const OnboardingFormPage: React.FC = () => {
           )}
 
           {/* If No: Work Authorization Type */}
-          {isCitizenOrPR === false && (
+          {isCitizenOrPR === 'No' && (
             <>
               <Form.Item
                 name="workAuthorizationType"
@@ -530,17 +586,6 @@ const OnboardingFormPage: React.FC = () => {
                 </Col>
               </Row>
 
-              {/* Upload work authorization document */}
-              <Form.Item
-                name="workAuthDocument"
-                label="Upload Work Authorization Document"
-                rules={[{ required: true, message: 'Document upload is required' }]}
-                tooltip="Upload EAD card, H1B document, etc."
-              >
-                <Upload beforeUpload={() => false} maxCount={1}>
-                  <Button icon={<UploadOutlined />}>Click to Upload</Button>
-                </Upload>
-              </Form.Item>
             </>
           )}
 
@@ -551,14 +596,16 @@ const OnboardingFormPage: React.FC = () => {
             label="Do you have a driver's license?"
             rules={[{ required: true, message: 'Required' }]}
           >
-            <Radio.Group onChange={(e) => setHasDriverLicense(e.target.value)}>
-              <Radio value={true}>Yes</Radio>
-              <Radio value={false}>No</Radio>
+            <Radio.Group
+              onChange={(e) => setHasDriverLicense(e.target.value as 'Yes' | 'No')}
+            >
+              <Radio value="Yes">Yes</Radio>
+              <Radio value="No">No</Radio>
             </Radio.Group>
           </Form.Item>
 
           {/* If Yes: Show license fields */}
-          {hasDriverLicense === true && (
+          {hasDriverLicense === 'Yes' && (
             <>
               <Row gutter={16}>
                 <Col span={12}>
@@ -679,89 +726,92 @@ const OnboardingFormPage: React.FC = () => {
           >
             {(fields, { add, remove }, { errors }) => (
               <>
-                {fields.map((field, index) => (
-                  <Card 
-                    key={field.key} 
-                    size="small" 
-                    title={`Emergency Contact ${index + 1}`}
-                    style={{ marginBottom: 16 }}
-                    extra={
-                      fields.length > 1 ? (
-                        <MinusCircleOutlined
-                          onClick={() => remove(field.name)}
-                          style={{ color: 'red' }}
-                        />
-                      ) : null
-                    }
-                  >
-                    <Row gutter={16}>
-                      <Col span={8}>
-                        <Form.Item
-                          {...field}
-                          name={[field.name, 'firstName']}
-                          label="First Name"
-                          rules={[{ required: true, message: 'Required' }]}
-                        >
-                          <Input placeholder="First Name" />
-                        </Form.Item>
-                      </Col>
-                      <Col span={8}>
-                        <Form.Item
-                          {...field}
-                          name={[field.name, 'lastName']}
-                          label="Last Name"
-                          rules={[{ required: true, message: 'Required' }]}
-                        >
-                          <Input placeholder="Last Name" />
-                        </Form.Item>
-                      </Col>
-                      <Col span={8}>
-                        <Form.Item
-                          {...field}
-                          name={[field.name, 'middleName']}
-                          label="Middle Name"
-                        >
-                          <Input placeholder="Middle Name (optional)" />
-                        </Form.Item>
-                      </Col>
-                    </Row>
-                    <Row gutter={16}>
-                      <Col span={8}>
-                        <Form.Item
-                          {...field}
-                          name={[field.name, 'phone']}
-                          label="Phone"
-                          rules={[{ required: true, message: 'Required' }]}
-                        >
-                          <Input placeholder="444-555-6666" />
-                        </Form.Item>
-                      </Col>
-                      <Col span={8}>
-                        <Form.Item
-                          {...field}
-                          name={[field.name, 'email']}
-                          label="Email"
-                          rules={[
-                            { required: true, message: 'Required' },
-                            { type: 'email', message: 'Invalid email' },
-                          ]}
-                        >
-                          <Input placeholder="emergency@example.com" />
-                        </Form.Item>
-                      </Col>
-                      <Col span={8}>
-                        <Form.Item
-                          {...field}
-                          name={[field.name, 'relationship']}
-                          label="Relationship"
-                          rules={[{ required: true, message: 'Required' }]}
-                        >
-                          <Input placeholder="Spouse" />
-                        </Form.Item>
-                      </Col>
-                    </Row>
-                  </Card>
-                ))}
+                {fields.map((field, index) => {
+                  const { key, name, ...restField } = field;
+                  return (
+                    <Card 
+                      key={key} 
+                      size="small" 
+                      title={`Emergency Contact ${index + 1}`}
+                      style={{ marginBottom: 16 }}
+                      extra={
+                        fields.length > 1 ? (
+                          <MinusCircleOutlined
+                            onClick={() => remove(name)}
+                            style={{ color: 'red' }}
+                          />
+                        ) : null
+                      }
+                    >
+                      <Row gutter={16}>
+                        <Col span={8}>
+                          <Form.Item
+                            {...restField}
+                            name={[name, 'firstName']}
+                            label="First Name"
+                            rules={[{ required: true, message: 'Required' }]}
+                          >
+                            <Input placeholder="First Name" />
+                          </Form.Item>
+                        </Col>
+                        <Col span={8}>
+                          <Form.Item
+                            {...restField}
+                            name={[name, 'lastName']}
+                            label="Last Name"
+                            rules={[{ required: true, message: 'Required' }]}
+                          >
+                            <Input placeholder="Last Name" />
+                          </Form.Item>
+                        </Col>
+                        <Col span={8}>
+                          <Form.Item
+                            {...restField}
+                            name={[name, 'middleName']}
+                            label="Middle Name"
+                          >
+                            <Input placeholder="Middle Name (optional)" />
+                          </Form.Item>
+                        </Col>
+                      </Row>
+                      <Row gutter={16}>
+                        <Col span={8}>
+                          <Form.Item
+                            {...restField}
+                            name={[name, 'phone']}
+                            label="Phone"
+                            rules={[{ required: true, message: 'Required' }]}
+                          >
+                            <Input placeholder="444-555-6666" />
+                          </Form.Item>
+                        </Col>
+                        <Col span={8}>
+                          <Form.Item
+                            {...restField}
+                            name={[name, 'email']}
+                            label="Email"
+                            rules={[
+                              { required: true, message: 'Required' },
+                              { type: 'email', message: 'Invalid email' },
+                            ]}
+                          >
+                            <Input placeholder="emergency@example.com" />
+                          </Form.Item>
+                        </Col>
+                        <Col span={8}>
+                          <Form.Item
+                            {...restField}
+                            name={[name, 'relationship']}
+                            label="Relationship"
+                            rules={[{ required: true, message: 'Required' }]}
+                          >
+                            <Input placeholder="Spouse" />
+                          </Form.Item>
+                        </Col>
+                      </Row>
+                    </Card>
+                  );
+                })}
                 <Form.Item>
                   <Button 
                     type="dashed" 

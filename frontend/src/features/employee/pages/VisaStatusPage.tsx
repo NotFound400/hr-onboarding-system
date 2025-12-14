@@ -73,7 +73,7 @@ const VisaStatusPage: React.FC = () => {
    */
   const getActiveVisaStatus = (): VisaStatus | undefined => {
     if (!employee?.visaStatus) return undefined;
-    return employee.visaStatus.find(visa => visa.activeFlag);
+    return employee.visaStatus.find(visa => visa.activeFlag === 'Yes');
   };
 
   /**
@@ -187,8 +187,8 @@ const VisaStatusPage: React.FC = () => {
               </Tag>
             </Descriptions.Item>
             <Descriptions.Item label="Status">
-              <Tag color={activeVisa.activeFlag ? 'success' : 'default'}>
-                {activeVisa.activeFlag ? 'Active' : 'Inactive'}
+              <Tag color={activeVisa.activeFlag === 'Yes' ? 'success' : 'default'}>
+                {activeVisa.activeFlag === 'Yes' ? 'Active' : 'Inactive'}
               </Tag>
             </Descriptions.Item>
             <Descriptions.Item label="Start Date">

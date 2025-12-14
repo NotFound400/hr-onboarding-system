@@ -68,7 +68,7 @@ export const MOCK_EMPLOYEE_APPROVED: Employee = {
     {
       id: '507f1f77bcf86cd799439005',
       visaType: 'OPT',
-      activeFlag: 'Y',
+      activeFlag: 'Yes',
       startDate: '2024-01-15',
       endDate: '2025-12-31',
       lastModificationDate: '2024-01-15T00:00:00Z',
@@ -183,7 +183,7 @@ export const MOCK_EMPLOYEE_OPT: Employee = {
     {
       id: '507f1f77bcf86cd799439015',
       visaType: 'OPT',
-      activeFlag: 'Y',
+      activeFlag: 'Yes',
       startDate: '2024-02-01',
       endDate: '2025-02-01',
       lastModificationDate: '2024-02-01T00:00:00Z',
@@ -266,7 +266,7 @@ export const MOCK_EMPLOYEE_GREEN_CARD: Employee = {
     {
       id: '507f1f77bcf86cd799439022',
       visaType: 'Green Card',
-      activeFlag: 'Y',
+      activeFlag: 'Yes',
       startDate: '2020-01-15',
       endDate: '9999-12-31',
       lastModificationDate: '2024-03-01T00:00:00Z',
@@ -326,7 +326,7 @@ export const MOCK_EMPLOYEE_OPT_STEM: Employee = {
     {
       id: '507f1f77bcf86cd799439026',
       visaType: 'F1',
-      activeFlag: 'Y',
+      activeFlag: 'Yes',
       startDate: '2024-06-01',
       endDate: '2027-06-01',
       lastModificationDate: '2024-06-01T00:00:00Z',

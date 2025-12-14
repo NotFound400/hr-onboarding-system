@@ -136,6 +136,7 @@ export interface CreateEmployeeRequest {
 
 /** 更新员工请求 (Section 6.c - Edit Functionality) */
 export interface UpdateEmployeeRequest {
+  id?: string;
   userID?: number;
   firstName?: string;
   lastName?: string;
