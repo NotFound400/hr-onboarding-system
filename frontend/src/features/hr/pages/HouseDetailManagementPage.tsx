@@ -18,6 +18,7 @@ import {
   Typography,
   Empty,
   Spin,
+  Input,
 } from 'antd';
 import { HomeOutlined } from '@ant-design/icons';
 import type { ColumnsType } from 'antd/es/table';
@@ -28,6 +29,8 @@ import {
   getAllEmployees,
   createFacility,
   updateFacility,
+  deleteFacility,
+  getFacilitiesByHouseId,
   getFacilityReportsByHouse,
   getFacilityReportById,
 } from '../../../services/api';
@@ -37,13 +40,12 @@ import type {
   Employee,
   FacilityReportListItem,
   FacilityReportDetail,
+  Facility,
 } from '../../../types';
 import { useAntdMessage } from '../../../hooks/useAntdMessage';
 
 const isHouseDetailHR = (detail: HouseDetail): detail is HouseDetailHR =>
   detail.viewType === 'HR_VIEW';
-
-const KEY_FACILITY_TYPES = ['Bed', 'Mattress', 'Desk'];
 
 const HouseDetailManagementPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -59,9 +61,14 @@ const HouseDetailManagementPage: React.FC = () => {
   const [reportDetailLoading, setReportDetailLoading] = useState(false);
   const [selectedReportDetail, setSelectedReportDetail] = useState<FacilityReportDetail | null>(null);
   const messageApi = useAntdMessage();
-  const [facilityQuantities, setFacilityQuantities] = useState<Record<string, number>>({});
-  const [editingFacilities, setEditingFacilities] = useState<Record<string, boolean>>({});
-  const [updatingFacility, setUpdatingFacility] = useState<string | null>(null);
+  const [facilities, setFacilities] = useState<Facility[]>([]);
+  const [facilitiesLoading, setFacilitiesLoading] = useState(false);
+  const [editingFacility, setEditingFacility] = useState<number | null>(null);
+  const [editForm, setEditForm] = useState<{ type: string; description: string; quantity: number } | null>(null);
+  const [updatingFacility, setUpdatingFacility] = useState<number | null>(null);
+  const [createModalVisible, setCreateModalVisible] = useState(false);
+  const [createForm, setCreateForm] = useState({ type: '', description: '', quantity: 0 });
+  const [creatingFacility, setCreatingFacility] = useState(false);
 
   useEffect(() => {
     if (id) {
@@ -75,14 +82,12 @@ const HouseDetailManagementPage: React.FC = () => {
   const fetchHouseDetail = async (houseId: number) => {
     try {
       setLoading(true);
-      await ensureFacilityTypes(houseId);
       const detail = await getHouseById(houseId);
       if (!isHouseDetailHR(detail)) {
         throw new Error('Invalid house detail payload');
       }
       setHouseDetail(detail);
-      setFacilityQuantities(buildFacilityQuantities(detail));
-      setEditingFacilities(buildInitialEditingState(detail));
+      fetchFacilities(houseId);
       fetchResidents(houseId);
       fetchFacilityReports(houseId);
     } catch (error: any) {
@@ -117,86 +122,94 @@ const HouseDetailManagementPage: React.FC = () => {
     }
   };
 
-  const buildFacilityQuantities = (detail: HouseDetailHR) => {
-    const map: Record<string, number> = {};
-    KEY_FACILITY_TYPES.forEach((type) => {
-      const facility = detail.facilities?.find(
-        (item) => item.type?.toLowerCase() === type.toLowerCase()
-      );
-      map[type] = facility?.quantity ?? 0;
-    });
-    return map;
-  };
-
-  const buildInitialEditingState = (detail: HouseDetailHR) => {
-    const map: Record<string, boolean> = {};
-    KEY_FACILITY_TYPES.forEach((type) => {
-      const facilityExists = detail.facilities?.some(
-        (item) => item.type?.toLowerCase() === type.toLowerCase()
-      );
-      map[type] = !facilityExists;
-    });
-    return map;
-  };
-
-  const ensureFacilityTypes = async (houseId: number) => {
-    const detail = await getHouseById(houseId);
-    if (!isHouseDetailHR(detail)) {
-      return;
-    }
-
-    const existingTypes =
-      detail.facilities?.map((facility) => facility.type?.toLowerCase() || '') || [];
-    const missingTypes = KEY_FACILITY_TYPES.filter(
-      (type) => !existingTypes.includes(type.toLowerCase())
-    );
-
-    for (const type of missingTypes) {
-      await createFacility({
-        houseId,
-        type,
-        description: `${type} placeholder`,
-        quantity: 0,
-      });
+  const fetchFacilities = async (houseId: number) => {
+    try {
+      setFacilitiesLoading(true);
+      const facilitiesData = await getFacilitiesByHouseId(houseId);
+      setFacilities(facilitiesData);
+    } catch (error: any) {
+      messageApi.error(error.message || 'Failed to load facilities');
+    } finally {
+      setFacilitiesLoading(false);
     }
   };
 
-  const handleUpdateFacilityQuantity = async (type: string) => {
+  const handleEditFacility = (facility: Facility) => {
+    setEditingFacility(facility.id);
+    setEditForm({
+      type: facility.type,
+      description: facility.description || '',
+      quantity: facility.quantity,
+    });
+  };
+
+  const handleCancelEdit = () => {
+    setEditingFacility(null);
+    setEditForm(null);
+  };
+
+  const handleUpdateFacility = async (facilityId: number) => {
+    if (!editForm || !houseDetail) return;
+
+    try {
+      setUpdatingFacility(facilityId);
+      await updateFacility(facilityId, editForm);
+      messageApi.success('Facility updated successfully');
+      setEditingFacility(null);
+      setEditForm(null);
+      fetchFacilities(houseDetail.id);
+    } catch (error: any) {
+      messageApi.error(error.message || 'Failed to update facility');
+    } finally {
+      setUpdatingFacility(null);
+    }
+  };
+
+  const handleDeleteFacility = async (facilityId: number, facilityType: string) => {
     if (!houseDetail) return;
-    const facility = houseDetail.facilities?.find(
-      (item) => item.type?.toLowerCase() === type.toLowerCase()
-    );
-    if (!facility) {
-      messageApi.error(`Facility record for ${type} not found`);
+
+    Modal.confirm({
+      title: 'Delete Facility',
+      content: `Are you sure you want to delete ${facilityType}?`,
+      onOk: async () => {
+        try {
+          await deleteFacility(facilityId);
+          messageApi.success('Facility deleted successfully');
+          fetchFacilities(houseDetail.id);
+        } catch (error: any) {
+          messageApi.error(error.message || 'Failed to delete facility');
+        }
+      },
+    });
+  };
+
+  const handleOpenCreateModal = () => {
+    setCreateForm({ type: '', description: '', quantity: 0 });
+    setCreateModalVisible(true);
+  };
+
+  const handleCreateFacility = async () => {
+    if (!houseDetail) return;
+    if (!createForm.type.trim()) {
+      messageApi.warning('Please enter facility type');
       return;
     }
 
     try {
-      setUpdatingFacility(type);
-      await updateFacility(facility.id, {
-        quantity: facilityQuantities[type] ?? 0,
+      setCreatingFacility(true);
+      await createFacility({
+        houseId: houseDetail.id,
+        ...createForm,
       });
-      messageApi.success(`${type} quantity updated`);
+      messageApi.success('Facility created successfully');
+      setCreateModalVisible(false);
+      setCreateForm({ type: '', description: '', quantity: 0 });
+      fetchFacilities(houseDetail.id);
     } catch (error: any) {
-      messageApi.error(error.message || `Failed to update ${type}`);
+      messageApi.error(error.message || 'Failed to create facility');
     } finally {
-      setUpdatingFacility(null);
-      fetchHouseDetail(houseDetail.id);
+      setCreatingFacility(false);
     }
-  };
-
-  const handleQuantityChange = (type: string, value: number | null) => {
-    setFacilityQuantities((prev) => ({
-      ...prev,
-      [type]: value ?? 0,
-    }));
-  };
-
-  const toggleEditFacility = (type: string) => {
-    setEditingFacilities((prev) => ({
-      ...prev,
-      [type]: !prev[type],
-    }));
   };
 
   const handleViewReportDetail = async (reportId: number) => {
@@ -321,57 +334,6 @@ const HouseDetailManagementPage: React.FC = () => {
             </Descriptions>
           </Card>
 
-          <Card title="Facility Information">
-            <div
-              style={{
-                display: 'flex',
-                justifyContent: 'space-between',
-                width: '80%',
-                margin: '0 auto',
-                gap: 24,
-              }}
-            >
-              {KEY_FACILITY_TYPES.map((type) => (
-                <div
-                  key={type}
-                  style={{
-                    flex: 1,
-                    display: 'flex',
-                    flexDirection: 'column',
-                    alignItems: 'center',
-                    padding: 16,
-                    border: '1px solid #f0f0f0',
-                    borderRadius: 8,
-                    background: '#fafafa',
-                  }}
-                >
-                  <span style={{ fontWeight: 600, marginBottom: 12 }}>{type}</span>
-                  <InputNumber
-                    min={0}
-                    disabled={!editingFacilities[type]}
-                    value={facilityQuantities[type] ?? 0}
-                    onChange={(value) => handleQuantityChange(type, value)}
-                    style={{ width: '100%', marginBottom: 12 }}
-                  />
-                  {editingFacilities[type] ? (
-                    <Space>
-                      <Button
-                        type="primary"
-                        loading={updatingFacility === type}
-                        onClick={() => handleUpdateFacilityQuantity(type)}
-                      >
-                        Update
-                      </Button>
-                      <Button onClick={() => toggleEditFacility(type)}>Cancel</Button>
-                    </Space>
-                  ) : (
-                    <Button onClick={() => toggleEditFacility(type)}>Edit</Button>
-                  )}
-                </div>
-              ))}
-            </div>
-          </Card>
-
           <Card title="Residents">
             <Table
               columns={residentColumns}
@@ -381,6 +343,123 @@ const HouseDetailManagementPage: React.FC = () => {
               pagination={false}
               locale={{ emptyText: 'No residents assigned' }}
             />
+          </Card>
+
+          <Card 
+            title="Facility Information"
+            extra={
+              <Button type="primary" onClick={handleOpenCreateModal}>
+                Add Facility
+              </Button>
+            }
+          >
+            {facilitiesLoading ? (
+              <div style={{ textAlign: 'center', padding: 24 }}>
+                <Spin />
+              </div>
+            ) : facilities.length === 0 ? (
+              <Empty description="No facilities yet" />
+            ) : (
+              <List
+                dataSource={facilities}
+                renderItem={(facility) => {
+                  const isEditing = editingFacility === facility.id;
+                  return (
+                    <List.Item
+                      actions={[
+                        isEditing ? (
+                          <Space key="edit-actions">
+                            <Button
+                              type="primary"
+                              size="small"
+                              loading={updatingFacility === facility.id}
+                              onClick={() => handleUpdateFacility(facility.id)}
+                            >
+                              Save
+                            </Button>
+                            <Button size="small" onClick={handleCancelEdit}>
+                              Cancel
+                            </Button>
+                          </Space>
+                        ) : (
+                          <Space key="normal-actions">
+                            <Button
+                              type="link"
+                              size="small"
+                              onClick={() => handleEditFacility(facility)}
+                            >
+                              Edit
+                            </Button>
+                            <Button
+                              type="link"
+                              danger
+                              size="small"
+                              onClick={() => handleDeleteFacility(facility.id, facility.type)}
+                            >
+                              Delete
+                            </Button>
+                          </Space>
+                        ),
+                      ]}
+                    >
+                      <List.Item.Meta
+                        title={
+                          isEditing ? (
+                            <Input
+                              value={editForm?.type}
+                              onChange={(e) =>
+                                setEditForm((prev) => prev ? { ...prev, type: e.target.value } : null)
+                              }
+                              placeholder="Facility Type"
+                              style={{ width: 200 }}
+                            />
+                          ) : (
+                            <strong>{facility.type}</strong>
+                          )
+                        }
+                        description={
+                          <Space direction="vertical" size="small">
+                            {isEditing ? (
+                              <>
+                                <Input
+                                  value={editForm?.description}
+                                  onChange={(e) =>
+                                    setEditForm((prev) =>
+                                      prev ? { ...prev, description: e.target.value } : null
+                                    )
+                                  }
+                                  placeholder="Description"
+                                  style={{ width: 400 }}
+                                />
+                                <Space>
+                                  <span>Quantity:</span>
+                                  <InputNumber
+                                    min={0}
+                                    value={editForm?.quantity}
+                                    onChange={(value) =>
+                                      setEditForm((prev) =>
+                                        prev ? { ...prev, quantity: value ?? 0 } : null
+                                      )
+                                    }
+                                  />
+                                </Space>
+                              </>
+                            ) : (
+                              <>
+                                <div>{facility.description || 'No description'}</div>
+                                <div>
+                                  <Tag color="blue">Quantity: {facility.quantity}</Tag>
+                                </div>
+                              </>
+                            )}
+                          </Space>
+                        }
+                      />
+                    </List.Item>
+                  );
+                }}
+              />
+            )}
           </Card>
 
           <Card title="Facility Reports">
@@ -455,6 +534,44 @@ const HouseDetailManagementPage: React.FC = () => {
         ) : (
           <Empty description="Unable to load report detail" />
         )}
+      </Modal>
+
+      <Modal
+        open={createModalVisible}
+        onCancel={() => setCreateModalVisible(false)}
+        onOk={handleCreateFacility}
+        title="Create New Facility"
+        confirmLoading={creatingFacility}
+        destroyOnClose
+      >
+        <Space direction="vertical" size="middle" style={{ width: '100%', marginTop: 16 }}>
+          <div>
+            <label style={{ display: 'block', marginBottom: 8 }}>Type *</label>
+            <Input
+              value={createForm.type}
+              onChange={(e) => setCreateForm((prev) => ({ ...prev, type: e.target.value }))}
+              placeholder="e.g., Bed, Desk, Chair"
+            />
+          </div>
+          <div>
+            <label style={{ display: 'block', marginBottom: 8 }}>Description</label>
+            <Input.TextArea
+              value={createForm.description}
+              onChange={(e) => setCreateForm((prev) => ({ ...prev, description: e.target.value }))}
+              placeholder="e.g., Queen size bed"
+              rows={3}
+            />
+          </div>
+          <div>
+            <label style={{ display: 'block', marginBottom: 8 }}>Quantity</label>
+            <InputNumber
+              min={0}
+              value={createForm.quantity}
+              onChange={(value) => setCreateForm((prev) => ({ ...prev, quantity: value ?? 0 }))}
+              style={{ width: '100%' }}
+            />
+          </div>
+        </Space>
       </Modal>
     </PageContainer>
   );

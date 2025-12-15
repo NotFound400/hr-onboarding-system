@@ -33,6 +33,7 @@ import {
   getFacilityReportById,
   addFacilityReportComment,
   updateFacilityReportComment,
+  getFacilitiesByHouseId,
 } from '../../../services/api';
 import { useAppSelector } from '../../../store/hooks';
 import { selectUser } from '../../../store/slices/authSlice';
@@ -110,13 +111,9 @@ const FacilityReportPage: React.FC = () => {
   const fetchFacilities = async (targetHouseId: number) => {
     try {
       setFacilityLoading(true);
-      // Hardcoded facilities for dropdown
-      const hardcodedFacilities = [
-        { id: 2, type: 'Bed', quantity: 1, description: '' },
-        { id: 3, type: 'Mattress', quantity: 1, description: '' },
-        { id: 4, type: 'Desk', quantity: 1, description: '' },
-      ];
-      setFacilities(hardcodedFacilities);
+      // Fetch facilities from API
+      const facilitiesData = await getFacilitiesByHouseId(targetHouseId);
+      setFacilities(facilitiesData);
     } catch (error: any) {
       messageApi.error(error.message || 'Failed to load facilities');
       setFacilities([]);
