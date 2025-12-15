@@ -19,6 +19,7 @@ import {
   Empty,
   Spin,
   Input,
+  Form,
 } from 'antd';
 import { HomeOutlined } from '@ant-design/icons';
 import type { ColumnsType } from 'antd/es/table';
@@ -33,6 +34,8 @@ import {
   getFacilitiesByHouseId,
   getFacilityReportsByHouse,
   getFacilityReportById,
+  updateFacilityReportStatus,
+  addFacilityReportComment,
 } from '../../../services/api';
 import type {
   HouseDetail,
@@ -69,6 +72,9 @@ const HouseDetailManagementPage: React.FC = () => {
   const [createModalVisible, setCreateModalVisible] = useState(false);
   const [createForm, setCreateForm] = useState({ type: '', description: '', quantity: 0 });
   const [creatingFacility, setCreatingFacility] = useState(false);
+  const [closingReport, setClosingReport] = useState(false);
+  const [addingComment, setAddingComment] = useState(false);
+  const [commentForm] = Form.useForm();
 
   useEffect(() => {
     if (id) {
@@ -229,6 +235,55 @@ const HouseDetailManagementPage: React.FC = () => {
   const handleCloseReportModal = () => {
     setReportDetailModalVisible(false);
     setSelectedReportDetail(null);
+    commentForm.resetFields();
+  };
+
+  const handleCloseReport = async () => {
+    if (!selectedReportDetail || !houseDetail) return;
+
+    Modal.confirm({
+      title: 'Close Report',
+      content: 'Are you sure you want to close this facility report?',
+      onOk: async () => {
+        try {
+          setClosingReport(true);
+          await updateFacilityReportStatus(selectedReportDetail.id, {
+            reportId: selectedReportDetail.id,
+            status: 'Closed',
+          });
+          messageApi.success('Report closed successfully');
+          handleCloseReportModal();
+          fetchFacilityReports(houseDetail.id);
+        } catch (error: any) {
+          messageApi.error(error.message || 'Failed to close report');
+        } finally {
+          setClosingReport(false);
+        }
+      },
+    });
+  };
+
+  const handleAddComment = async (values: { comment: string }) => {
+    if (!selectedReportDetail || !houseDetail) return;
+
+    try {
+      setAddingComment(true);
+      await addFacilityReportComment({
+        facilityReportId: selectedReportDetail.id,
+        comment: values.comment,
+      });
+      messageApi.success('Comment added successfully');
+      commentForm.resetFields();
+      
+      // Re-fetch the report detail to get the updated comments
+      const updatedReport = await getFacilityReportById(selectedReportDetail.id);
+      setSelectedReportDetail(updatedReport);
+      fetchFacilityReports(houseDetail.id);
+    } catch (error: any) {
+      messageApi.error(error.message || 'Failed to add comment');
+    } finally {
+      setAddingComment(false);
+    }
   };
 
   const residentColumns: ColumnsType<Employee> = [
@@ -511,6 +566,19 @@ const HouseDetailManagementPage: React.FC = () => {
             <Typography.Title level={5}>Description</Typography.Title>
             <Typography.Paragraph>{selectedReportDetail.description}</Typography.Paragraph>
 
+            {selectedReportDetail.status !== 'Closed' && (
+              <div style={{ marginBottom: 16 }}>
+                <Button
+                  type="primary"
+                  danger
+                  loading={closingReport}
+                  onClick={handleCloseReport}
+                >
+                  Close Report
+                </Button>
+              </div>
+            )}
+
             <Typography.Title level={5}>Comments</Typography.Title>
             {selectedReportDetail.comments?.length ? (
               <List
@@ -528,8 +596,35 @@ const HouseDetailManagementPage: React.FC = () => {
                 )}
               />
             ) : (
-              <Empty description="No comments yet" />
+              <Empty description="No comments yet" style={{ marginBottom: 16 }} />
             )}
+
+            <Form
+              form={commentForm}
+              onFinish={handleAddComment}
+              style={{ marginTop: 16 }}
+            >
+              <Form.Item
+                name="comment"
+                rules={[{ required: true, message: 'Please enter a comment' }]}
+              >
+                <Input.TextArea
+                  placeholder="Add a comment..."
+                  rows={3}
+                  disabled={selectedReportDetail.status === 'Closed'}
+                />
+              </Form.Item>
+              <Form.Item>
+                <Button
+                  type="primary"
+                  htmlType="submit"
+                  loading={addingComment}
+                  disabled={selectedReportDetail.status === 'Closed'}
+                >
+                  Add Comment
+                </Button>
+              </Form.Item>
+            </Form>
           </>
         ) : (
           <Empty description="Unable to load report detail" />

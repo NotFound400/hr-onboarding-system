@@ -253,7 +253,7 @@ const HiringPage: React.FC = () => {
               showSearch
               optionFilterProp="children"
             >
-              {houses.map((house) => {
+              {[...houses].reverse().map((house) => {
                 const spots = getAvailableSpots(house);
                 return (
                   <Select.Option

@@ -29,6 +29,7 @@ import {
   Radio,
   Upload,
   Card,
+  Alert,
 } from 'antd';
 import type { UploadFile } from 'antd';
 import type { UploadChangeParam } from 'antd/es/upload';
@@ -125,6 +126,7 @@ const OnboardingFormPage: React.FC = () => {
   const [driverLicenseFiles, setDriverLicenseFiles] = useState<UploadFile[]>([]);
   const [eadPreviewUrl, setEadPreviewUrl] = useState<string | null>(null);
   const [driverLicensePreviewUrl, setDriverLicensePreviewUrl] = useState<string | null>(null);
+  const [initializingApp, setInitializingApp] = useState(false);
 
   const updatePreview = (
     file: File | undefined,
@@ -180,12 +182,17 @@ const OnboardingFormPage: React.FC = () => {
     }
   }, [user, form]);
 
-  // 提交成功后跳转到文档页面 (Section 3.d)
-  useEffect(() => {
-    if (!applicationId) {
-      dispatch(initializeOnboardingApplication());
+  const handleInitializeApplication = async () => {
+    try {
+      setInitializingApp(true);
+      await dispatch(initializeOnboardingApplication()).unwrap();
+      messageApi.success('Application initialized successfully!');
+    } catch (error: any) {
+      messageApi.error(error || 'Failed to initialize application');
+    } finally {
+      setInitializingApp(false);
     }
-  }, [dispatch, applicationId]);
+  };
 
   useEffect(() => {
     if (applicationId) {
@@ -491,21 +498,43 @@ const OnboardingFormPage: React.FC = () => {
   return (
     <div style={{ width: '80%', margin: '0 auto' }}>
       <PageContainer title="Employee Onboarding Application">
-        <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 16 }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 16 }}>
+          {!applicationId && (
+            <Button
+              type="primary"
+              size="large"
+              loading={initializingApp}
+              onClick={handleInitializeApplication}
+              style={{ marginRight: 'auto' }}
+            >
+              Start Onboarding Application
+            </Button>
+          )}
           <Button
             icon={<ArrowLeftOutlined />}
             onClick={async () => {
               await dispatch(logout());
               navigate('/login', { replace: true });
             }}
+            style={{ marginLeft: 'auto' }}
           >
             Back to Login
           </Button>
         </div>
+        {!applicationId && (
+          <Alert
+            message="Click 'Start Onboarding Application' to begin"
+            description="You must initialize your application before filling out the onboarding form."
+            type="info"
+            showIcon
+            style={{ marginBottom: 16 }}
+          />
+        )}
         <Card>
           <Form 
             form={form} 
             layout="vertical"
+            disabled={!applicationId}
             initialValues={{
               startDate: dayjs(),
               dob: dayjs('1995-01-01'),

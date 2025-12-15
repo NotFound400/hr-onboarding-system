@@ -97,10 +97,11 @@ const HRVisaManagementPage: React.FC = () => {
       // Step 1: Fetch approved applications
       const applications = await getApplicationsWithEmployeesByStatus('Approved');
 
-      // Step 2 & 3: Fetch documents and merge data
+      // Step 2 & 3: Fetch documents for last 10 applications only
       const rows: VisaTableRow[] = [];
+      const last10Applications = applications.slice(0, 10);
       
-      for (const app of applications) {
+      for (const app of last10Applications) {
         try {
           // Fetch documents for this application
           const documents = await getDocumentsByApplicationId(app.id);
