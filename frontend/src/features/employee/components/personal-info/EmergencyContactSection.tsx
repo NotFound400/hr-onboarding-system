@@ -99,17 +99,6 @@ const EmergencyContactSection: React.FC<EmergencyContactSectionProps> = ({
       <Form form={form} layout="vertical">
         <Form.List
           name="emergencyContacts"
-          rules={[
-            {
-              validator: async (_, contacts) => {
-                if (!contacts || contacts.length < 1) {
-                  return Promise.reject(
-                    new Error('At least one emergency contact is required')
-                  );
-                }
-              },
-            },
-          ]}
         >
           {(fields, { add, remove }, { errors }) => (
             <>
@@ -145,7 +134,6 @@ const EmergencyContactSection: React.FC<EmergencyContactSectionProps> = ({
                         {...field}
                         name={[field.name, 'firstName']}
                         label="First Name"
-                        rules={[{ required: true, message: 'First name is required' }]}
                         style={{ flex: 1, marginBottom: 0 }}
                       >
                         <Input placeholder="First Name" />
@@ -162,7 +150,6 @@ const EmergencyContactSection: React.FC<EmergencyContactSectionProps> = ({
                         {...field}
                         name={[field.name, 'lastName']}
                         label="Last Name"
-                        rules={[{ required: true, message: 'Last name is required' }]}
                         style={{ flex: 1, marginBottom: 0 }}
                       >
                         <Input placeholder="Last Name" />
@@ -176,7 +163,6 @@ const EmergencyContactSection: React.FC<EmergencyContactSectionProps> = ({
                         name={[field.name, 'phone']}
                         label="Phone"
                         rules={[
-                          { required: true, message: 'Phone is required' },
                           {
                             pattern: /^\d{3}-\d{3}-\d{4}$/,
                             message: 'Format: 123-456-7890',
@@ -191,7 +177,6 @@ const EmergencyContactSection: React.FC<EmergencyContactSectionProps> = ({
                         name={[field.name, 'email']}
                         label="Email"
                         rules={[
-                          { required: true, message: 'Email is required' },
                           { type: 'email', message: 'Invalid email format' },
                         ]}
                         style={{ flex: 1, marginBottom: 0 }}
@@ -205,7 +190,6 @@ const EmergencyContactSection: React.FC<EmergencyContactSectionProps> = ({
                       {...field}
                       name={[field.name, 'relationship']}
                       label="Relationship"
-                      rules={[{ required: true, message: 'Relationship is required' }]}
                       style={{ marginBottom: 0 }}
                     >
                       <Input placeholder="e.g., Spouse, Parent, Sibling" />

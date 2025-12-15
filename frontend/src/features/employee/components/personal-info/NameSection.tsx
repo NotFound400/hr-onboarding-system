@@ -91,7 +91,6 @@ const NameSection: React.FC<NameSectionProps> = ({ employee, form, isEditing }) 
             <Form.Item
               name="firstName"
               label="First Name"
-              rules={[{ required: true, message: 'First name is required' }]}
             >
               <Input placeholder="First Name" />
             </Form.Item>
@@ -105,7 +104,6 @@ const NameSection: React.FC<NameSectionProps> = ({ employee, form, isEditing }) 
             <Form.Item
               name="lastName"
               label="Last Name"
-              rules={[{ required: true, message: 'Last name is required' }]}
             >
               <Input placeholder="Last Name" />
             </Form.Item>
@@ -122,7 +120,6 @@ const NameSection: React.FC<NameSectionProps> = ({ employee, form, isEditing }) 
             <Form.Item
               name="gender"
               label="Gender"
-              rules={[{ required: true, message: 'Gender is required' }]}
             >
               <Select placeholder="Select Gender">
                 <Option value="Male">Male</Option>
@@ -138,7 +135,6 @@ const NameSection: React.FC<NameSectionProps> = ({ employee, form, isEditing }) 
             <Form.Item
               name="dateOfBirth"
               label="Date of Birth"
-              rules={[{ required: true, message: 'Date of birth is required' }]}
             >
               <DatePicker
                 style={{ width: '100%' }}

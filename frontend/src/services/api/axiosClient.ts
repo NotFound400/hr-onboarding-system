@@ -62,6 +62,11 @@ axiosClient.interceptors.response.use(
     // HTTP Status 200
     const responseData = response.data;
 
+    // Skip parsing for Blob responses (file downloads)
+    if (responseData instanceof Blob) {
+      return responseData;
+    }
+
     // 检查是否为包装的 ApiResponse 格式
     if (responseData && typeof responseData === 'object' && 'success' in responseData) {
       // 有 success 字段，说明是包装的 ApiResponse<T>

@@ -109,7 +109,6 @@ const AddressSection: React.FC<AddressSectionProps> = ({
             <Form.Item
               name="primaryAddressLine1"
               label="Address Line 1"
-              rules={[{ required: true, message: 'Address Line 1 is required' }]}
             >
               <Input placeholder="Enter address line 1" />
             </Form.Item>
@@ -125,7 +124,6 @@ const AddressSection: React.FC<AddressSectionProps> = ({
             <Form.Item
               name="primaryCity"
               label="City"
-              rules={[{ required: true, message: 'City is required' }]}
             >
               <Input placeholder="Enter city" />
             </Form.Item>
@@ -134,7 +132,6 @@ const AddressSection: React.FC<AddressSectionProps> = ({
             <Form.Item
               name="primaryState"
               label="State"
-              rules={[{ required: true, message: 'State is required' }]}
             >
               <Input placeholder="Enter state" />
             </Form.Item>
@@ -144,7 +141,6 @@ const AddressSection: React.FC<AddressSectionProps> = ({
               name="primaryZipCode"
               label="Zip Code"
               rules={[
-                { required: true, message: 'Zip code is required' },
                 { pattern: /^\d{5}(-\d{4})?$/, message: 'Invalid zip code format' },
               ]}
             >

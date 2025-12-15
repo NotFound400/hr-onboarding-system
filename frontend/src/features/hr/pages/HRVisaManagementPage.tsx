@@ -10,7 +10,7 @@
  */
 
 import { useState, useEffect } from 'react';
-import { Table, Button, Space, Tag, Typography, Modal } from 'antd';
+import { Table, Button, Space, Tag, Typography, Modal, Image } from 'antd';
 import { FileTextOutlined, CheckOutlined, CloseOutlined } from '@ant-design/icons';
 import type { ColumnsType } from 'antd/es/table';
 import dayjs from 'dayjs';
@@ -306,24 +306,39 @@ const HRVisaManagementPage: React.FC = () => {
 
   /**
    * Handle document preview
+   * Mimics ApplicationReviewDetailPage pattern: download blob and show in Modal with Image
    */
   const handlePreview = async (document: ApplicationDocument) => {
     try {
+      // Download document as blob
       const blob = await downloadDocument(document.id);
-      const url = URL.createObjectURL(blob);
       
-      // Open in new tab
-      const newWindow = window.open(url, '_blank');
+      // Create object URL from blob
+      const documentUrl = URL.createObjectURL(blob);
       
-      // Cleanup URL after window loads or after delay
-      if (newWindow) {
-        newWindow.onload = () => {
-          setTimeout(() => URL.revokeObjectURL(url), 1000);
-        };
-      } else {
-        // Fallback if popup blocked
-        setTimeout(() => URL.revokeObjectURL(url), 5000);
-      }
+      // Show in Modal with Image component (same as ApplicationReviewDetailPage)
+      Modal.info({
+        title: `Document Preview: ${document.title || document.type}`,
+        width: 800,
+        content: (
+          <div style={{ marginTop: 16 }}>
+            <Image
+              src={documentUrl}
+              alt={document.title || document.type}
+              fallback="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg=="
+              style={{ maxWidth: '100%' }}
+            />
+          </div>
+        ),
+        onOk: () => {
+          // Cleanup URL when modal is closed
+          URL.revokeObjectURL(documentUrl);
+        },
+        onCancel: () => {
+          // Cleanup URL when modal is closed
+          URL.revokeObjectURL(documentUrl);
+        },
+      });
     } catch (error: any) {
       messageApi.error(error.message || 'Failed to preview document');
     }

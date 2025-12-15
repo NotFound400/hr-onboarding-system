@@ -54,11 +54,8 @@ export const HRHomePage: React.FC = () => {
     try {
       setLoading(true);
       const mergedData = await getApplicationsWithEmployeesByStatus(selectedStatus);
-      const filteredData = selectedStatus === ApplicationStatusEnum.PENDING
-        ? mergedData
-        : mergedData.filter((app) => Boolean(app.employee?.firstName));
 
-      setApplications(filteredData);
+      setApplications(mergedData);
     } catch (error: any) {
       messageApi.error(error.message || 'Failed to load applications');
     } finally {
@@ -176,6 +173,7 @@ export const HRHomePage: React.FC = () => {
                 onChange={handleStatusChange}
                 style={{ width: 160 }}
                 options={[
+                  { label: 'Open', value: ApplicationStatusEnum.OPEN },
                   { label: 'Pending', value: ApplicationStatusEnum.PENDING },
                   { label: 'Approved', value: ApplicationStatusEnum.APPROVED },
                   { label: 'Rejected', value: ApplicationStatusEnum.REJECTED },
@@ -224,15 +222,14 @@ export const HRHomePage: React.FC = () => {
               title: 'Status',
               dataIndex: 'status',
               key: 'status',
-              render: (status: ApplicationStatus, record: ApplicationWithEmployeeInfo) => {
-                const effectiveStatus = record.employee?.firstName ? status : 'Open';
-                const colorMap: Record<ApplicationStatus | 'Open', string> = {
+              render: (status: ApplicationStatus) => {
+                const colorMap: Record<ApplicationStatus, string> = {
                   Open: 'default',
                   Pending: 'warning',
                   Approved: 'success',
                   Rejected: 'error',
                 };
-                return <Tag color={colorMap[effectiveStatus]}>{effectiveStatus}</Tag>;
+                return <Tag color={colorMap[status]}>{status}</Tag>;
               },
             },
             {
@@ -246,10 +243,6 @@ export const HRHomePage: React.FC = () => {
               title: 'Action',
               key: 'action',
               render: (_, record) => {
-                const effectiveStatus = record.employee?.firstName ? record.status : 'Open';
-                if (effectiveStatus === 'Open') {
-                  return <Tag color="default">Awaiting Employee Info</Tag>;
-                }
                 const targetEmployeeId = record.employee?.id || record.employeeId;
                 const isPending = record.status === ApplicationStatusEnum.PENDING;
                 return (

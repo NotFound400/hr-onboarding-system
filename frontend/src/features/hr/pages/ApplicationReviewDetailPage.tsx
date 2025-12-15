@@ -138,9 +138,6 @@ const ApplicationReviewDetailPage: React.FC = () => {
   const [application, setApplication] = useState<Application | null>(null);
   const [employee, setEmployee] = useState<Employee | null>(null);
   
-  // 文档评论状态
-  const [documentComments, setDocumentComments] = useState<Record<string, string>>({});
-  
   // Reject Modal 状态
   const [rejectModalVisible, setRejectModalVisible] = useState(false);
   const [rejectReason, setRejectReason] = useState('');
@@ -173,16 +170,6 @@ const ApplicationReviewDetailPage: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  };
-
-  /**
-   * 更新文档评论
-   */
-  const handleDocumentCommentChange = (docType: string, comment: string) => {
-    setDocumentComments(prev => ({
-      ...prev,
-      [docType]: comment,
-    }));
   };
 
   /**
@@ -341,13 +328,51 @@ const ApplicationReviewDetailPage: React.FC = () => {
         <Card title="Address Information" extra={<Tag color="blue">Read-Only</Tag>}>
           <Descriptions column={1} bordered>
             {employee.address?.map((addr, idx) => (
-              <Descriptions.Item key={idx} label={`${addr.type} Address`}>
-                {addr.addressLine1}, {addr.addressLine2 && `${addr.addressLine2}, `}
+              <Descriptions.Item key={idx} label={`Address ${idx + 1}`}>
+                {addr.addressLine1}{addr.addressLine2 && `, ${addr.addressLine2}`}
+                <br />
                 {addr.city}, {addr.state} {addr.zipCode}
               </Descriptions.Item>
             ))}
           </Descriptions>
         </Card>
+
+        {/* Driver License Information */}
+        {employee.driverLicense && (
+          <Card title="Driver License" extra={<Tag color="blue">Read-Only</Tag>}>
+            <Descriptions column={2} bordered>
+              <Descriptions.Item label="License Number">
+                {employee.driverLicense}
+              </Descriptions.Item>
+              <Descriptions.Item label="Expiration Date">
+                {employee.driverLicenseExpiration 
+                  ? new Date(employee.driverLicenseExpiration).toLocaleDateString()
+                  : '-'
+                }
+              </Descriptions.Item>
+            </Descriptions>
+          </Card>
+        )}
+
+        {/* Reference Contact */}
+        {employee.contact && employee.contact.some(c => c.type === 'Reference') && (
+          <Card title="Reference Contact" extra={<Tag color="blue">Read-Only</Tag>}>
+            {employee.contact
+              .filter(c => c.type === 'Reference')
+              .map((contact, idx) => (
+                <Descriptions key={idx} column={2} bordered style={{ marginBottom: 16 }}>
+                  <Descriptions.Item label="Name">
+                    {contact.firstName} {contact.lastName}
+                  </Descriptions.Item>
+                  <Descriptions.Item label="Relationship">
+                    {contact.relationship}
+                  </Descriptions.Item>
+                  <Descriptions.Item label="Phone">{contact.cellPhone}</Descriptions.Item>
+                  <Descriptions.Item label="Email">{contact.email}</Descriptions.Item>
+                </Descriptions>
+              ))}
+          </Card>
+        )}
 
         {/* Emergency Contact */}
         {employee.contact && employee.contact.length > 0 && (
@@ -371,43 +396,25 @@ const ApplicationReviewDetailPage: React.FC = () => {
 
         <Divider />
 
-        {/* 文档审核部分 - 关键功能 */}
-        <Card 
-          title={
-            <Space>
-              <FileTextOutlined />
-              Supporting Documents
-              <Tag color="orange">HR Review Required</Tag>
-            </Space>
-          }
-        >
-          <Alert
-            message="HR Section 5.b: Document Review"
-            description="Review each uploaded document and add comments if needed. Comments will be saved with Approve/Reject action."
-            type="info"
-            showIcon
-            style={{ marginBottom: 16 }}
-          />
-          
-          <Space direction="vertical" size="middle" style={{ width: '100%' }}>
-            {application.documents && application.documents.length > 0 ? (
-              application.documents.map(doc => (
-                <DocumentComment
-                  key={doc.id}
-                  documentType={doc.title || doc.type}
-                  documentUrl={doc.filename}
-                  initialComment={doc.comment}
-                  onCommentChange={(comment) => handleDocumentCommentChange(doc.type, comment)}
-                />
-              ))
-            ) : (
-              <Alert
-                message="No documents uploaded yet"
-                type="warning"
-                showIcon
-              />
-            )}
-          </Space>
+        {/* Employment Information */}
+        <Card title="Employment Information" extra={<Tag color="blue">Read-Only</Tag>}>
+          <Descriptions column={2} bordered>
+            <Descriptions.Item label="Start Date">
+              {employee.startDate 
+                ? new Date(employee.startDate).toLocaleDateString()
+                : '-'
+              }
+            </Descriptions.Item>
+            <Descriptions.Item label="End Date">
+              {employee.endDate 
+                ? new Date(employee.endDate).toLocaleDateString()
+                : 'Ongoing'
+              }
+            </Descriptions.Item>
+            <Descriptions.Item label="House ID" span={2}>
+              {employee.houseID || '-'}
+            </Descriptions.Item>
+          </Descriptions>
         </Card>
 
         {/* 全局评论 */}

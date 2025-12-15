@@ -106,7 +106,6 @@ const EmploymentSection: React.FC<EmploymentSectionProps> = ({
         <Form.Item
           name="title"
           label="Job Title"
-          rules={[{ required: true, message: 'Job title is required' }]}
         >
           <Input placeholder="e.g., Software Engineer" />
         </Form.Item>
@@ -116,7 +115,6 @@ const EmploymentSection: React.FC<EmploymentSectionProps> = ({
             <Form.Item
               name="startDate"
               label="Start Date"
-              rules={[{ required: true, message: 'Start date is required' }]}
             >
               <DatePicker
                 style={{ width: '100%' }}

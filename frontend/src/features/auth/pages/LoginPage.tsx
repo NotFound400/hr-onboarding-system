@@ -31,6 +31,7 @@ const LoginPage: React.FC = () => {
   const dispatch = useAppDispatch();
   const messageApi = useAntdMessage();
   const [checkingOnboarding, setCheckingOnboarding] = useState(false);
+  const [justLoggedIn, setJustLoggedIn] = useState(false);
 
   const isAuthenticated = useAppSelector(selectIsAuthenticated);
   const loading = useAppSelector(selectAuthLoading);
@@ -39,7 +40,8 @@ const LoginPage: React.FC = () => {
   // 登录成功后根据角色和 onboarding 状态跳转
   useEffect(() => {
     const checkOnboardingStatus = async () => {
-      if (!isAuthenticated || !user) return;
+      // Only redirect if user just logged in, not if already authenticated on page load
+      if (!isAuthenticated || !user || !justLoggedIn) return;
 
       const redirect = searchParams.get('redirect');
       
@@ -115,7 +117,7 @@ const LoginPage: React.FC = () => {
     };
 
     checkOnboardingStatus();
-  }, [isAuthenticated, user, navigate, searchParams]);
+  }, [isAuthenticated, user, navigate, searchParams, justLoggedIn, dispatch, messageApi]);
 
   /**
    * 处理登录表单提交
@@ -127,6 +129,7 @@ const LoginPage: React.FC = () => {
       if (login.fulfilled.match(resultAction)) {
         console.log('[Login] JWT Token:', resultAction.payload.token);
         messageApi.success('Login successful');
+        setJustLoggedIn(true); // Mark that user just logged in
         // 跳转逻辑由 useEffect 处理
       } else if (login.rejected.match(resultAction)) {
         messageApi.error(resultAction.payload || 'Login failed');

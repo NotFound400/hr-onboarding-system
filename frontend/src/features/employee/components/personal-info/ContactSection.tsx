@@ -72,7 +72,6 @@ const ContactSection: React.FC<ContactSectionProps> = ({ employee, form, isEditi
               name="email"
               label="Email"
               rules={[
-                { required: true, message: 'Email is required' },
                 { type: 'email', message: 'Invalid email format' },
               ]}
             >
@@ -87,7 +86,6 @@ const ContactSection: React.FC<ContactSectionProps> = ({ employee, form, isEditi
               name="cellPhone"
               label="Cell Phone"
               rules={[
-                { required: true, message: 'Cell phone is required' },
                 { pattern: /^\+?1?-?\d{3}-\d{3}-\d{4}$/, message: 'Format: 123-456-7890 or +1-123-456-7890' },
               ]}
             >

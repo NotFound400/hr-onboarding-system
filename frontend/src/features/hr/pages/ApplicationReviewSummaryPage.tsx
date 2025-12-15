@@ -138,9 +138,9 @@ const ApplicationReviewSummaryPage: React.FC = () => {
                   title={
                     <span>
                       {doc.title}{' '}
-                      <Tag color={doc.isRequired ? 'red' : 'blue'}>
-                        {doc.isRequired ? 'Required' : 'Optional'}
-                      </Tag>
+                      {doc.isRequired && (
+                        <Tag color="red">Required</Tag>
+                      )}
                     </span>
                   }
                   description={

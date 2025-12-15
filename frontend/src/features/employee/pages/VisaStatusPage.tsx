@@ -10,8 +10,8 @@
  */
 
 import { useState, useEffect } from 'react';
-import { Card, Upload, Button, Space, Alert, Spin, Typography, Divider } from 'antd';
-import { UploadOutlined, FileTextOutlined, CheckCircleOutlined, CloseCircleOutlined } from '@ant-design/icons';
+import { Card, Upload, Button, Space, Alert, Spin, Typography, Divider, Modal, Image } from 'antd';
+import { UploadOutlined, FileTextOutlined, CheckCircleOutlined, CloseCircleOutlined, EyeOutlined } from '@ant-design/icons';
 import type { UploadFile, UploadProps } from 'antd';
 import { PageContainer } from '../../../components/common/PageContainer';
 import {
@@ -21,6 +21,7 @@ import {
   updateDocument,
   updateApplication,
   getActiveApplications,
+  downloadDocument,
 } from '../../../services/api';
 import { useAppSelector } from '../../../store/hooks';
 import type { Application, ApplicationDocument } from '../../../types';
@@ -213,6 +214,51 @@ const VisaStatusPage: React.FC = () => {
   };
 
   /**
+   * Handle document preview
+   * Mimics ApplicationReviewDetailPage pattern: download blob and show in Modal with Image
+   */
+  const handlePreview = async (doc: ApplicationDocument) => {
+    if (!doc.id) {
+      messageApi.error('Document ID not available');
+      return;
+    }
+    
+    try {
+      // Download document as blob
+      const blob = await downloadDocument(doc.id);
+      
+      // Create object URL from blob
+      const documentUrl = URL.createObjectURL(blob);
+      
+      // Show in Modal with Image component (same as ApplicationReviewDetailPage)
+      Modal.info({
+        title: `Document Preview: ${doc.title || doc.type}`,
+        width: 800,
+        content: (
+          <div style={{ marginTop: 16 }}>
+            <Image
+              src={documentUrl}
+              alt={doc.title || doc.type}
+              fallback="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg=="
+              style={{ maxWidth: '100%' }}
+            />
+          </div>
+        ),
+        onOk: () => {
+          // Cleanup URL when modal is closed
+          URL.revokeObjectURL(documentUrl);
+        },
+        onCancel: () => {
+          // Cleanup URL when modal is closed
+          URL.revokeObjectURL(documentUrl);
+        },
+      });
+    } catch (error: any) {
+      messageApi.error(error.message || 'Failed to preview document');
+    }
+  };
+
+  /**
    * Custom upload handler
    */
   const createUploadProps = (slot: DocumentSlot): UploadProps => ({
@@ -269,16 +315,27 @@ const VisaStatusPage: React.FC = () => {
           </Space>
         </Space>
 
-        <Upload {...createUploadProps(slot)}>
-          <Button
-            icon={<UploadOutlined />}
-            loading={uploading === slot.type}
-            disabled={!slot.enabled}
-            type={slot.enabled ? 'primary' : 'default'}
-          >
-            {slot.existingDoc ? 'Update Document' : 'Upload Document'}
-          </Button>
-        </Upload>
+        <Space>
+          <Upload {...createUploadProps(slot)}>
+            <Button
+              icon={<UploadOutlined />}
+              loading={uploading === slot.type}
+              disabled={!slot.enabled}
+              type={slot.enabled ? 'primary' : 'default'}
+            >
+              {slot.existingDoc ? 'Update Document' : 'Upload Document'}
+            </Button>
+          </Upload>
+
+          {slot.existingDoc && (
+            <Button
+              icon={<EyeOutlined />}
+              onClick={() => handlePreview(slot.existingDoc!)}
+            >
+              Preview
+            </Button>
+          )}
+        </Space>
 
         {slot.existingDoc && (
           <Alert
