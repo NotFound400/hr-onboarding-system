@@ -1,0 +1,1845 @@
+{
+	"info": {
+		"_postman_id": "832e04db-d2bb-4e51-a381-1c93cc8f7a78",
+		"name": "HR Onboarding System",
+		"description": "Complete API test collection for Gateway, Auth Service, and Housing Service",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "49509974",
+		"_collection_link": "https://dongdongwangdeveloper-2282544.postman.co/workspace/Dongdong-Wang's-Workspace~35257b56-7a6c-4dc5-8764-076662cf0752/collection/49509974-832e04db-d2bb-4e51-a381-1c93cc8f7a78?action=share&source=collection_link&creator=49509974"
+	},
+	"item": [
+		{
+			"name": "🔐 Auth Service",
+			"item": [
+				{
+					"name": "Login (HR)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 200) {",
+									"    var jsonData = pm.response.json();",
+									"    if (jsonData.token) {",
+									"        pm.collectionVariables.set('hr_token', jsonData.token);",
+									"        console.log('HR token saved successfully');",
+									"    }",
+									"}",
+									"",
+									"pm.test('Login successful', function () {",
+									"    pm.response.to.have.status(200);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"username\": \"hr_admin\",\n    \"password\": \"password123\"\n}"
+						},
+						"url": {
+							"raw": "{{gateway_url}}/api/auth/login",
+							"host": [
+								"{{gateway_url}}"
+							],
+							"path": [
+								"api",
+								"auth",
+								"login"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Login (Employee)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 200) {",
+									"    var jsonData = pm.response.json();",
+									"    if (jsonData.token) {",
+									"        pm.collectionVariables.set('employee_token', jsonData.token);",
+									"        console.log('Employee token saved successfully');",
+									"    }",
+									"}",
+									"",
+									"pm.test('Login successful', function () {",
+									"    pm.response.to.have.status(200);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"username\": \"employee1\",\n    \"password\": \"password123\"\n}"
+						},
+						"url": {
+							"raw": "{{gateway_url}}/api/auth/login",
+							"host": [
+								"{{gateway_url}}"
+							],
+							"path": [
+								"api",
+								"auth",
+								"login"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Generate Registration Token (HR)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 200) {",
+									"    var jsonData = pm.response.json();",
+									"    if (jsonData.token) {",
+									"        pm.collectionVariables.set('registration_token', jsonData.token);",
+									"        console.log('Registration token saved: ' + jsonData.token);",
+									"    }",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{hr_token}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"email\": \"newemployee@company.com\"\n}"
+						},
+						"url": {
+							"raw": "{{gateway_url}}/api/auth/registration-token",
+							"host": [
+								"{{gateway_url}}"
+							],
+							"path": [
+								"api",
+								"auth",
+								"registration-token"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Validate Registration Token",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{gateway_url}}/api/auth/validate-token/{{registration_token}}",
+							"host": [
+								"{{gateway_url}}"
+							],
+							"path": [
+								"api",
+								"auth",
+								"validate-token",
+								"{{registration_token}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Register Employee",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"token\": \"{{registration_token}}\",\n    \"username\": \"newemployee\",\n    \"email\": \"newemployee@company.com\",\n    \"password\": \"password123\"\n}"
+						},
+						"url": {
+							"raw": "{{gateway_url}}/api/auth/register",
+							"host": [
+								"{{gateway_url}}"
+							],
+							"path": [
+								"api",
+								"auth",
+								"register"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Profile",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{hr_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{gateway_url}}/api/auth/profile",
+							"host": [
+								"{{gateway_url}}"
+							],
+							"path": [
+								"api",
+								"auth",
+								"profile"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Refresh Token",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{hr_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{gateway_url}}/api/auth/refresh",
+							"host": [
+								"{{gateway_url}}"
+							],
+							"path": [
+								"api",
+								"auth",
+								"refresh"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "🏠 Housing - Houses",
+			"item": [
+				{
+					"name": "Get All Houses (HR View)",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{hr_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{gateway_url}}/api/housing/houses",
+							"host": [
+								"{{gateway_url}}"
+							],
+							"path": [
+								"api",
+								"housing",
+								"houses"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get All Houses (Employee View)",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{employee_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{gateway_url}}/api/housing/houses",
+							"host": [
+								"{{gateway_url}}"
+							],
+							"path": [
+								"api",
+								"housing",
+								"houses"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get House Detail (HR)",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{hr_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{gateway_url}}/api/housing/houses/1",
+							"host": [
+								"{{gateway_url}}"
+							],
+							"path": [
+								"api",
+								"housing",
+								"houses",
+								"1"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get House Detail (Employee)",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{employee_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{gateway_url}}/api/housing/houses/1",
+							"host": [
+								"{{gateway_url}}"
+							],
+							"path": [
+								"api",
+								"housing",
+								"houses",
+								"1"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get My House (Employee)",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{employee_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{gateway_url}}/api/housing/houses/my-house",
+							"host": [
+								"{{gateway_url}}"
+							],
+							"path": [
+								"api",
+								"housing",
+								"houses",
+								"my-house"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get House Summaries",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{hr_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{gateway_url}}/api/housing/houses/summaries",
+							"host": [
+								"{{gateway_url}}"
+							],
+							"path": [
+								"api",
+								"housing",
+								"houses",
+								"summaries"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Create House (HR)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{hr_token}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"landlordId\": 1,\n    \"address\": \"456 Oak Avenue, Boston, MA 02102\",\n    \"maxOccupant\": 4\n}"
+						},
+						"url": {
+							"raw": "{{gateway_url}}/api/housing/houses",
+							"host": [
+								"{{gateway_url}}"
+							],
+							"path": [
+								"api",
+								"housing",
+								"houses"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Update House (HR)",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{hr_token}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"address\": \"456 Oak Avenue, Suite 100, Boston, MA 02102\",\n    \"maxOccupant\": 6\n}"
+						},
+						"url": {
+							"raw": "{{gateway_url}}/api/housing/houses/1",
+							"host": [
+								"{{gateway_url}}"
+							],
+							"path": [
+								"api",
+								"housing",
+								"houses",
+								"1"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Delete House (HR)",
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{hr_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{gateway_url}}/api/housing/houses/1",
+							"host": [
+								"{{gateway_url}}"
+							],
+							"path": [
+								"api",
+								"housing",
+								"houses",
+								"1"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "👤 Housing - Landlords",
+			"item": [
+				{
+					"name": "Get All Landlords",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{hr_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{gateway_url}}/api/housing/landlords",
+							"host": [
+								"{{gateway_url}}"
+							],
+							"path": [
+								"api",
+								"housing",
+								"landlords"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Landlord Detail",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{hr_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{gateway_url}}/api/housing/landlords/1",
+							"host": [
+								"{{gateway_url}}"
+							],
+							"path": [
+								"api",
+								"housing",
+								"landlords",
+								"1"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Create Landlord",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{hr_token}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"firstName\": \"John\",\n    \"lastName\": \"Smith\",\n    \"email\": \"john.smith@landlord.com\",\n    \"cellPhone\": \"617-555-1234\"\n}"
+						},
+						"url": {
+							"raw": "{{gateway_url}}/api/housing/landlords",
+							"host": [
+								"{{gateway_url}}"
+							],
+							"path": [
+								"api",
+								"housing",
+								"landlords"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Update Landlord",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{hr_token}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"firstName\": \"John\",\n    \"lastName\": \"Smith\",\n    \"email\": \"john.smith.updated@landlord.com\",\n    \"cellPhone\": \"617-555-5678\"\n}"
+						},
+						"url": {
+							"raw": "{{gateway_url}}/api/housing/landlords/1",
+							"host": [
+								"{{gateway_url}}"
+							],
+							"path": [
+								"api",
+								"housing",
+								"landlords",
+								"1"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Delete Landlord",
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{hr_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{gateway_url}}/api/housing/landlords/1",
+							"host": [
+								"{{gateway_url}}"
+							],
+							"path": [
+								"api",
+								"housing",
+								"landlords",
+								"1"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "🛋️ Housing - Facilities",
+			"item": [
+				{
+					"name": "Get All Facilities",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{hr_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{gateway_url}}/api/housing/facilities",
+							"host": [
+								"{{gateway_url}}"
+							],
+							"path": [
+								"api",
+								"housing",
+								"facilities"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Facility Detail",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{hr_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{gateway_url}}/api/housing/facilities/1",
+							"host": [
+								"{{gateway_url}}"
+							],
+							"path": [
+								"api",
+								"housing",
+								"facilities",
+								"1"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Facilities by House",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{hr_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{gateway_url}}/api/housing/facilities/house/1",
+							"host": [
+								"{{gateway_url}}"
+							],
+							"path": [
+								"api",
+								"housing",
+								"facilities",
+								"house",
+								"1"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Create Facility",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{hr_token}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"houseId\": 1,\n    \"type\": \"Bed\",\n    \"description\": \"Queen size bed\",\n    \"quantity\": 2\n}"
+						},
+						"url": {
+							"raw": "{{gateway_url}}/api/housing/facilities",
+							"host": [
+								"{{gateway_url}}"
+							],
+							"path": [
+								"api",
+								"housing",
+								"facilities"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Update Facility",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{hr_token}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"type\": \"Bed\",\n    \"description\": \"King size bed\",\n    \"quantity\": 3\n}"
+						},
+						"url": {
+							"raw": "{{gateway_url}}/api/housing/facilities/1",
+							"host": [
+								"{{gateway_url}}"
+							],
+							"path": [
+								"api",
+								"housing",
+								"facilities",
+								"1"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Delete Facility",
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{hr_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{gateway_url}}/api/housing/facilities/1",
+							"host": [
+								"{{gateway_url}}"
+							],
+							"path": [
+								"api",
+								"housing",
+								"facilities",
+								"1"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "📝 Housing - Facility Reports",
+			"item": [
+				{
+					"name": "Create Report (Employee)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{employee_token}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"facilityId\": 1,\n    \"title\": \"Broken bed frame\",\n    \"description\": \"The bed frame in room 2 has a broken leg and needs repair\"\n}"
+						},
+						"url": {
+							"raw": "{{gateway_url}}/api/housing/facility-reports",
+							"host": [
+								"{{gateway_url}}"
+							],
+							"path": [
+								"api",
+								"housing",
+								"facility-reports"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Report Detail",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{hr_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{gateway_url}}/api/housing/facility-reports/1",
+							"host": [
+								"{{gateway_url}}"
+							],
+							"path": [
+								"api",
+								"housing",
+								"facility-reports",
+								"1"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Update Report Status (HR)",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{hr_token}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"status\": \"IN_PROGRESS\",\n    \"comment\": \"Maintenance team has been notified\"\n}"
+						},
+						"url": {
+							"raw": "{{gateway_url}}/api/housing/facility-reports/1",
+							"host": [
+								"{{gateway_url}}"
+							],
+							"path": [
+								"api",
+								"housing",
+								"facility-reports",
+								"1"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get all Facility Report of a House",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{hr_token}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{gateway_url}}/api/housing/facility-reports/house/1",
+							"host": [
+								"{{gateway_url}}"
+							],
+							"path": [
+								"api",
+								"housing",
+								"facility-reports",
+								"house",
+								"1"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Update Report Content (Employee)",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{employee_token}}",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"title\": \"Broken bed frame\",\r\n    \"description\": \"The bed frame in room 1 has a broken leg and needs repair\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{gateway_url}}/api/housing/facility-reports/1",
+							"host": [
+								"{{gateway_url}}"
+							],
+							"path": [
+								"api",
+								"housing",
+								"facility-reports",
+								"1"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Add Comment (Employee)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{employee_token}}",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"facilityReportId\": 1,\r\n    \"comment\": \"I am available on Friday\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{gateway_url}}/api/housing/facility-reports/comments",
+							"host": [
+								"{{gateway_url}}"
+							],
+							"path": [
+								"api",
+								"housing",
+								"facility-reports",
+								"comments"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get All Comments of a Report",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{employee_token}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{gateway_url}}/api/housing/facility-reports/1/comments",
+							"host": [
+								"{{gateway_url}}"
+							],
+							"path": [
+								"api",
+								"housing",
+								"facility-reports",
+								"1",
+								"comments"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Update Comment",
+					"request": {
+						"method": "PUT",
+						"header": [],
+						"url": {
+							"raw": "{{gateway_url}}/api/housing/facility-reports/comments/1",
+							"host": [
+								"{{gateway_url}}"
+							],
+							"path": [
+								"api",
+								"housing",
+								"facility-reports",
+								"comments",
+								"1"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "🏥 Health Checks",
+			"item": [
+				{
+					"name": "Gateway Health",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{gateway_url}}/actuator/health",
+							"host": [
+								"{{gateway_url}}"
+							],
+							"path": [
+								"actuator",
+								"health"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Application-Service",
+			"item": [
+				{
+					"name": "delete document by documentId",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJ0ZW5neWFuZyIsInVzZXJJZCI6Nywicm9sZXMiOlsiRW1wbG95ZWUiXSwiaWF0IjoxNzY1NDk0MDY0LCJleHAiOjE3NjU1ODA0NjR9.PQs8L2CPMvnM3wj2ukfkkpf3JMF_zR1XOCeVBuybW0A",
+									"type": "string"
+								}
+							]
+						},
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:8080/api/applications/documents/delete/8",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"api",
+								"applications",
+								"documents",
+								"delete",
+								"8"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "create application",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJ0ZW5neWFuZyIsInVzZXJJZCI6Nywicm9sZXMiOlsiRW1wbG95ZWUiXSwiaWF0IjoxNzY1NDg2NjI1LCJleHAiOjE3NjU1NzMwMjV9.2dJSWRylK0kXLJI-4tBm-1kZ4BFr_SNHr8tZ8j7guUs",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n  \"employeeId\": \"693701e551aab8bb4fad7295\",\r\n  \"applicationType\": \"OPT\",\r\n  \"comment\": \"OPT Pending 222\"\r\n}\r\n",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://localhost:8080/api/applications",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"api",
+								"applications"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "upload document",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJ0ZW5neWFuZyIsInVzZXJJZCI6Nywicm9sZXMiOlsiRW1wbG95ZWUiXSwiaWF0IjoxNzY1NDk0MDY0LCJleHAiOjE3NjU1ODA0NjR9.PQs8L2CPMvnM3wj2ukfkkpf3JMF_zR1XOCeVBuybW0A",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "file",
+									"type": "file",
+									"src": "/C:/Users/yenj2/Downloads/driver-license.png"
+								},
+								{
+									"key": "metadata",
+									"value": "{\"applicationId\":3,\"type\":\"F1 visa\",\"title\":\"F1 visa Scan\",\"description\":\"Scan of employee F1 visa\"}",
+									"type": "text"
+								}
+							]
+						},
+						"url": {
+							"raw": "http://localhost:8080/api/applications/documents/upload",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"api",
+								"applications",
+								"documents",
+								"upload"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "get applications by status",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJocl9hZG1pbiIsInVzZXJJZCI6MSwicm9sZXMiOlsiRW1wbG95ZWUiLCJIUiJdLCJpYXQiOjE3NjU0ODkzNzcsImV4cCI6MTc2NTU3NTc3N30.dVL-95Ys5l3WTcjwrkLZCzSHheZ9GhESPx2e9uOJ1Qg",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:8080/api/applications/status/Pending",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"api",
+								"applications",
+								"status",
+								"Pending"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "HR reject application",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJocl9hZG1pbiIsInVzZXJJZCI6MSwicm9sZXMiOlsiRW1wbG95ZWUiLCJIUiJdLCJpYXQiOjE3NjU0ODkzNzcsImV4cCI6MTc2NTU3NTc3N30.dVL-95Ys5l3WTcjwrkLZCzSHheZ9GhESPx2e9uOJ1Qg",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n  \"comment\": \"Denied, more documents needed!\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://localhost:8080/api/applications/8/reject",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"api",
+								"applications",
+								"8",
+								"reject"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "update application by Id",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJ0ZW5neWFuZyIsInVzZXJJZCI6Nywicm9sZXMiOlsiRW1wbG95ZWUiXSwiaWF0IjoxNzY1NDg2NjI1LCJleHAiOjE3NjU1NzMwMjV9.2dJSWRylK0kXLJI-4tBm-1kZ4BFr_SNHr8tZ8j7guUs",
+									"type": "string"
+								}
+							]
+						},
+						"method": "PUT",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n  \"comment\": \"Updated remark before submission\",\r\n  \"applicationType\": \"OPT\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://localhost:8080/api/applications/9",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"api",
+								"applications",
+								"9"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "delete application by Id",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJ0ZW5neWFuZyIsInVzZXJJZCI6Nywicm9sZXMiOlsiRW1wbG95ZWUiXSwiaWF0IjoxNzY1NDg2NjI1LCJleHAiOjE3NjU1NzMwMjV9.2dJSWRylK0kXLJI-4tBm-1kZ4BFr_SNHr8tZ8j7guUs",
+									"type": "string"
+								}
+							]
+						},
+						"method": "DELETE",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n  \"comment\": \"Updated remark before submission\",\r\n  \"applicationType\": \"OPT\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://localhost:8080/api/applications/9",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"api",
+								"applications",
+								"9"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "get all documents by employee",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJ0ZW5neWFuZyIsInVzZXJJZCI6Nywicm9sZXMiOlsiRW1wbG95ZWUiXSwiaWF0IjoxNzY1NDkwMzY2LCJleHAiOjE3NjU1NzY3NjZ9.5kggfeU1C-YSyrFNsykdJgyK9aMtEob5GkOcnzqP_nc",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:8080/api/applications/documents/application/1",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"api",
+								"applications",
+								"documents",
+								"application",
+								"1"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "get application by applicationId",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJ0ZW5neWFuZyIsInVzZXJJZCI6Nywicm9sZXMiOlsiRW1wbG95ZWUiXSwiaWF0IjoxNzY1NDgzNDIyLCJleHAiOjE3NjU1Njk4MjJ9.-2amZke-zHXheqoEN-JPjUmXiy7kfwj7PT6uyYUYaBI",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:8080/api/applications/1",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"api",
+								"applications",
+								"1"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "get all documents by application",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJ0ZW5neWFuZyIsInVzZXJJZCI6Nywicm9sZXMiOlsiRW1wbG95ZWUiXSwiaWF0IjoxNzY1NDkyMTc4LCJleHAiOjE3NjU1Nzg1Nzh9.6ezwRtLuw8v4NZMVpktZ8Lurell6piQSlq1PHs1fXaM",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:8080/api/applications/documents/application/1",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"api",
+								"applications",
+								"documents",
+								"application",
+								"1"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "get active application by employeeId",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJocl9hZG1pbiIsInVzZXJJZCI6MSwicm9sZXMiOlsiRW1wbG95ZWUiLCJIUiJdLCJpYXQiOjE3NjU0ODkzNzcsImV4cCI6MTc2NTU3NTc3N30.dVL-95Ys5l3WTcjwrkLZCzSHheZ9GhESPx2e9uOJ1Qg",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:8080/api/applications/employee/69349799cdc561de9cddb191",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"api",
+								"applications",
+								"employee",
+								"69349799cdc561de9cddb191"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "HR approve application",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJocl9hZG1pbiIsInVzZXJJZCI6MSwicm9sZXMiOlsiRW1wbG95ZWUiLCJIUiJdLCJpYXQiOjE3NjU0ODkzNzcsImV4cCI6MTc2NTU3NTc3N30.dVL-95Ys5l3WTcjwrkLZCzSHheZ9GhESPx2e9uOJ1Qg",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n  \"comment\": \"Approved, welcome aboard!\"\r\n}\r\n",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://localhost:8089/api/applications/8/approve",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8089",
+							"path": [
+								"api",
+								"applications",
+								"8",
+								"approve"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "HR ongoing applications",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJocl9hZG1pbiIsInVzZXJJZCI6MSwicm9sZXMiOlsiRW1wbG95ZWUiLCJIUiJdLCJpYXQiOjE3NjU0ODkzNzcsImV4cCI6MTc2NTU3NTc3N30.dVL-95Ys5l3WTcjwrkLZCzSHheZ9GhESPx2e9uOJ1Qg",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:8080/api/applications/ongoing",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"api",
+								"applications",
+								"ongoing"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "employee-service",
+			"item": [
+				{
+					"name": "getEmployeesByHouseId",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJocl9hZG1pbiIsInVzZXJJZCI6MSwicm9sZXMiOlsiRW1wbG95ZWUiLCJIUiJdLCJpYXQiOjE3NjU0ODMyOTAsImV4cCI6MTc2NTU2OTY5MH0.mupNeW0hTE5QYtwehyyLZ8FDcEM1dxd2XZ5Dkpq5ldU",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:8080/api/employees/house/501/count",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"api",
+								"employees",
+								"house",
+								"501",
+								"count"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get All Employee pagination",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:8080/api/employees/page",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"api",
+								"employees",
+								"page"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Search Employee by name(first,last,preferredName)",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:8080/api/employees/search?name=sama",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"api",
+								"employees",
+								"search"
+							],
+							"query": [
+								{
+									"key": "name",
+									"value": "sama"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Employee by user ID",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:8080/api/employees/user/:id",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"api",
+								"employees",
+								"user",
+								":id"
+							],
+							"variable": [
+								{
+									"key": "id",
+									"value": "3"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Create Employee",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJocl9hZG1pbiIsInVzZXJJZCI6MSwicm9sZXMiOlsiRW1wbG95ZWUiLCJIUiJdLCJpYXQiOjE3NjU0ODQxNjMsImV4cCI6MTc2NTU3MDU2M30.w_YLIkTOMThOMfg3BoXFmgNhSeYb4XmfjHmWWDxl7zk",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"userID\": 588,\n  \"firstName\": \"Benjamin\",\n  \"lastName\": \"Harper\",\n  \"middleName\": \"T\",\n  \"preferredName\": \"Ben\",\n  \"email\": \"ben.harper@example.com\",\n  \"cellPhone\": \"415-555-2099\",\n  \"alternatePhone\": \"415-555-1122\",\n  \"gender\": \"Male\",\n  \"SSN\": \"567-89-0123\",\n  \"DOB\": \"1991-03-22T00:00:00\",\n  \"startDate\": \"2025-01-10T08:30:00\",\n  \"endDate\": null,\n  \"driverLicense\": \"H78902345\",\n  \"driverLicenseExpiration\": \"2029-03-22T00:00:00\",\n  \"houseID\": 205,\n\n  \"contact\": [\n    {\n      \"firstName\": \"Olivia\",\n      \"lastName\": \"Harper\",\n      \"cellPhone\": \"415-555-3344\",\n      \"alternatePhone\": null,\n      \"email\": \"olivia.harper@example.com\",\n      \"relationship\": \"Wife\",\n      \"type\": \"Emergency\"\n    },\n    {\n      \"firstName\": \"Liam\",\n      \"lastName\": \"Harper\",\n      \"cellPhone\": \"415-555-5566\",\n      \"alternatePhone\": null,\n      \"email\": \"liam.harper@example.com\",\n      \"relationship\": \"Brother\",\n      \"type\": \"Backup Emergency\"\n    }\n  ],\n\n  \"address\": [\n    {\n      \"addressLine1\": \"842 Market St\",\n      \"addressLine2\": \"Floor 5\",\n      \"city\": \"San Francisco\",\n      \"state\": \"CA\",\n      \"zipCode\": \"94103\"\n    }\n  ],\n\n  \"visaStatus\": [\n    {\n      \"visaType\": \"Green Card\",\n      \"activeFlag\": \"Yes\",\n      \"startDate\": \"2020-08-01T00:00:00\",\n      \"endDate\": null,\n      \"lastModificationDate\": \"2024-12-01T09:15:00\"\n    }\n  ],\n\n  \"personalDocument\": [\n    {\n      \"path\": \"/docs/ben/green_card.pdf\",\n      \"title\": \"Green Card\",\n      \"comment\": \"Permanent resident ID\",\n      \"createDate\": \"2024-12-01T09:20:00\"\n    },\n    {\n      \"path\": \"/docs/ben/driver_license.png\",\n      \"title\": \"Driver License\",\n      \"comment\": \"Scanned at HR office\",\n      \"createDate\": \"2024-12-05T12:45:00\"\n    }\n  ]\n}\n"
+						},
+						"url": {
+							"raw": "http://localhost:8080/api/employees",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"api",
+								"employees"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get All Employee",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJocl9hZG1pbiIsInVzZXJJZCI6MSwicm9sZXMiOlsiRW1wbG95ZWUiLCJIUiJdLCJpYXQiOjE3NjU1NTIxNTksImV4cCI6MTc2NTYzODU1OX0._ajTHEQ_lo_6za55xx6zrvmKwmBiQyvnhmdj31Bi8Uk",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:8080/api/employees",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"api",
+								"employees"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Delete Document",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJocl9hZG1pbiIsInVzZXJJZCI6MSwicm9sZXMiOlsiRW1wbG95ZWUiLCJIUiJdLCJpYXQiOjE3NjU1NTIxNTksImV4cCI6MTc2NTYzODU1OX0._ajTHEQ_lo_6za55xx6zrvmKwmBiQyvnhmdj31Bi8Uk",
+									"type": "string"
+								}
+							]
+						},
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"userID\": 1122334455,\n  \"firstName\": \"Benjamin\",\n  \"lastName\": \"Harper\",\n  \"middleName\": \"T\",\n  \"preferredName\": \"Ben\",\n  \"email\": \"ben.harper@example.com\",\n  \"cellPhone\": \"415-555-2099\",\n  \"alternatePhone\": \"415-555-1122\",\n  \"gender\": \"Male\",\n  \"SSN\": \"567-89-0123\",\n  \"DOB\": \"1991-03-22T00:00:00\",\n  \"startDate\": \"2025-01-10T08:30:00\",\n  \"endDate\": null,\n  \"driverLicense\": \"H78902345\",\n  \"driverLicenseExpiration\": \"2029-03-22T00:00:00\",\n  \"houseID\": 205,\n\n  \"contact\": [\n    {\n      \"firstName\": \"Olivia\",\n      \"lastName\": \"Harper\",\n      \"cellPhone\": \"415-555-3344\",\n      \"alternatePhone\": null,\n      \"email\": \"olivia.harper@example.com\",\n      \"relationship\": \"Wife\",\n      \"type\": \"Emergency\"\n    },\n    {\n      \"firstName\": \"Liam\",\n      \"lastName\": \"Harper\",\n      \"cellPhone\": \"415-555-5566\",\n      \"alternatePhone\": null,\n      \"email\": \"liam.harper@example.com\",\n      \"relationship\": \"Brother\",\n      \"type\": \"Backup Emergency\"\n    }\n  ],\n\n  \"address\": [\n    {\n      \"addressLine1\": \"842 Market St\",\n      \"addressLine2\": \"Floor 5\",\n      \"city\": \"San Francisco\",\n      \"state\": \"CA\",\n      \"zipCode\": \"94103\"\n    }\n  ],\n\n  \"visaStatus\": [\n    {\n      \"visaType\": \"Green Card\",\n      \"activeFlag\": \"Yes\",\n      \"startDate\": \"2020-08-01T00:00:00\",\n      \"endDate\": null,\n      \"lastModificationDate\": \"2024-12-01T09:15:00\"\n    }\n  ],\n\n  \"personalDocument\": [\n    {\n      \"path\": \"/docs/ben/green_card.pdf\",\n      \"title\": \"Green Card\",\n      \"comment\": \"Permanent resident ID\",\n      \"createDate\": \"2024-12-01T09:20:00\"\n    },\n    {\n      \"path\": \"/docs/ben/driver_license.png\",\n      \"title\": \"Driver License\",\n      \"comment\": \"Scanned at HR office\",\n      \"createDate\": \"2024-12-05T12:45:00\"\n    }\n  ]\n}\n"
+						},
+						"url": {
+							"raw": "http://localhost:8080/api/employees/693495f1cdc561de9cddb190/documents/8ef8597a-ad14-4c1b-90a5-ff0481135953",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"api",
+								"employees",
+								"693495f1cdc561de9cddb190",
+								"documents",
+								"8ef8597a-ad14-4c1b-90a5-ff0481135953"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Update Employee",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJocl9hZG1pbiIsInVzZXJJZCI6MSwicm9sZXMiOlsiRW1wbG95ZWUiLCJIUiJdLCJpYXQiOjE3NjU1NTIxNTksImV4cCI6MTc2NTYzODU1OX0._ajTHEQ_lo_6za55xx6zrvmKwmBiQyvnhmdj31Bi8Uk",
+									"type": "string"
+								}
+							]
+						},
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"id\": \"693748a9002b281c5f877c15\",\n    \"userID\": 10,\n    \"firstName\": \"Benjamin update\",\n    \"lastName\": \"Harper update\",\n    \"middleName\": \"T\",\n    \"preferredName\": \"Ben\",\n    \"email\": \"ben.harper@example.com\",\n    \"cellPhone\": \"415-555-2099\",\n    \"alternatePhone\": \"415-555-1122\",\n    \"gender\": \"Femail\",\n    \"SSN\": \"567-89-0123\",\n    \"DOB\": \"1991-03-22T00:00:00\",\n    \"startDate\": \"2025-01-10T08:30:00\",\n    \"endDate\": null,\n    \"driverLicense\": \"H78902345\",\n    \"driverLicenseExpiration\": \"2029-03-22T00:00:00\",\n    \"houseID\": 205,\n    \"contact\": [\n        {\n            \"id\": null,\n            \"firstName\": \"Olivia\",\n            \"lastName\": \"Harper\",\n            \"cellPhone\": \"415-555-3344\",\n            \"alternatePhone\": null,\n            \"email\": \"olivia.harper@example.com\",\n            \"relationship\": \"Wife\",\n            \"type\": \"Emergency\"\n        },\n        {\n            \"id\": null,\n            \"firstName\": \"Liam\",\n            \"lastName\": \"Harper\",\n            \"cellPhone\": \"415-555-5566\",\n            \"alternatePhone\": null,\n            \"email\": \"liam.harper@example.com\",\n            \"relationship\": \"Brother\",\n            \"type\": \"Backup Emergency\"\n        }\n    ],\n    \"address\": [\n        {\n            \"id\": null,\n            \"addressLine1\": \"842 Market St\",\n            \"addressLine2\": \"Floor 5\",\n            \"city\": \"San Francisco\",\n            \"state\": \"CA\",\n            \"zipCode\": \"94103\"\n        }\n    ],\n    \"visaStatus\": [\n        {\n            \"id\": null,\n            \"visaType\": \"Green Card\",\n            \"activeFlag\": \"Yes\",\n            \"startDate\": \"2020-08-01T00:00:00\",\n            \"endDate\": null,\n            \"lastModificationDate\": \"2024-12-01T09:15:00\"\n        }\n    ],\n    \"personalDocument\": [\n        {\n            \"id\": null,\n            \"path\": \"/docs/ben/green_card.pdf\",\n            \"title\": \"Green Card\",\n            \"comment\": \"Permanent resident ID\",\n            \"createDate\": \"2024-12-01T09:20:00\"\n        },\n        {\n            \"id\": null,\n            \"path\": \"/docs/ben/driver_license.png\",\n            \"title\": \"Driver License\",\n            \"comment\": \"Scanned at HR office\",\n            \"createDate\": \"2024-12-05T12:45:00\"\n        }\n    ]\n}"
+						},
+						"url": {
+							"raw": "http://localhost:8080/api/employees/693748a9002b281c5f877c15",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"api",
+								"employees",
+								"693748a9002b281c5f877c15"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		}
+	],
+	"variable": [
+		{
+			"key": "gateway_url",
+			"value": "http://localhost:8080"
+		},
+		{
+			"key": "auth_url",
+			"value": "http://localhost:8081"
+		},
+		{
+			"key": "hr_token",
+			"value": ""
+		},
+		{
+			"key": "employee_token",
+			"value": ""
+		},
+		{
+			"key": "registration_token",
+			"value": ""
+		}
+	]
+}

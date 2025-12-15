@@ -1,0 +1,24 @@
+package org.example.applicationservice.dao;
+
+import org.example.applicationservice.utils.*;
+import org.example.applicationservice.domain.ApplicationWorkFlow;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.stereotype.Repository;
+import java.util.List;
+import java.util.Optional;
+
+@Repository
+public interface ApplicationWorkFlowRepository extends JpaRepository<ApplicationWorkFlow,Long> {
+    Optional<ApplicationWorkFlow> findFirstByEmployeeIdAndStatusInOrderByCreateDateDesc(
+            String employeeID,
+            List<ApplicationStatus> statuses
+    );
+    List<ApplicationWorkFlow> findByEmployeeIdAndStatusInOrderByCreateDateDesc(
+            String employeeId, List<ApplicationStatus> statuses);
+
+
+    //fetch only active applications
+    List<ApplicationWorkFlow> findByStatusInOrderByCreateDateDesc(List<ApplicationStatus> statuses);
+    List<ApplicationWorkFlow> findByEmployeeIdOrderByCreateDateDesc(String employeeID);
+    List<ApplicationWorkFlow> findByStatusOrderByCreateDateDesc(ApplicationStatus status);
+}
