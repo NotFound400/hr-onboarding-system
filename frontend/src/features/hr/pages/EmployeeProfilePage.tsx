@@ -165,10 +165,10 @@ const EmployeeProfilePage: React.FC = () => {
         <Space direction="vertical" size="small" style={{ width: '100%' }}>
           <Text strong style={{ fontSize: 16 }}>Employee Summary</Text>
           <Text>
-            Total Applications: <Text strong style={{ fontSize: 18, color: '#1890ff' }}>{applications.length}</Text>
+            Total Employees: <Text strong style={{ fontSize: 18, color: '#1890ff' }}>{applications.length}</Text>
           </Text>
           <Text type="secondary" style={{ fontSize: 12 }}>
-            Note: Use search bar to filter applications by employee name, then click to view the review summary.
+            Note: Use search bar to filter employees by employee name, then click to view the review summary.
           </Text>
         </Space>
       </Card>
