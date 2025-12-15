@@ -75,7 +75,7 @@ axiosClient.interceptors.response.use(
         return responseData.data;
       } else {
         // 业务失败
-        const message = responseData.message || '操作失败';
+        const message = responseData.message || 'Operation failed';
         showErrorMessage(message);
         return Promise.reject(new Error(message));
       }
@@ -95,7 +95,7 @@ axiosClient.interceptors.response.use(
 
       switch (status) {
         case 401:
-          emitError('未授权，请重新登录');
+          emitError('Unauthorized, please login again');
           // 清除本地 Token
           localStorage.removeItem('token');
           localStorage.removeItem('role');
@@ -108,26 +108,26 @@ axiosClient.interceptors.response.use(
           window.location.href = '/login';
           break;
         case 403:
-          emitError('没有权限访问该资源');
+          emitError('No permission to access this resource');
           break;
         case 404:
-          emitError('请求的资源不存在');
+          emitError('Resource not found');
           break;
         case 500:
-          emitError('服务器内部错误，请稍后重试');
+          emitError('Server error, please try again later');
           break;
         default:
-          emitError(apiResponse?.message || `请求失败 (${status})`);
+          emitError(apiResponse?.message || `Request failed (${status})`);
       }
 
       return Promise.reject(error);
     } else if (error.request) {
       // 网络错误
-      showErrorMessage('网络连接失败，请检查您的网络');
-      return Promise.reject(new Error('网络连接失败'));
+      showErrorMessage('Network connection failed, please check your network');
+      return Promise.reject(new Error('Network connection failed'));
     } else {
       // 其他错误
-      showErrorMessage('请求发生错误');
+      showErrorMessage('Request error occurred');
       return Promise.reject(error);
     }
   }
