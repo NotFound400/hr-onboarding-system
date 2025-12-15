@@ -207,10 +207,10 @@ public class ApplicationServiceImpl implements ApplicationService {
         ApplicationWorkFlow app = optionalApp.get();
 //        ownershipValidator.checkOwnership(app.getEmployeeId());
 
-        // Only allow update if status = OPEN or REJECTED
-        if (!(app.getStatus() == ApplicationStatus.Open || app.getStatus() == ApplicationStatus.Rejected)) {
-            return Result.fail("Cannot update application with status: " + app.getStatus());
-        }
+//        // Only allow update if status = OPEN or REJECTED
+//        if (!(app.getStatus() == ApplicationStatus.Open || app.getStatus() == ApplicationStatus.Rejected)) {
+//            return Result.fail("Cannot update application with status: " + app.getStatus());
+//        }
 
         if (request.getComment() != null) {
             app.setComment(request.getComment());

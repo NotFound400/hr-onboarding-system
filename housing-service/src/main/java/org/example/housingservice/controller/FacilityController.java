@@ -71,7 +71,6 @@ public class FacilityController {
     @GetMapping("/house/{houseId}")
     @Operation(summary = "Get house facilities", description = "Get all facilities of a specified house")
     public ResponseEntity<ApiResponse<List<FacilityDTO.Response>>> getFacilitiesByHouseId(
-            @RequestHeader("X-User-Roles") String userRoles,
             @PathVariable Long houseId) {
 
         List<FacilityDTO.Response> facilities = facilityService.getFacilitiesByHouseId(houseId);

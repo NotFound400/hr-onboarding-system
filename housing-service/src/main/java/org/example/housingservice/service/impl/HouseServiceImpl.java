@@ -126,8 +126,12 @@ public class HouseServiceImpl implements HouseService {
                     .email(landlordReq.getEmail())
                     .cellPhone(landlordReq.getCellPhone())
                     .build();
-            landlord = landlordRepository.save(landlord);
-            log.info("Created new landlord with id: {} for house", landlord.getId());
+
+            if (landlordRepository.existsByEmail(landlord.getEmail())) {
+                landlord = landlordRepository.findByEmail(landlord.getEmail()).orElse(null);
+            }
+
+            landlordRepository.save(landlord);
         }
 
         // Create house

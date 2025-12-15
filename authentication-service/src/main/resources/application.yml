@@ -53,7 +53,7 @@ email:
   service:
     url: http://localhost:8085
   frontend:
-    registration-url: http://localhost:3000/register
+    registration-url: http://localhost:5175/register
 
 # Housing Service Configuration
 housing:
