@@ -101,6 +101,29 @@ const HiringPage: React.FC = () => {
       );
 
       messageApi.success(`Token generated successfully for ${values.email}`);
+      
+      // Add new application entry to the list
+      const currentTime = new Date().toISOString();
+      const newApplication: ApplicationWithEmployeeInfo = {
+        id: Date.now(), // Temporary ID until backend creates the real application
+        employeeId: tokenInfo.employeeId || '',
+        createDate: currentTime,
+        lastModificationDate: currentTime,
+        status: 'Open',
+        comment: '',
+        applicationType: 'ONBOARDING',
+        employee: {
+          id: tokenInfo.employeeId || '',
+          email: values.email,
+          firstName: '',
+          lastName: '',
+          middleName: '',
+        } as Employee,
+      };
+      
+      // Add to the top of the list
+      setApplications((prev) => [newApplication, ...prev]);
+      
       fetchAvailableHouses();
       form.resetFields(['houseId']);
     } catch (error: any) {

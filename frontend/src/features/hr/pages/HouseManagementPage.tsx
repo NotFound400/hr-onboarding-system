@@ -49,7 +49,14 @@ export const HouseManagementPage: React.FC = () => {
     try {
       setLoading(true);
       const data = await getHouseList();
-      setHouseList(data);
+      // Filter out houses that have exceeded max occupancy
+      const filteredData = data.filter((house) => {
+        const current = house.numberOfEmployees ?? house.employeeList?.length ?? 0;
+        const max = house.maxOccupant || 0;
+        // Keep houses that haven't exceeded max occupancy (current <= max)
+        return max === 0 || current <= max;
+      });
+      setHouseList(filteredData);
     } catch (error) {
       messageApi.error('Failed to load house list');
       console.error(error);

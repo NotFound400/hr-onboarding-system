@@ -54,6 +54,52 @@ import { useAntdMessage } from '../../../hooks/useAntdMessage';
 import { uploadDocument } from '../../../services/api/applicationApi';
 
 /**
+ * Format phone number to (XXX) XXX-XXXX
+ * Only allows digits, max 10 digits
+ */
+const formatPhoneNumber = (value: string): string => {
+  const digits = value.replace(/\D/g, '').slice(0, 10);
+  if (digits.length <= 3) return digits;
+  if (digits.length <= 6) return `(${digits.slice(0, 3)}) ${digits.slice(3)}`;
+  return `(${digits.slice(0, 3)}) ${digits.slice(3, 6)}-${digits.slice(6)}`;
+};
+
+/**
+ * Format SSN to XXX-XX-XXXX
+ * Only allows digits, max 9 digits
+ */
+const formatSSN = (value: string): string => {
+  const digits = value.replace(/\D/g, '').slice(0, 9);
+  if (digits.length <= 3) return digits;
+  if (digits.length <= 5) return `${digits.slice(0, 3)}-${digits.slice(3)}`;
+  return `${digits.slice(0, 3)}-${digits.slice(3, 5)}-${digits.slice(5)}`;
+};
+
+/**
+ * Validate phone number has exactly 10 digits
+ */
+const validatePhone = (_: any, value: string) => {
+  if (!value) return Promise.resolve();
+  const digits = value.replace(/\D/g, '');
+  if (digits.length !== 10) {
+    return Promise.reject(new Error('Phone number must be exactly 10 digits'));
+  }
+  return Promise.resolve();
+};
+
+/**
+ * Validate SSN has exactly 9 digits
+ */
+const validateSSN = (_: any, value: string) => {
+  if (!value) return Promise.resolve();
+  const digits = value.replace(/\D/g, '');
+  if (digits.length !== 9) {
+    return Promise.reject(new Error('SSN must be exactly 9 digits'));
+  }
+  return Promise.resolve();
+};
+
+/**
  * OnboardingFormPage Component
  * 
  * 严格按照 raw_project_requirement.md Section 3 实现:
@@ -574,14 +620,23 @@ const OnboardingFormPage: React.FC = () => {
               <Form.Item
                 name="cellPhone"
                 label="Cell Phone"
-                rules={[{ required: true, message: 'Required' }]}
+                rules={[
+                  { required: true, message: 'Required' },
+                  { validator: validatePhone },
+                ]}
+                normalize={formatPhoneNumber}
               >
-                <Input placeholder="123-456-7890" />
+                <Input placeholder="(123) 456-7890" maxLength={14} />
               </Form.Item>
             </Col>
             <Col span={12}>
-              <Form.Item name="workPhone" label="Work Phone">
-                <Input placeholder="098-765-4321 (optional)" />
+              <Form.Item 
+                name="workPhone" 
+                label="Work Phone"
+                rules={[{ validator: validatePhone }]}
+                normalize={formatPhoneNumber}
+              >
+                <Input placeholder="(098) 765-4321 (optional)" maxLength={14} />
               </Form.Item>
             </Col>
           </Row>
@@ -605,9 +660,13 @@ const OnboardingFormPage: React.FC = () => {
               <Form.Item
                 name="ssn"
                 label="SSN"
-                rules={[{ required: true, message: 'Required' }]}
+                rules={[
+                  { required: true, message: 'Required' },
+                  { validator: validateSSN },
+                ]}
+                normalize={formatSSN}
               >
-                <Input placeholder="123-45-6789" />
+                <Input placeholder="123-45-6789" maxLength={11} />
               </Form.Item>
             </Col>
             <Col span={8}>
@@ -616,7 +675,10 @@ const OnboardingFormPage: React.FC = () => {
                 label="Date of Birth"
                 rules={[{ required: true, message: 'Required' }]}
               >
-                <DatePicker style={{ width: '100%' }} />
+                <DatePicker 
+                  style={{ width: '100%' }} 
+                  disabledDate={(current) => current && current > dayjs().endOf('day')}
+                />
               </Form.Item>
             </Col>
             <Col span={8}>
@@ -844,9 +906,13 @@ const OnboardingFormPage: React.FC = () => {
               <Form.Item
                 name="referencePhone"
                 label="Phone"
-                rules={[{ required: true, message: 'Required' }]}
+                rules={[
+                  { required: true, message: 'Required' },
+                  { validator: validatePhone },
+                ]}
+                normalize={formatPhoneNumber}
               >
-                <Input placeholder="111-222-3333" />
+                <Input placeholder="(111) 222-3333" maxLength={14} />
               </Form.Item>
             </Col>
             <Col span={12}>
@@ -953,9 +1019,13 @@ const OnboardingFormPage: React.FC = () => {
                             {...restField}
                             name={[name, 'phone']}
                             label="Phone"
-                            rules={[{ required: true, message: 'Required' }]}
+                            rules={[
+                              { required: true, message: 'Required' },
+                              { validator: validatePhone },
+                            ]}
+                            normalize={formatPhoneNumber}
                           >
-                            <Input placeholder="444-555-6666" />
+                            <Input placeholder="(444) 555-6666" maxLength={14} />
                           </Form.Item>
                         </Col>
                         <Col span={8}>

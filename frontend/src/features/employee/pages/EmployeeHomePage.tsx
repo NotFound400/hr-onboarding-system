@@ -9,20 +9,24 @@
  */
 
 import { useState, useEffect } from 'react';
-import { Card, Row, Col, Typography, Space, Avatar, Button } from 'antd';
+import { Card, Row, Col, Typography, Space, Avatar, Button, Descriptions, Tag, Image } from 'antd';
 import { 
   UserOutlined, 
   SafetyOutlined, 
   HomeOutlined, 
   FileTextOutlined,
-  RightOutlined 
+  RightOutlined,
+  PhoneOutlined,
+  MailOutlined,
+  CalendarOutlined,
+  IdcardOutlined,
 } from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
 import { PageContainer } from '../../../components/common/PageContainer';
-import { getEmployeeById, getEmployeeByUserId } from '../../../services/api';
+import { getEmployeeById, getEmployeeByUserId, getDocumentsByEmployeeId, downloadDocument } from '../../../services/api';
 import { useAppSelector } from '../../../store/hooks';
 import { selectUser } from '../../../store/slices/authSlice';
-import type { Employee } from '../../../types';
+import type { Employee, ApplicationDocument } from '../../../types';
 import dayjs from 'dayjs';
 
 const { Title, Text, Paragraph } = Typography;
@@ -34,6 +38,8 @@ const EmployeeHomePage: React.FC = () => {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [employee, setEmployee] = useState<Employee | null>(null);
+  const [documents, setDocuments] = useState<ApplicationDocument[]>([]);
+  const [documentUrls, setDocumentUrls] = useState<Record<number, string>>({});
 
   // 获取当前登录用户
   const currentUser = useAppSelector(selectUser);
@@ -51,12 +57,44 @@ const EmployeeHomePage: React.FC = () => {
       const empData = await getEmployeeByUserId(String(currentUser.id));
       const data = await getEmployeeById(empData.id);
       setEmployee(data);
+      
+      // Fetch documents
+      try {
+        const docs = await getDocumentsByEmployeeId(data.id);
+        // Filter for EAD and driverLicense only
+        const filteredDocs = docs.filter(
+          (doc) => doc.type === 'EAD' || doc.type === 'driverLicense'
+        );
+        setDocuments(filteredDocs);
+        
+        // Fetch document images
+        const urls: Record<number, string> = {};
+        for (const doc of filteredDocs) {
+          try {
+            const blob = await downloadDocument(doc.id);
+            const url = URL.createObjectURL(blob);
+            urls[doc.id] = url;
+          } catch (err) {
+            console.error(`Failed to load document ${doc.id}:`, err);
+          }
+        }
+        setDocumentUrls(urls);
+      } catch (error) {
+        console.error('Failed to load documents:', error);
+      }
     } catch (error) {
       console.error('Failed to load employee info:', error);
     } finally {
       setLoading(false);
     }
   };
+  
+  // Cleanup blob URLs on unmount
+  useEffect(() => {
+    return () => {
+      Object.values(documentUrls).forEach((url) => URL.revokeObjectURL(url));
+    };
+  }, [documentUrls]);
 
   /**
    * 快捷链接配置
@@ -116,60 +154,179 @@ const EmployeeHomePage: React.FC = () => {
         </Space>
       </Card>
 
-      {/* 快捷链接卡片 */}
-      <Title level={4} style={{ marginBottom: 16 }}>
-        Quick Links
-      </Title>
-      <Row gutter={[16, 16]}>
-        {quickLinks.map((link) => (
-          <Col xs={24} sm={12} lg={6} key={link.path}>
-            <Card
-              hoverable
-              onClick={() => navigate(link.path)}
-              style={{ height: '100%', textAlign: 'center' }}
-              bodyStyle={{ padding: '32px 16px' }}
-            >
-              <Space direction="vertical" size="middle" style={{ width: '100%' }}>
-                {link.icon}
-                <Title level={5} style={{ margin: 0 }}>
-                  {link.title}
-                </Title>
-                <Text type="secondary" style={{ fontSize: 13 }}>
-                  {link.description}
-                </Text>
-                <Button type="link" icon={<RightOutlined />}>
-                  Go
-                </Button>
-              </Space>
-            </Card>
-          </Col>
-        ))}
-      </Row>
-
       {/* 个人信息摘要 */}
       {employee && (
-        <Card title="Profile Summary" style={{ marginTop: 24 }}>
-          <Row gutter={[24, 16]}>
-            <Col span={8}>
-              <Text type="secondary">Full Name</Text>
-              <div style={{ fontSize: 16, fontWeight: 500, marginTop: 4 }}>
-                {employee.firstName} {employee.middleName && `${employee.middleName} `}{employee.lastName}
-              </div>
+        <>
+          <Card title="Personal Information" style={{ marginTop: 24 }}>
+            <Descriptions column={2} bordered>
+              <Descriptions.Item label="Full Name" span={2}>
+                <strong>
+                  {employee.firstName} {employee.middleName && `${employee.middleName} `}
+                  {employee.lastName}
+                </strong>
+                {employee.preferredName && (
+                  <Tag color="blue" style={{ marginLeft: 8 }}>
+                    Preferred: {employee.preferredName}
+                  </Tag>
+                )}
+              </Descriptions.Item>
+              <Descriptions.Item label="Email" icon={<MailOutlined />}>
+                {employee.email}
+              </Descriptions.Item>
+              <Descriptions.Item label="Cell Phone" icon={<PhoneOutlined />}>
+                {employee.cellPhone || 'N/A'}
+              </Descriptions.Item>
+              {employee.alternatePhone && (
+                <Descriptions.Item label="Alternate Phone" span={2}>
+                  {employee.alternatePhone}
+                </Descriptions.Item>
+              )}
+              <Descriptions.Item label="Date of Birth">
+                {employee.dob ? dayjs(employee.dob).format('MMMM DD, YYYY') : 'N/A'}
+              </Descriptions.Item>
+              <Descriptions.Item label="Gender">
+                {employee.gender || 'N/A'}
+              </Descriptions.Item>
+              <Descriptions.Item label="SSN">
+                {employee.ssn ? `***-**-${employee.ssn.slice(-4)}` : 'N/A'}
+              </Descriptions.Item>
+              <Descriptions.Item label="Start Date">
+                {employee.startDate ? dayjs(employee.startDate).format('MMMM DD, YYYY') : 'N/A'}
+              </Descriptions.Item>
+            </Descriptions>
+          </Card>
+
+          <Row gutter={16} style={{ marginTop: 24 }}>
+            <Col span={12}>
+              <Card title="Address Information">
+                <Descriptions column={1} bordered>
+                  {employee.address ? (
+                    <>
+                      <Descriptions.Item label="Street">
+                        {employee.address.addressLine1}
+                        {employee.address.addressLine2 && `, ${employee.address.addressLine2}`}
+                      </Descriptions.Item>
+                      <Descriptions.Item label="City">
+                        {employee.address.city}
+                      </Descriptions.Item>
+                      <Descriptions.Item label="State">
+                        {employee.address.stateName}
+                      </Descriptions.Item>
+                      <Descriptions.Item label="Zip Code">
+                        {employee.address.zipCode}
+                      </Descriptions.Item>
+                    </>
+                  ) : (
+                    <Descriptions.Item label="Address">
+                      No address information available
+                    </Descriptions.Item>
+                  )}
+                </Descriptions>
+              </Card>
             </Col>
-            <Col span={8}>
-              <Text type="secondary">Contact</Text>
-              <div style={{ fontSize: 16, fontWeight: 500, marginTop: 4 }}>
-                {employee.cellPhone}
-              </div>
-            </Col>
-            <Col span={8}>
-              <Text type="secondary">Work Authorization</Text>
-              <div style={{ fontSize: 16, fontWeight: 500, marginTop: 4 }}>
-                {employee.visaStatus?.find(v => v.activeFlag === 'Yes')?.visaType || 'N/A'}
-              </div>
+
+            <Col span={12}>
+              <Card title="Work Authorization">
+                <Descriptions column={1} bordered>
+                  <Descriptions.Item label="Visa Type">
+                    {employee.visaStatus?.find(v => v.activeFlag === 'Yes')?.visaType || 'N/A'}
+                  </Descriptions.Item>
+                  <Descriptions.Item label="Work Authorization">
+                    {employee.citizenship ? (
+                      <Tag color="green">US Citizen / Green Card</Tag>
+                    ) : (
+                      <Tag color="blue">Work Visa</Tag>
+                    )}
+                  </Descriptions.Item>
+                  {employee.visaStatus?.find(v => v.activeFlag === 'Yes')?.startDate && (
+                    <Descriptions.Item label="Visa Start Date">
+                      {dayjs(employee.visaStatus.find(v => v.activeFlag === 'Yes')?.startDate).format('MMMM DD, YYYY')}
+                    </Descriptions.Item>
+                  )}
+                  {employee.visaStatus?.find(v => v.activeFlag === 'Yes')?.endDate && (
+                    <Descriptions.Item label="Visa End Date">
+                      {dayjs(employee.visaStatus.find(v => v.activeFlag === 'Yes')?.endDate).format('MMMM DD, YYYY')}
+                    </Descriptions.Item>
+                  )}
+                </Descriptions>
+              </Card>
             </Col>
           </Row>
-        </Card>
+
+          {employee.driverLicense && (
+            <Card title="Driver License" style={{ marginTop: 24 }}>
+              <Descriptions column={2} bordered>
+                <Descriptions.Item label="License Number">
+                  {employee.driverLicense.number}
+                </Descriptions.Item>
+                <Descriptions.Item label="Expiration Date">
+                  {dayjs(employee.driverLicense.expirationDate).format('MMMM DD, YYYY')}
+                </Descriptions.Item>
+              </Descriptions>
+            </Card>
+          )}
+
+          {employee.emergencyContacts && employee.emergencyContacts.length > 0 && (
+            <Card title="Emergency Contacts" style={{ marginTop: 24 }}>
+              {employee.emergencyContacts.map((contact, index) => (
+                <Card 
+                  key={index} 
+                  type="inner" 
+                  title={`Contact ${index + 1}`}
+                  style={{ marginBottom: index < employee.emergencyContacts!.length - 1 ? 16 : 0 }}
+                >
+                  <Descriptions column={2} bordered size="small">
+                    <Descriptions.Item label="Name" span={2}>
+                      {contact.firstName} {contact.middleName && `${contact.middleName} `}
+                      {contact.lastName}
+                    </Descriptions.Item>
+                    <Descriptions.Item label="Phone">
+                      {contact.cellPhone}
+                    </Descriptions.Item>
+                    <Descriptions.Item label="Email">
+                      {contact.email}
+                    </Descriptions.Item>
+                    <Descriptions.Item label="Relationship" span={2}>
+                      {contact.relationship}
+                    </Descriptions.Item>
+                  </Descriptions>
+                </Card>
+              ))}
+            </Card>
+          )}
+
+          {documents.length > 0 && (
+            <Card title="Documents" style={{ marginTop: 24 }}>
+              <Row gutter={[16, 16]}>
+                {documents.map((doc) => (
+                  <Col key={doc.id} xs={24} sm={12} md={8}>
+                    <Card
+                      type="inner"
+                      title={doc.type === 'EAD' ? 'EAD' : 'Driver License'}
+                      cover={
+                        documentUrls[doc.id] ? (
+                          <div style={{ padding: 16, textAlign: 'center', backgroundColor: '#f5f5f5' }}>
+                            <Image
+                              src={documentUrls[doc.id]}
+                              alt={doc.type}
+                              style={{ maxHeight: 300, objectFit: 'contain' }}
+                            />
+                          </div>
+                        ) : (
+                          <div style={{ padding: 40, textAlign: 'center', backgroundColor: '#f5f5f5' }}>
+                            <Text type="secondary">Loading...</Text>
+                          </div>
+                        )
+                      }
+                    >
+                      {doc.title && <Text type="secondary">{doc.title}</Text>}
+                    </Card>
+                  </Col>
+                ))}
+              </Row>
+            </Card>
+          )}
+        </>
       )}
     </PageContainer>
   );
