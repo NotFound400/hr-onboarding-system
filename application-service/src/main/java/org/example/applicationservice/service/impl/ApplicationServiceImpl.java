@@ -1,5 +1,7 @@
 package org.example.applicationservice.service.impl;
 
+import org.example.applicationservice.dao.DigitalDocumentRepository;
+import org.example.applicationservice.exception.ApplicationServiceException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.example.applicationservice.client.EmployeeServiceClient;
@@ -14,6 +16,7 @@ import org.example.applicationservice.utils.SecurityUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
@@ -22,17 +25,19 @@ import java.util.stream.Collectors;
 @Service
 public class ApplicationServiceImpl implements ApplicationService {
     private final ApplicationWorkFlowRepository repository;
+    private final DigitalDocumentRepository documentRepository;
     private final EmailServiceClient emailServiceClient;
     private final OwnershipValidator ownershipValidator;
     private final EmployeeServiceClient employeeServiceClient;
     private static final Logger log = LoggerFactory.getLogger(ApplicationServiceImpl.class);
 
-    public ApplicationServiceImpl(ApplicationWorkFlowRepository repository,
+    public ApplicationServiceImpl(ApplicationWorkFlowRepository repository, DigitalDocumentRepository documentRepository,
                                   EmailServiceClient emailServiceClient,
                                   EmployeeServiceClient employeeServiceClient,
                                   SecurityUtils securityUtils,
                                   OwnershipValidator ownershipValidator) {
         this.repository = repository;
+        this.documentRepository = documentRepository;
         this.emailServiceClient = emailServiceClient;
         this.employeeServiceClient = employeeServiceClient;
         this.ownershipValidator = ownershipValidator;
@@ -400,6 +405,31 @@ public class ApplicationServiceImpl implements ApplicationService {
                     return Result.<Void>success(null);
                 })
                 .orElse(Result.fail("Application not found with id: " + applicationId));
+    }
+
+    @Override
+    public Result<List<ApplicationAndDocumentDTO>> getApplicationAndDocumentsByEmployeeId(String employeeID) {
+        List<ApplicationAndDocumentDTO> list = new ArrayList<>();
+
+        List<ApplicationWorkFlow> applications = repository.findByEmployeeIdOrderByCreateDateDesc(employeeID);
+        if (applications.isEmpty()) {
+            throw new ApplicationServiceException("Application not found with id: " + employeeID);
+        }
+
+        list = applications.stream()
+                .map(app -> new ApplicationAndDocumentDTO(
+                        app.getId(),
+                        app.getEmployeeId(),
+                        app.getCreateDate(),
+                        app.getLastModificationDate(),
+                        app.getStatus(),
+                        app.getComment(),
+                        app.getApplicationType(),
+                        app.getDocumentsDTO()
+                ))
+                .collect(Collectors.toList());
+
+        return Result.success(list);
     }
 
     private void sendApplicationStatusEmail(String employeeId, String status, String comment) {
