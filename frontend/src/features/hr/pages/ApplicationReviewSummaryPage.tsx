@@ -88,7 +88,7 @@ const ApplicationReviewSummaryPage: React.FC = () => {
   }
 
   return (
-    <PageContainer title="Application Review">
+    <PageContainer title="Detail Review">
       <div style={{ marginBottom: 16 }}>
         <Button onClick={() => navigate(-1)}>← Back</Button>
       </div>
