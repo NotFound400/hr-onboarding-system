@@ -74,10 +74,6 @@ public class FacilityController {
             @RequestHeader("X-User-Roles") String userRoles,
             @PathVariable Long houseId) {
 
-        if (!userRoles.contains("HR")) {
-            throw new ForbiddenException("Only HR can check facilities");
-        }
-
         List<FacilityDTO.Response> facilities = facilityService.getFacilitiesByHouseId(houseId);
         return ResponseEntity.ok(ApiResponse.success(facilities));
     }
