@@ -268,16 +268,16 @@ const HouseDetailManagementPage: React.FC = () => {
 
     try {
       setAddingComment(true);
-      await addFacilityReportComment({
+      const updatedReport = await addFacilityReportComment({
         facilityReportId: selectedReportDetail.id,
         comment: values.comment,
       });
       messageApi.success('Comment added successfully');
+      // Refresh the report detail to show the new comment
+      const refreshedDetail = await getFacilityReportById(selectedReportDetail.id);
+      setSelectedReportDetail(refreshedDetail);
       commentForm.resetFields();
-      
-      // Re-fetch the report detail to get the updated comments
-      const updatedReport = await getFacilityReportById(selectedReportDetail.id);
-      setSelectedReportDetail(updatedReport);
+      // Refresh the facility reports list
       fetchFacilityReports(houseDetail.id);
     } catch (error: any) {
       messageApi.error(error.message || 'Failed to add comment');

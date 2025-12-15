@@ -85,8 +85,6 @@ const LoginPage: React.FC = () => {
           }
 
           const latestApplication = applications[0];
-          console.log('[Login] Latest Application:', latestApplication);
-          console.log('[Login] Application Status:', latestApplication.status);
           dispatch(
             setApplicationContext({
               id: latestApplication.id,
@@ -96,19 +94,16 @@ const LoginPage: React.FC = () => {
 
           switch (latestApplication.status) {
             case 'Approved':
-              console.log('[Login] → /employee/personal-info');
               navigate('/employee/personal-info', { replace: true });
               break;
             case 'Rejected':
-              console.log('[Login] → /onboarding/rejected');
               navigate('/onboarding/rejected', { replace: true });
               break;
             case 'Pending':
-              console.log('[Login] → /onboarding/submit-result');
               navigate('/onboarding/submit-result', { replace: true });
               break;
             default:
-              console.log('[Login] → /onboarding/form (default, status:', latestApplication.status, ')');
+              // Includes "Open" and other pending-like states
               navigate('/onboarding/form', { replace: true });
           }
         } catch (error) {
