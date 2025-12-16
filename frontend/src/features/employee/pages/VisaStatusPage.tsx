@@ -1,18 +1,7 @@
-/**
- * Visa Status Management Page
- * Employee Visa Document Upload and Tracking
- * 
- * Specification:
- * - Vertical layout with upload sections for I-983, I-20, OPT Receipt, STEM EAD
- * - Fetch documents and application status on load
- * - Enable/disable upload boxes based on applicationType
- * - Upload new documents via POST, update existing via PUT
- */
-
 import { useState, useEffect } from 'react';
-import { Card, Upload, Button, Space, Alert, Spin, Typography, Divider, Modal, Image } from 'antd';
+import { Card, Upload, Button, Space, Alert, Spin, Typography, Modal, Image } from 'antd';
 import { UploadOutlined, FileTextOutlined, CheckCircleOutlined, CloseCircleOutlined, EyeOutlined } from '@ant-design/icons';
-import type { UploadFile, UploadProps } from 'antd';
+import type { UploadProps } from 'antd';
 import { PageContainer } from '../../../components/common/PageContainer';
 import {
   getApplicationById,
@@ -27,9 +16,8 @@ import { useAppSelector } from '../../../store/hooks';
 import type { Application, ApplicationDocument } from '../../../types';
 import { useAntdMessage } from '../../../hooks/useAntdMessage';
 
-const { Title, Text } = Typography;
+const { Text } = Typography;
 
-// Visa document types - aligned with HR management page
 const VisaDocumentType = {
   OPT: 'OPT',
   I983: 'I983',
@@ -39,7 +27,6 @@ const VisaDocumentType = {
   Terminate: 'Terminate'
 } as const;
 
-// Document types in specific order
 const DOCUMENT_TYPES = [
   { type: VisaDocumentType.I983, title: 'I-983', description: 'Form I-983 for OPT STEM extension' },
   { type: VisaDocumentType.I20, title: 'I-20', description: 'Certificate of Eligibility for Nonimmigrant Student Status' },
@@ -55,9 +42,6 @@ interface DocumentSlot {
   enabled: boolean;
 }
 
-/**
- * VisaStatusPage Component
- */
 const VisaStatusPage: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [uploading, setUploading] = useState<string | null>(null);
@@ -78,9 +62,6 @@ const VisaStatusPage: React.FC = () => {
     }
   }, [application, documents]);
 
-  /**
-   * Initialize page: fetch application and documents
-   */
   const initializeVisaPage = async () => {
     if (!employeeId) {
       messageApi.error('Employee ID not found. Please log in again.');
@@ -91,10 +72,8 @@ const VisaStatusPage: React.FC = () => {
     try {
       setLoading(true);
       
-      // Fetch active applications for this employee
       const applications = await getActiveApplications(employeeId);
       
-      // Find the active OPT application
       const optApplication = applications.find(
         app => app.applicationType === 'OPT' && app.status !== 'Rejected'
       );
@@ -105,11 +84,9 @@ const VisaStatusPage: React.FC = () => {
         return;
       }
       
-      // Fetch application details
       const appData = await getApplicationById(optApplication.id);
       setApplication(appData);
 
-      // Fetch documents for this application
       const docsData = await getDocumentsByApplicationId(optApplication.id);
       setDocuments(docsData);
 
@@ -120,13 +97,6 @@ const VisaStatusPage: React.FC = () => {
     }
   };
 
-  /**
-   * Update document slots based on comment (workflow tracking field)
-   * Rules:
-   * - If comment matches a document type, enable that specific box
-   * - If comment is 'Terminate', disable all boxes
-   * - If comment is not in VisaDocumentType values (except Terminate), enable I983 box
-   */
   const updateDocumentSlots = (comment: string | null, docs: ApplicationDocument[]) => {
     const visaDocumentValues = Object.values(VisaDocumentType);
     
@@ -135,13 +105,10 @@ const VisaStatusPage: React.FC = () => {
       
       let enabled = false;
       if (comment === VisaDocumentType.Terminate) {
-        // Terminate: disable all
         enabled = false;
       } else if (comment && visaDocumentValues.includes(comment as any)) {
-        // Comment matches a specific visa document type: enable that box
         enabled = comment === docType.type;
       } else {
-        // Comment is not in VisaDocumentType (or null/empty): enable I983 by default
         enabled = docType.type === VisaDocumentType.I983;
       }
 
@@ -157,9 +124,6 @@ const VisaStatusPage: React.FC = () => {
     setDocumentSlots(slots);
   };
 
-  /**
-   * Handle file upload/update
-   */
   const handleFileUpload = async (slot: DocumentSlot, file: File) => {
     if (!application) {
       messageApi.error('Application not found');
@@ -177,14 +141,12 @@ const VisaStatusPage: React.FC = () => {
       };
 
       if (slot.existingDoc) {
-        // UPDATE existing document
         await updateDocument(slot.existingDoc.id, {
           file,
           metadata,
         });
         messageApi.success(`${slot.type} updated successfully`);
       } else {
-        // CREATE new document
         await uploadDocument({
           file,
           metadata,
@@ -192,12 +154,10 @@ const VisaStatusPage: React.FC = () => {
         messageApi.success(`${slot.type} uploaded successfully`);
       }
 
-      // Update application comment to the document type (workflow tracking)
       await updateApplication(application.id, {
         comment: slot.type,
       });
 
-      // Refresh documents and application
       const updatedDocs = await getDocumentsByApplicationId(application.id);
       setDocuments(updatedDocs);
       
@@ -213,10 +173,6 @@ const VisaStatusPage: React.FC = () => {
     }
   };
 
-  /**
-   * Handle document preview
-   * Mimics ApplicationReviewDetailPage pattern: download blob and show in Modal with Image
-   */
   const handlePreview = async (doc: ApplicationDocument) => {
     if (!doc.id) {
       messageApi.error('Document ID not available');
@@ -224,13 +180,10 @@ const VisaStatusPage: React.FC = () => {
     }
     
     try {
-      // Download document as blob
       const blob = await downloadDocument(doc.id);
       
-      // Create object URL from blob
       const documentUrl = URL.createObjectURL(blob);
       
-      // Show in Modal with Image component (same as ApplicationReviewDetailPage)
       Modal.info({
         title: `Document Preview: ${doc.title || doc.type}`,
         width: 800,
@@ -245,11 +198,9 @@ const VisaStatusPage: React.FC = () => {
           </div>
         ),
         onOk: () => {
-          // Cleanup URL when modal is closed
           URL.revokeObjectURL(documentUrl);
         },
         onCancel: () => {
-          // Cleanup URL when modal is closed
           URL.revokeObjectURL(documentUrl);
         },
       });
@@ -258,22 +209,16 @@ const VisaStatusPage: React.FC = () => {
     }
   };
 
-  /**
-   * Custom upload handler
-   */
   const createUploadProps = (slot: DocumentSlot): UploadProps => ({
     beforeUpload: (file) => {
       handleFileUpload(slot, file);
-      return false; // Prevent automatic upload
+      return false;
     },
     showUploadList: false,
     disabled: !slot.enabled || uploading === slot.type,
     accept: '.pdf,.jpg,.jpeg,.png',
   });
 
-  /**
-   * Render document upload section
-   */
   const renderDocumentSection = (slot: DocumentSlot) => (
     <Card
       key={slot.type}
@@ -377,7 +322,6 @@ const VisaStatusPage: React.FC = () => {
   return (
     <PageContainer title="Visa Status Management">
       <Space direction="vertical" size="large" style={{ width: '100%' }}>
-        {/* Application Status Card */}
         <Card title="Application Status" extra={<FileTextOutlined />}>
           <Space direction="vertical" style={{ width: '100%' }}>
             <Space>
@@ -395,7 +339,6 @@ const VisaStatusPage: React.FC = () => {
           </Space>
         </Card>
 
-        {/* Instructions */}
         <Alert
           message="Document Upload Instructions"
           description="Upload your visa documents in the order shown below. Only enabled sections can be uploaded based on your current application status."
@@ -404,7 +347,6 @@ const VisaStatusPage: React.FC = () => {
           closable
         />
 
-        {/* Document Upload Sections */}
         <Card title="Required Documents">
           {documentSlots.map(renderDocumentSection)}
         </Card>

@@ -1,15 +1,3 @@
-/**
- * Application Review Detail Page
- * HR 审核 Onboarding 申请的详情页
- * 
- * Features (HR Section 5.b):
- * - 显示完整的 Onboarding 表单（只读）
- * - 显示所有上传的文档
- * - 允许 HR 对每个文档添加评论
- * - 提供 Approve 和 Reject 按钮
- * - Reject 时必须填写全局 Comment
- */
-
 import { useState, useEffect } from 'react';
 import { 
   Card, 
@@ -39,9 +27,6 @@ import { useAntdMessage } from '../../../hooks/useAntdMessage';
 
 const { TextArea } = Input;
 
-/**
- * 文档评论组件
- */
 interface DocumentCommentProps {
   documentType: string;
   documentUrl?: string;
@@ -123,9 +108,6 @@ const DocumentComment: React.FC<DocumentCommentProps> = ({
   );
 };
 
-/**
- * ApplicationReviewDetailPage Component
- */
 const ApplicationReviewDetailPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
@@ -138,7 +120,6 @@ const ApplicationReviewDetailPage: React.FC = () => {
   const [application, setApplication] = useState<Application | null>(null);
   const [employee, setEmployee] = useState<Employee | null>(null);
   
-  // Reject Modal 状态
   const [rejectModalVisible, setRejectModalVisible] = useState(false);
   const [rejectReason, setRejectReason] = useState('');
 
@@ -148,9 +129,6 @@ const ApplicationReviewDetailPage: React.FC = () => {
     }
   }, [id]);
 
-  /**
-   * 获取申请详情
-   */
   const fetchApplicationDetail = async () => {
     if (!id) return;
     
@@ -159,12 +137,8 @@ const ApplicationReviewDetailPage: React.FC = () => {
       const appData = await getApplicationById(parseInt(id));
       setApplication(appData);
       
-      // 获取员工完整信息
       const empData = await getEmployeeById(appData.employeeId);
       setEmployee(empData);
-      
-      // Note: Document management is now separate from application
-      // Documents should be fetched using getDocumentsByApplicationId if needed
     } catch (error: any) {
       messageApi.error(error.message || 'Failed to load application details');
     } finally {
@@ -172,9 +146,6 @@ const ApplicationReviewDetailPage: React.FC = () => {
     }
   };
 
-  /**
-   * 批准申请
-   */
   const handleApprove = () => {
     Modal.confirm({
       title: 'Approve Application',
@@ -192,7 +163,6 @@ const ApplicationReviewDetailPage: React.FC = () => {
           
         messageApi.success('Application approved successfully');
           
-          // 返回列表页
           navigate('/hr/hiring');
         } catch (error: any) {
         messageApi.error(error.message || 'Failed to approve application');
@@ -203,16 +173,10 @@ const ApplicationReviewDetailPage: React.FC = () => {
     });
   };
 
-  /**
-   * 拒绝申请
-   */
   const handleReject = () => {
     setRejectModalVisible(true);
   };
 
-  /**
-   * 确认拒绝
-   */
   const handleConfirmReject = async () => {
     if (!rejectReason.trim()) {
       messageApi.error('Please provide a reason for rejection');
@@ -284,7 +248,6 @@ const ApplicationReviewDetailPage: React.FC = () => {
         </Button>
       </Space>
       <Space direction="vertical" size="large" style={{ width: '100%' }}>
-        {/* 申请基本信息 */}
         <Card title="Application Information">
           <Descriptions column={2} bordered>
             <Descriptions.Item label="Application ID">{application.id}</Descriptions.Item>
@@ -302,7 +265,6 @@ const ApplicationReviewDetailPage: React.FC = () => {
           </Descriptions>
         </Card>
 
-        {/* 个人信息部分 (只读) */}
         <Card title="Personal Information" extra={<Tag color="blue">Read-Only</Tag>}>
           <Descriptions column={2} bordered>
             <Descriptions.Item label="Legal Name">
@@ -324,7 +286,6 @@ const ApplicationReviewDetailPage: React.FC = () => {
           </Descriptions>
         </Card>
 
-        {/* 地址信息 */}
         <Card title="Address Information" extra={<Tag color="blue">Read-Only</Tag>}>
           <Descriptions column={1} bordered>
             {employee.address?.map((addr, idx) => (
@@ -417,7 +378,6 @@ const ApplicationReviewDetailPage: React.FC = () => {
           </Descriptions>
         </Card>
 
-        {/* 全局评论 */}
         {application.comment && (
           <Card title="Previous Comments">
             <Alert

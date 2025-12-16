@@ -1,7 +1,3 @@
-/**
- * Auth Slice
- * 处理用户认证状态管理
- */
 
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import type { PayloadAction } from '@reduxjs/toolkit';
@@ -24,7 +20,6 @@ const derivePrimaryRole = (roles: RoleType[], fallback: RoleType | null): RoleTy
   return fallback;
 };
 
-// ==================== State Interface ====================
 
 interface AuthState {
   /** 当前登录用户信息 (User ID 为 number) */
@@ -51,7 +46,6 @@ interface AuthState {
   error: string | null;
 }
 
-// ==================== Initial State ====================
 
 const initialRoles = parseStoredRoles();
 const storedRole = (localStorage.getItem('role') as RoleType | null) ?? null;
@@ -72,11 +66,7 @@ const initialState: AuthState = {
   error: null,
 };
 
-// ==================== Async Thunks ====================
 
-/**
- * 用户登录
- */
 export const login = createAsyncThunk<
   LoginResponse,
   LoginRequest,
@@ -93,7 +83,6 @@ export const login = createAsyncThunk<
         role: normalizedRole,
       };
 
-      // 持久化 token 和 role
       localStorage.setItem('token', response.token);
       localStorage.setItem('tokenType', response.tokenType);
       localStorage.setItem('tokenExpiresAt', response.expiresAt);
@@ -117,9 +106,6 @@ export const login = createAsyncThunk<
   }
 );
 
-/**
- * 用户注册
- */
 export const register = createAsyncThunk<
   User,
   RegisterRequest,
@@ -136,9 +122,6 @@ export const register = createAsyncThunk<
   }
 );
 
-/**
- * 获取当前用户信息
- */
 export const fetchUserProfile = createAsyncThunk<
   User,
   void,
@@ -155,9 +138,6 @@ export const fetchUserProfile = createAsyncThunk<
   }
 );
 
-/**
- * 用户登出
- */
 export const logout = createAsyncThunk<
   void,
   void,
@@ -167,7 +147,6 @@ export const logout = createAsyncThunk<
   async (_, { rejectWithValue }) => {
     try {
       await logoutApi();
-      // 清除本地存储
       localStorage.removeItem('token');
       localStorage.removeItem('role');
       localStorage.removeItem('tokenType');
@@ -177,7 +156,6 @@ export const logout = createAsyncThunk<
       localStorage.removeItem('employeeId');
       localStorage.removeItem('user');
     } catch (error: any) {
-      // 即使 API 调用失败，也要清除本地状态
       localStorage.removeItem('token');
       localStorage.removeItem('role');
       localStorage.removeItem('tokenType');
@@ -191,21 +169,14 @@ export const logout = createAsyncThunk<
   }
 );
 
-// ==================== Slice ====================
 
 const authSlice = createSlice({
   name: 'auth',
   initialState,
   reducers: {
-    /**
-     * 清除错误信息
-     */
     clearError: (state) => {
       state.error = null;
     },
-    /**
-     * 手动设置认证状态 (用于页面刷新时从 localStorage 恢复)
-     */
     restoreAuth: (state) => {
       const token = localStorage.getItem('token');
       const role = localStorage.getItem('role') as RoleType | null;
@@ -343,7 +314,6 @@ const authSlice = createSlice({
   },
 });
 
-// ==================== Selectors ====================
 
 export const selectUser = (state: { auth: AuthState }) => state.auth.user;
 export const selectToken = (state: { auth: AuthState }) => state.auth.token;
@@ -354,7 +324,6 @@ export const selectIsAuthenticated = (state: { auth: AuthState }) => state.auth.
 export const selectAuthLoading = (state: { auth: AuthState }) => state.auth.loading;
 export const selectAuthError = (state: { auth: AuthState }) => state.auth.error;
 
-// ==================== Exports ====================
 
 export const { clearError, restoreAuth } = authSlice.actions;
 export default authSlice.reducer;

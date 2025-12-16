@@ -1,14 +1,3 @@
-/**
- * NameSection - 姓名与基本信息板块组件
- * 
- * Section 6(b).i: Name (Legal Full Name)
- * 
- * 基础字段：
- * - firstName, lastName, middleName, preferredName
- * - Gender, Date of Birth
- * - SSN (masked display: ***-**-1234)
- */
-
 import React, { useEffect } from 'react';
 import { Form, Input, Row, Col, DatePicker, Select, Descriptions } from 'antd';
 import type { FormInstance } from 'antd';
@@ -24,9 +13,6 @@ interface NameSectionProps {
   isEditing: boolean;
 }
 
-/**
- * NameSection Component
- */
 const NameSection: React.FC<NameSectionProps> = ({ employee, form, isEditing }) => {
   useEffect(() => {
     if (isEditing && employee) {
@@ -41,9 +27,6 @@ const NameSection: React.FC<NameSectionProps> = ({ employee, form, isEditing }) 
     }
   }, [isEditing, employee, form]);
 
-  /**
-   * Mask SSN for display: ***-**-1234
-   */
   const maskSSN = (ssn?: string): string => {
     if (!ssn) return 'N/A';
     const cleaned = ssn.replace(/\D/g, '');
@@ -51,9 +34,6 @@ const NameSection: React.FC<NameSectionProps> = ({ employee, form, isEditing }) 
     return `***-**-${cleaned.slice(-4)}`;
   };
 
-  /**
-   * 渲染只读视图 (Dashboard Style: 紧凑 Key-Value 对齐)
-   */
   const renderReadView = () => {
     if (!employee) return null;
 
@@ -80,9 +60,6 @@ const NameSection: React.FC<NameSectionProps> = ({ employee, form, isEditing }) 
     );
   };
 
-  /**
-   * 渲染编辑表单
-   */
   const renderEditForm = () => {
     return (
       <Form form={form} layout="vertical">
@@ -146,7 +123,6 @@ const NameSection: React.FC<NameSectionProps> = ({ employee, form, isEditing }) 
           </Col>
         </Row>
 
-        {/* SSN is not editable per requirement (Section 3.c.viii: SSN displayed but not editable) */}
         <Form.Item label="SSN">
           <Input disabled value={maskSSN(employee?.SSN)} />
         </Form.Item>

@@ -1,8 +1,3 @@
-/**
- * Login Page
- * 用户登录页面，支持根据角色和 onboarding 状态进行智能跳转
- */
-
 import { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Form, Input, Button, Card, Typography } from 'antd';
@@ -16,14 +11,6 @@ import { setApplicationContext } from '../../../store/slices/onboardingSlice';
 
 const { Title, Text } = Typography;
 
-/**
- * LoginPage Component
- * 
- * 跳转逻辑 (按 frontend_requirement.md 4.1 定义):
- * - HR → /hr/home
- * - Employee (Unapproved / No Application) → /onboarding/form
- * - Employee (Approved) → /employee/home
- */
 const LoginPage: React.FC = () => {
   const [form] = Form.useForm();
   const navigate = useNavigate();
@@ -37,15 +24,12 @@ const LoginPage: React.FC = () => {
   const loading = useAppSelector(selectAuthLoading);
   const user = useAppSelector(selectUser);
 
-  // 登录成功后根据角色和 onboarding 状态跳转
   useEffect(() => {
     const checkOnboardingStatus = async () => {
-      // Only redirect if user just logged in, not if already authenticated on page load
       if (!isAuthenticated || !user || !justLoggedIn) return;
 
       const redirect = searchParams.get('redirect');
       
-      // 如果有 redirect 参数，优先跳转
       if (redirect) {
         navigate(redirect, { replace: true });
         return;
@@ -53,29 +37,22 @@ const LoginPage: React.FC = () => {
 
       const role = localStorage.getItem('role');
       
-      // HR 用户直接跳转
       if (role === 'HR') {
         navigate('/hr/home', { replace: true });
         return;
       }
 
-      // Employee 用户需要检查 onboarding 状态
       if (role === 'Employee') {
         try {
           setCheckingOnboarding(true);
           
-          // 1. 先通过 User.id 获取 Employee 记录（获取 MongoDB ObjectId）
-          console.log('[Login] User ID:', user.id);
           const employee = await getEmployeeByUserId(String(user.id));
-          console.log('[Login] Employee ID:', employee.id);
 
           if (!employee.id) {
-            // 没有 Employee 记录，跳转到 Onboarding 表单
             navigate('/onboarding/form', { replace: true });
             return;
           }
           
-          // 2. 通过 Employee.id 查询 Application
           const applications = await getApplicationsByEmployeeId(employee.id);
 
           if (!applications || applications.length === 0) {
@@ -103,11 +80,9 @@ const LoginPage: React.FC = () => {
               navigate('/onboarding/submit-result', { replace: true });
               break;
             default:
-              // Includes "Open" and other pending-like states
               navigate('/onboarding/form', { replace: true });
           }
         } catch (error) {
-          // 查询失败或没有 Employee 记录，静默跳转到 Onboarding 表单
           dispatch(setApplicationContext({ id: null, status: null }));
           navigate('/onboarding/form', { replace: true });
         } finally {
@@ -119,18 +94,13 @@ const LoginPage: React.FC = () => {
     checkOnboardingStatus();
   }, [isAuthenticated, user, navigate, searchParams, justLoggedIn, dispatch, messageApi]);
 
-  /**
-   * 处理登录表单提交
-   */
   const handleLogin = async (values: LoginRequest) => {
     try {
       const resultAction = await dispatch(login(values));
       
       if (login.fulfilled.match(resultAction)) {
-        console.log('[Login] JWT Token:', resultAction.payload.token);
         messageApi.success('Login successful');
-        setJustLoggedIn(true); // Mark that user just logged in
-        // 跳转逻辑由 useEffect 处理
+        setJustLoggedIn(true);
       } else if (login.rejected.match(resultAction)) {
         messageApi.error(resultAction.payload || 'Login failed');
       }
@@ -139,7 +109,6 @@ const LoginPage: React.FC = () => {
     }
   };
 
-  // 显示加载状态（检查 onboarding 状态时）
   if (checkingOnboarding) {
     return (
       <div style={{

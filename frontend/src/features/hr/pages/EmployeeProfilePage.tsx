@@ -1,13 +1,3 @@
-/**
- * Employee Profile Page
- * HR 员工档案列表页面
- * 
- * Features:
- * - 搜索功能（按姓名）
- * - 员工列表表格
- * - 点击行跳转到员工详情
- */
-
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Table, Input, Space, Button, Card, Typography } from 'antd';
@@ -22,9 +12,6 @@ import { useAntdMessage } from '../../../hooks/useAntdMessage';
 const { Search } = Input;
 const { Text } = Typography;
 
-/**
- * EmployeeProfilePage Component
- */
 const EmployeeProfilePage: React.FC = () => {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
@@ -33,7 +20,6 @@ const EmployeeProfilePage: React.FC = () => {
   const [searchText, setSearchText] = useState('');
   const messageApi = useAntdMessage();
 
-  // 获取所有员工数据
   useEffect(() => {
     fetchEmployees();
   }, []);
@@ -52,9 +38,6 @@ const EmployeeProfilePage: React.FC = () => {
     }
   };
 
-  /**
-   * 搜索功能 - 按 First Name / Last Name / Preferred Name 搜索
-   */
   const handleSearch = (value: string) => {
     setSearchText(value);
     
@@ -77,7 +60,6 @@ const EmployeeProfilePage: React.FC = () => {
 
     setFilteredApplications(filtered);
 
-    // 处理搜索结果状态提示
     if (filtered.length === 0) {
       messageApi.info('No records found');
     } else if (filtered.length === 1) {
@@ -87,9 +69,6 @@ const EmployeeProfilePage: React.FC = () => {
     }
   };
 
-  /**
-   * 跳转到 Application Review Summary
-   */
   const handleViewDetails = (record: ApplicationWithEmployeeInfo) => {
     const employeeId = record.employee?.id || record.employeeId;
     if (employeeId) {
@@ -99,9 +78,6 @@ const EmployeeProfilePage: React.FC = () => {
     }
   };
 
-  /**
-   * 表格列定义
-   */
   const columns: ColumnsType<ApplicationWithEmployeeInfo> = [
     {
       title: 'Name',
@@ -160,7 +136,6 @@ const EmployeeProfilePage: React.FC = () => {
 
   return (
     <PageContainer title="Employee Profiles" loading={loading}>
-      {/* Section HR.3.a.i - Summary with <10/100> format */}
       <Card style={{ marginBottom: 16, background: '#fafafa' }}>
         <Space direction="vertical" size="small" style={{ width: '100%' }}>
           <Text strong style={{ fontSize: 16 }}>Employee Summary</Text>
@@ -173,7 +148,6 @@ const EmployeeProfilePage: React.FC = () => {
         </Space>
       </Card>
 
-      {/* Section HR.3.a.ii - Search Bar (First OR Last OR Preferred Name) */}
       <Space style={{ marginBottom: 16 }}>
         <Search
           placeholder="Search by name (First / Last / Preferred)"
@@ -194,7 +168,6 @@ const EmployeeProfilePage: React.FC = () => {
         </Button>
       </Space>
 
-      {/* 员工列表表格 */}
       <Table
         columns={columns}
         dataSource={filteredApplications}

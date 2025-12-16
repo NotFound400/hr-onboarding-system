@@ -1,13 +1,3 @@
-/**
- * Housing Page
- * 员工房屋信息页面
- * 
- * Features:
- * - 展示房屋地址、设施信息
- * - 展示室友列表
- * - "Report Issue" 按钮，点击跳转到报修页
- */
-
 import { useState, useEffect } from 'react';
 import { Card, Descriptions, List, Avatar, Button, Empty, Space, Tag, Alert } from 'antd';
 import { HomeOutlined, UserOutlined, ToolOutlined, PhoneOutlined } from '@ant-design/icons';
@@ -19,30 +9,20 @@ import { selectUser } from '../../../store/slices/authSlice';
 import type { HouseDetail, HouseEmployeeView } from '../../../types';
 import { useAntdMessage } from '../../../hooks/useAntdMessage';
 
-/**
- * HousingPage Component
- */
 const HousingPage: React.FC = () => {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [houseInfo, setHouseInfo] = useState<HouseEmployeeView | null>(null);
   const messageApi = useAntdMessage();
 
-  // 获取当前登录用户
   const currentUser = useAppSelector(selectUser);
   const assignedEmployeeId = useAppSelector((state) => state.auth.employeeId);
   const assignedHouseId = useAppSelector((state) => state.auth.houseId);
-  useEffect(() => {
-    console.log('[HousingPage] Current Redux houseId:', assignedHouseId);
-  }, [assignedHouseId]);
 
   useEffect(() => {
     fetchHousingInfo();
   }, [currentUser?.id, assignedHouseId]);
 
-  /**
-   * 获取房屋信息
-   */
   const fetchHousingInfo = async () => {
     if (!currentUser) return;
 
@@ -51,8 +31,6 @@ const HousingPage: React.FC = () => {
         setHouseInfo(null);
         return;
       }
-
-      console.log('[HousingPage] Assigned house ID:', assignedHouseId);
 
       setLoading(true);
       const detail: HouseDetail = await getHouseById(Number(assignedHouseId));
@@ -70,18 +48,12 @@ const HousingPage: React.FC = () => {
     }
   };
 
-  /**
-   * 跳转到报修页面
-   */
   const handleReportIssue = () => {
     if (houseInfo) {
       navigate(`/employee/facility-report?houseId=${houseInfo.id}`);
     }
   };
 
-  /**
-   * 渲染无房屋分配提示
-   */
   const renderNoHousingAssigned = () => (
     <Empty
       image={<HomeOutlined style={{ fontSize: 80, color: '#999' }} />}
@@ -100,9 +72,6 @@ const HousingPage: React.FC = () => {
     </Empty>
   );
 
-  /**
-   * 渲染房屋信息
-   */
   const renderHousingContent = () => {
     if (!houseInfo) return null;
 
@@ -121,14 +90,12 @@ const HousingPage: React.FC = () => {
       return candidateIds.includes(roommateId);
     });
     
-    // 过滤出室友（排除当前用户）
     const roommates = houseInfo.roommates.filter(
       (roommate) => roommate !== currentResident
     );
 
     return (
       <Space direction="vertical" size="large" style={{ width: '100%' }}>
-        {/* 房屋基本信息 */}
         <Card
           title="Housing Details"
           extra={
@@ -154,7 +121,6 @@ const HousingPage: React.FC = () => {
           </Descriptions>
         </Card>
 
-        {/* 当前用户信息 */}
         {currentResident && (
           <Card title="Your Information">
             <Descriptions column={2} bordered>
@@ -164,7 +130,6 @@ const HousingPage: React.FC = () => {
           </Card>
         )}
 
-        {/* 室友列表 */}
         <Card 
           title={`Roommates (${roommates.length})`}
           extra={<UserOutlined style={{ fontSize: 20 }} />}
@@ -202,7 +167,6 @@ const HousingPage: React.FC = () => {
           )}
         </Card>
 
-        {/* 报修提示 */}
         <Card>
           <Alert
             message="Need to Report a Facility Issue?"

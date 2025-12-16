@@ -10,17 +10,6 @@ import type {
   RegistrationTokenHouseContext,
 } from '../../../types';
 
-/**
- * 注册页面
- * 入口: /register?token=...
- * 
- * 流程:
- * 1. 从 URL 获取 token 参数
- * 2. 调用 validateToken 验证 token 有效性
- * 3. 验证通过后显示 Email，让用户输入密码
- * 4. 提交注册信息
- * 5. 成功后跳转到登录页
- */
 export const RegistrationPage: React.FC = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
@@ -49,9 +38,6 @@ export const RegistrationPage: React.FC = () => {
     validateRegistrationToken(token);
   }, [token]);
 
-  /**
-   * 验证 Token
-   */
   const validateRegistrationToken = async (tokenValue: string) => {
     try {
       setValidating(true);
@@ -74,17 +60,12 @@ export const RegistrationPage: React.FC = () => {
       setAssignedHouseId(null);
       setHouseContext(null);
       setErrorMessage(error.message || 'Failed to validate token. Please try again.');
-      console.error('Token validation error:', error);
     } finally {
       setLoading(false);
       setValidating(false);
     }
   };
 
-  /**
-   * 提交注册表单
-   * Section 1: "Users must provide a password, unique username, and unique email"
-   */
   const handleSubmit = async (values: any) => {
     if (!token) {
       messageApi.error('Token is missing');
@@ -109,7 +90,6 @@ export const RegistrationPage: React.FC = () => {
         localStorage.removeItem(key)
       );
       
-      // 延迟跳转，让用户看到成功提示
       setTimeout(() => {
         navigate('/login', { state: { registeredEmail: email } });
       }, 1500);
@@ -120,15 +100,11 @@ export const RegistrationPage: React.FC = () => {
       setAssignedHouseAddress(null);
       setHouseContext(null);
       setErrorMessage(error.message || 'Registration failed. Please try again.');
-      console.error('Registration error:', error);
     } finally {
       setSubmitting(false);
     }
   };
 
-  /**
-   * 渲染加载状态
-   */
   if (loading || validating) {
     return (
       <div style={{
@@ -146,9 +122,6 @@ export const RegistrationPage: React.FC = () => {
     );
   }
 
-  /**
-   * 渲染错误状态
-   */
   if (!tokenValid || errorMessage) {
     return (
       <div style={{
@@ -174,9 +147,6 @@ export const RegistrationPage: React.FC = () => {
     );
   }
 
-  /**
-   * 渲染注册表单
-   */
   return (
     <div style={{
       height: '100vh',
@@ -221,7 +191,6 @@ export const RegistrationPage: React.FC = () => {
           onFinish={handleSubmit}
           autoComplete="off"
         >
-          {/* Email (只读) */}
           <Form.Item
             label="Email"
             name="email"
@@ -235,7 +204,6 @@ export const RegistrationPage: React.FC = () => {
             />
           </Form.Item>
 
-          {/* Username - Section 1: "unique username" required */}
           <Form.Item
             label="Username"
             name="username"
@@ -255,7 +223,6 @@ export const RegistrationPage: React.FC = () => {
             />
           </Form.Item>
 
-          {/* 密码 */}
           <Form.Item
             label="Password"
             name="password"
@@ -272,7 +239,6 @@ export const RegistrationPage: React.FC = () => {
             />
           </Form.Item>
 
-          {/* 确认密码 */}
           <Form.Item
             label="Confirm Password"
             name="confirmPassword"
@@ -297,7 +263,6 @@ export const RegistrationPage: React.FC = () => {
             />
           </Form.Item>
 
-          {/* 提交按钮 */}
           <Form.Item style={{ marginBottom: 0 }}>
             <Button
               type="primary"

@@ -1,13 +1,7 @@
-/**
- * Application Service Types
- * 根据最新后端 API 文档更新 (api_application.md)
- * 负责管理 Onboarding 和 OPT 申请的状态流转和文档管理
- */
 
 import { ApplicationStatus, ApplicationType } from './enums';
 import type { Employee } from './employee';
 
-// Re-export request types
 export type { 
   CreateApplicationRequest, 
   UpdateApplicationRequest,
@@ -17,7 +11,6 @@ export type {
   UpdateDocumentRequest
 } from './request';
 
-// ==================== Application Flow Types ====================
 
 /** 
  * 申请工作流 (对应 API 返回的 Application 对象)
@@ -40,7 +33,6 @@ export interface Application {
   applicationType: ApplicationType;
 }
 
-/** 申请列表项 (用于 HR 查看所有申请) */
 export interface ApplicationListItem {
   id: number;
   employeeId: string;
@@ -49,14 +41,12 @@ export interface ApplicationListItem {
   applicationType: ApplicationType;
 }
 
-/** Application combined with employee info (frontend convenience) */
 export interface ApplicationWithEmployeeInfo extends Application {
   employee?: Employee;
   employeeName?: string;
   employeeEmail?: string;
 }
 
-// ==================== Document Management Types ====================
 
 /** 
  * 文档对象 (对应 API 返回的 Document)
@@ -79,7 +69,6 @@ export interface ApplicationDocument {
   applicationId: number;
 }
 
-/** 文档上传元数据 (用于上传接口) */
 export interface DocumentMetadata {
   type: string;
   title: string;
@@ -87,7 +76,6 @@ export interface DocumentMetadata {
   applicationId: number;
 }
 
-// ==================== Legacy Types (保持兼容性) ====================
 
 /** 
  * @deprecated 使用 Application 替代
@@ -101,7 +89,6 @@ export type ApplicationWorkFlow = Application;
  */
 export type DigitalDocument = ApplicationDocument;
 
-/** 申请详情 (包含员工和文档信息) */
 export interface ApplicationDetail extends Application {
   /** 员工姓名 (前端组装) */
   employeeName?: string;

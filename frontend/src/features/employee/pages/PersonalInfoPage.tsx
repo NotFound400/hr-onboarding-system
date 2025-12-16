@@ -1,14 +1,3 @@
-/**
- * Personal Information Page (Refactored)
- * 员工个人信息页面 - 组件化重构版
- * 
- * Architecture:
- * - 每个板块独立组件 (Name, Address, Contact, EmergencyContact, Employment)
- * - 使用 EditableSectionCard 统一封装
- * - Per-section editing 模式 (Section 6(c))
- * - Modal.confirm on Cancel (Section 6(c))
- */
-
 import { useState, useEffect } from 'react';
 import { Card, Avatar, Space, Form, Row, Col } from 'antd';
 import {
@@ -26,7 +15,6 @@ import { selectUser } from '../../../store/slices/authSlice';
 import type { Employee, UpdateEmployeeRequest } from '../../../types';
 import { useAntdMessage } from '../../../hooks/useAntdMessage';
 
-// Import all section components
 import EditableSectionCard from '../components/personal-info/EditableSectionCard';
 import NameSection, { extractNameData } from '../components/personal-info/NameSection';
 import AddressSection, { extractAddressData } from '../components/personal-info/AddressSection';
@@ -39,16 +27,9 @@ import EmploymentSection, {
 } from '../components/personal-info/EmploymentSection';
 import { ContactType } from '../../../types/enums';
 
-/**
- * Section 板块标识符
- */
 type SectionType = 'name' | 'address' | 'contact' | 'emergencyContact' | 'employment';
 
-/**
- * PersonalInfoPage Component
- */
 const PersonalInfoPage: React.FC = () => {
-  // ========== State Management ==========
   const [nameForm] = Form.useForm();
   const [addressForm] = Form.useForm();
   const [contactForm] = Form.useForm();
@@ -59,30 +40,23 @@ const PersonalInfoPage: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState<SectionType | null>(null);
 
-  // Section 6(c): "Each section should have an Edit button"
-  // 每个板块独立管理编辑状态
+
   const [editingSection, setEditingSection] = useState<SectionType | null>(null);
 
   const [employee, setEmployee] = useState<Employee | null>(null);
   const [currentEmployeeId, setCurrentEmployeeId] = useState<string>('');
 
-  // 获取当前登录用户
   const currentUser = useAppSelector(selectUser);
 
-  // ========== Data Fetching ==========
   useEffect(() => {
     fetchEmployeeInfo();
   }, []);
 
-  /**
-   * 获取员工信息
-   */
   const fetchEmployeeInfo = async () => {
     if (!currentUser) return;
 
     try {
       setLoading(true);
-      // 先通过 User ID 获取 Employee 记录
       const empData = await getEmployeeByUserId(String(currentUser.id));
       setCurrentEmployeeId(empData.id);
 
@@ -95,20 +69,12 @@ const PersonalInfoPage: React.FC = () => {
     }
   };
 
-  // ========== Section Actions ==========
-  /**
-   * 开始编辑某个板块
-   */
   const handleEdit = (section: SectionType) => {
     setEditingSection(section);
   };
 
-  /**
-   * 取消编辑 - Modal.confirm 已在 EditableSectionCard 中处理
-   */
   const handleCancel = (section: SectionType) => {
     setEditingSection(null);
-    // Reset form to original values
     switch (section) {
       case 'name':
         nameForm.resetFields();
@@ -128,9 +94,6 @@ const PersonalInfoPage: React.FC = () => {
     }
   };
 
-  /**
-   * 保存板块数据
-   */
   const handleSave = async (section: SectionType) => {
     if (!employee) return;
 
@@ -139,7 +102,6 @@ const PersonalInfoPage: React.FC = () => {
       let formValues: any;
       let updatePayload: Partial<UpdateEmployeeRequest> = {};
 
-      // Get form values and extract data based on section
       switch (section) {
         case 'name':
           formValues = await nameForm.validateFields();
@@ -161,7 +123,6 @@ const PersonalInfoPage: React.FC = () => {
         case 'emergencyContact':
           formValues = await emergencyContactForm.validateFields();
           const emergencyContacts = extractEmergencyContactData(formValues);
-          // Merge with existing non-emergency contacts
           const existingContacts = employee.contact?.filter(
             c => c.type !== ContactType.EMERGENCY
           ) || [];
@@ -176,7 +137,6 @@ const PersonalInfoPage: React.FC = () => {
           break;
       }
 
-      // Call API to update
       if (!currentEmployeeId) {
         messageApi.error('Employee ID is missing. Please refresh and try again.');
         return;
@@ -194,16 +154,9 @@ const PersonalInfoPage: React.FC = () => {
           updatePayload[key as keyof UpdateEmployeeRequest] !== employee[key as keyof Employee]
       );
 
-      console.log('[PersonalInfo] Submitting update payload:', {
-        id: currentEmployeeId,
-        changedFields,
-        payload: payloadWithIds,
-      });
-
       await updateEmployee(currentEmployeeId, payloadWithIds, { changedFields });
       messageApi.success('Information updated successfully');
 
-      // Refresh data and exit edit mode
       await fetchEmployeeInfo();
       setEditingSection(null);
     } catch (error: any) {
@@ -217,7 +170,6 @@ const PersonalInfoPage: React.FC = () => {
     }
   };
 
-  // ========== Avatar Section ==========
   const renderAvatarSection = () => {
     if (!employee) return null;
 
@@ -241,16 +193,12 @@ const PersonalInfoPage: React.FC = () => {
     );
   };
 
-  // ========== Render (Dashboard 三列布局) ==========
   return (
     <PageContainer title="Personal Information" loading={loading}>
       {renderAvatarSection()}
 
-      {/* Dashboard Style: 三列网格布局 */}
       <Row gutter={[16, 16]}>
-        {/* 左列: Name + Contact */}
         <Col xs={24} sm={24} md={8}>
-          {/* Name Section (蓝色) */}
           <EditableSectionCard
             title="Name & Basic Info"
             headerColor="#1890ff"
@@ -265,7 +213,6 @@ const PersonalInfoPage: React.FC = () => {
             <NameSection employee={employee} form={nameForm} isEditing={true} />
           </EditableSectionCard>
 
-          {/* Contact Section (默认灰色) */}
           <EditableSectionCard
             title="Contact Information"
             headerColor="#d9d9d9"
@@ -281,9 +228,7 @@ const PersonalInfoPage: React.FC = () => {
           </EditableSectionCard>
         </Col>
 
-        {/* 中列: Employment + Address */}
         <Col xs={24} sm={24} md={8}>
-          {/* Employment Section (绿色 - 对应截图的 Status/Employment) */}
           <EditableSectionCard
             title="Employment"
             headerColor="#52c41a"
@@ -300,7 +245,6 @@ const PersonalInfoPage: React.FC = () => {
             <EmploymentSection employee={employee} form={employmentForm} isEditing={true} />
           </EditableSectionCard>
 
-          {/* Address Section (默认灰色) */}
           <EditableSectionCard
             title="Address"
             headerColor="#d9d9d9"
@@ -316,9 +260,7 @@ const PersonalInfoPage: React.FC = () => {
           </EditableSectionCard>
         </Col>
 
-        {/* 右列: Emergency Contact */}
         <Col xs={24} sm={24} md={8}>
-          {/* Emergency Contact Section (橙色/红色) */}
           <EditableSectionCard
             title="Emergency Contacts"
             headerColor="#ff4d4f"

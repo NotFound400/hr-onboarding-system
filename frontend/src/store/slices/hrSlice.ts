@@ -1,7 +1,3 @@
-/**
- * HR Slice
- * 处理 HR 管理功能：员工列表、申请审批等
- */
 
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import type { PayloadAction } from '@reduxjs/toolkit';
@@ -9,7 +5,6 @@ import type { Employee, Application, ApproveApplicationRequest, RejectApplicatio
 import { getAllEmployees } from '../../services/api';
 import { getOngoingApplications, approveApplication, rejectApplication } from '../../services/api';
 
-// ==================== State Interface ====================
 
 interface HRState {
   /** 员工列表 (Employee ID 为 string - MongoDB) */
@@ -30,7 +25,6 @@ interface HRState {
   error: string | null;
 }
 
-// ==================== Initial State ====================
 
 const initialState: HRState = {
   employees: [],
@@ -43,11 +37,7 @@ const initialState: HRState = {
   error: null,
 };
 
-// ==================== Async Thunks ====================
 
-/**
- * 获取所有员工列表
- */
 export const fetchAllEmployees = createAsyncThunk<
   Employee[],
   void,
@@ -64,9 +54,6 @@ export const fetchAllEmployees = createAsyncThunk<
   }
 );
 
-/**
- * 获取所有申请列表
- */
 export const fetchAllApplications = createAsyncThunk<
   Application[],
   void,
@@ -83,9 +70,6 @@ export const fetchAllApplications = createAsyncThunk<
   }
 );
 
-/**
- * HR 批准申请
- */
 export const approveApplicationThunk = createAsyncThunk<
   { status: string; comment: string },
   { applicationId: number; data: ApproveApplicationRequest },
@@ -102,9 +86,6 @@ export const approveApplicationThunk = createAsyncThunk<
   }
 );
 
-/**
- * HR 拒绝申请
- */
 export const rejectApplicationThunk = createAsyncThunk<
   { status: string; comment: string },
   { applicationId: number; data: RejectApplicationRequest },
@@ -121,33 +102,20 @@ export const rejectApplicationThunk = createAsyncThunk<
   }
 );
 
-// ==================== Slice ====================
 
 const hrSlice = createSlice({
   name: 'hr',
   initialState,
   reducers: {
-    /**
-     * 设置选中的员工
-     */
     setSelectedEmployee: (state, action: PayloadAction<Employee | null>) => {
       state.selectedEmployee = action.payload;
     },
-    /**
-     * 设置选中的申请
-     */
     setSelectedApplication: (state, action: PayloadAction<Application | null>) => {
       state.selectedApplication = action.payload;
     },
-    /**
-     * 清除错误信息
-     */
     clearError: (state) => {
       state.error = null;
     },
-    /**
-     * 重置 HR 状态
-     */
     resetHRState: (state) => {
       state.employees = [];
       state.selectedEmployee = null;
@@ -224,7 +192,6 @@ const hrSlice = createSlice({
   },
 });
 
-// ==================== Selectors ====================
 
 export const selectEmployees = (state: { hr: HRState }) => state.hr.employees;
 export const selectSelectedEmployee = (state: { hr: HRState }) => state.hr.selectedEmployee;
@@ -235,7 +202,6 @@ export const selectApplicationsLoading = (state: { hr: HRState }) => state.hr.ap
 export const selectReviewLoading = (state: { hr: HRState }) => state.hr.reviewLoading;
 export const selectHRError = (state: { hr: HRState }) => state.hr.error;
 
-// ==================== Exports ====================
 
 export const {
   setSelectedEmployee,

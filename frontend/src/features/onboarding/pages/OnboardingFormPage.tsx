@@ -1,20 +1,3 @@
-/**
- * Onboarding Form Page
- * 严格按照 raw_project_requirement.md Section 3 实现
- * 
- * Section 3.c 字段清单:
- * i. First Name, Last Name, Middle Name, Preferred Name ✅
- * ii. Avatar (default picture if not uploaded) ✅
- * iii. Current Address ✅
- * iv. Cell Phone, Work Phone ✅
- * v. Email (pre-filled, not editable) ✅
- * vi. SSN, Date of Birth, Gender (Male, Female, Other, I Prefer Not to Say) ✅
- * vii. Citizenship flow (Citizen/Green Card OR visa types with document upload) ✅
- * viii. Driver License checkbox flow ✅
- * ix. Reference (ONE person): First/Last/Middle Name, Phone, Address, Email, Relationship ✅
- * x. Emergency Contact (at least one): First/Last/Middle Name, Phone, Email, Relationship ✅
- */
-
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
@@ -100,17 +83,6 @@ const validateSSN = (_: any, value: string) => {
   return Promise.resolve();
 };
 
-/**
- * OnboardingFormPage Component
- * 
- * 严格按照 raw_project_requirement.md Section 3 实现:
- * - 单页完整表单（不分步骤）
- * - Citizenship 条件分支逻辑 (Section 3.c.vii)
- * - Driver License 条件显示 (Section 3.c.viii)
- * - Reference (只允许一个人，包含 Address)
- * - Emergency Contact (至少一个，支持多个)
- * - 提交后跳转 /onboarding/submit-result (Section 3.d 更新)
- */
 const OnboardingFormPage: React.FC = () => {
   const [form] = Form.useForm();
   const navigate = useNavigate();
@@ -195,12 +167,6 @@ const OnboardingFormPage: React.FC = () => {
   };
 
   useEffect(() => {
-    if (applicationId) {
-      console.log('[Onboarding] Using applicationId:', applicationId);
-    }
-  }, [applicationId]);
-
-  useEffect(() => {
     if (hasDriverLicense !== 'Yes') {
       setDriverLicenseFiles([]);
       form.setFieldValue('driverLicenseCopy', []);
@@ -233,7 +199,6 @@ const OnboardingFormPage: React.FC = () => {
     };
   }, [eadPreviewUrl, driverLicensePreviewUrl]);
 
-  // 显示错误信息
   useEffect(() => {
     if (error) {
       messageApi.error(error);
@@ -281,14 +246,6 @@ const OnboardingFormPage: React.FC = () => {
     await Promise.all(uploads);
   };
 
-  /**
-   * 处理表单提交 - Tech Lead Fix
-   * 
-   * 关键修复点:
-   * 1. 不从 Redux state 读取数据，直接使用 form.validateFields() 返回的 values
-   * 2. 所有 DatePicker 返回的 dayjs 对象必须转换为字符串 (解决 Redux Non-serializable 错误)
-   * 3. 显式映射所有字段，避免 undefined 问题
-   */
   const handleSubmit = async () => {
     try {
       if (!applicationId) {
@@ -300,7 +257,6 @@ const OnboardingFormPage: React.FC = () => {
         return;
       }
 
-      // ✅ 直接从 validateFields() 获取值，不依赖 getFieldsValue()
       const values = await form.validateFields();
 
       const isCitizen = values.isCitizenOrPR === 'Yes';
@@ -309,40 +265,31 @@ const OnboardingFormPage: React.FC = () => {
       const formatDateTime = (input?: Dayjs) =>
         input ? dayjs(input).format('YYYY-MM-DD[T]HH:mm:ss') : '';
 
-      // ✅ 构建 OnboardingFormDTO - 所有日期对象立即转换为后端要求的 LocalDateTime 格式
       const onboardingData: OnboardingFormDTO = {
-        // Section 3.c.i - Name fields
         firstName: values.firstName,
         lastName: values.lastName,
         middleName: values.middleName || '',
         preferredName: values.preferredName || '',
         
-        // Section 3.c.ii - Avatar
         avatar: avatarFileList.length > 0 ? avatarFileList[0].url || '' : '',
         
-        // Section 3.c.iii - Current Address
         addressLine1: values.addressLine1,
         addressLine2: values.addressLine2 || '',
         city: values.city,
         state: values.state,
         zipCode: values.zipCode,
         
-        // Section 3.c.iv - Phone numbers
         cellPhone: values.cellPhone,
         workPhone: values.workPhone || '',
         
-        // Section 3.c.v - Email (pre-filled, not editable)
         email: values.email,
         
-        // Section 3.c.vi - Personal Info (✅ 关键修复: dayjs → string)
         ssn: values.ssn,
         dob: formatDateTime(values.dob),
         gender: values.gender,
         
-        // 添加 startDate (必需字段)
         startDate: formatDateTime(values.startDate) || formatDateTime(dayjs()),
         
-        // Section 3.c.vii - Citizenship/Work Authorization
         isCitizenOrPR: isCitizen,
         citizenshipType: isCitizen ? values.citizenshipType : undefined,
         visaType: !isCitizen ? values.workAuthorizationType : undefined,
@@ -355,7 +302,6 @@ const OnboardingFormPage: React.FC = () => {
         visaEndDate: !isCitizen && values.workAuthEndDate
           ? formatDateTime(values.workAuthEndDate)
           : undefined,
-        // Section 3.c.viii - Driver License
         hasDriverLicense: hasLicense,
         driverLicense: hasLicense ? values.driverLicenseNumber : undefined,
         driverLicenseExpiration: hasLicense && values.driverLicenseExpiration
@@ -363,7 +309,6 @@ const OnboardingFormPage: React.FC = () => {
           : undefined,
         driverLicenseCopy: hasLicense ? values.driverLicenseCopy : undefined,
         
-        // Section 3.c.ix - Reference (only one person, includes Address)
         referenceFirstName: values.referenceFirstName,
         referenceLastName: values.referenceLastName,
         referenceMiddleName: values.referenceMiddleName || '',
@@ -372,7 +317,6 @@ const OnboardingFormPage: React.FC = () => {
         referenceEmail: values.referenceEmail,
         referenceRelationship: values.referenceRelationship,
         
-        // Section 3.c.x - Emergency Contacts (at least one)
         emergencyFirstName: values.emergencyContacts[0]?.firstName || '',
         emergencyLastName: values.emergencyContacts[0]?.lastName || '',
         emergencyMiddleName: values.emergencyContacts[0]?.middleName || '',
@@ -381,7 +325,6 @@ const OnboardingFormPage: React.FC = () => {
         emergencyRelationship: values.emergencyContacts[0]?.relationship || '',
       };
 
-      // ✅ 将 OnboardingFormDTO 转换为 CreateEmployeeRequest (嵌套结构)
       const employeePayload: UpdateEmployeeRequest = {
         userID: user?.id || 0,
         firstName: onboardingData.firstName,
@@ -390,7 +333,7 @@ const OnboardingFormPage: React.FC = () => {
         preferredName: onboardingData.preferredName,
         email: onboardingData.email,
         cellPhone: onboardingData.cellPhone,
-        alternatePhone: onboardingData.workPhone || undefined, // Map workPhone → alternatePhone
+        alternatePhone: onboardingData.workPhone || undefined,
         gender: onboardingData.gender,
         SSN: onboardingData.ssn,
         DOB: onboardingData.dob,
@@ -399,11 +342,9 @@ const OnboardingFormPage: React.FC = () => {
         driverLicense: onboardingData.driverLicense,
         driverLicenseExpiration: onboardingData.driverLicenseExpiration,
         
-        // 嵌套结构: Contact[]
         contact: [
-          // Reference Contact
           {
-            id: '', // Will be generated by backend
+            id: '',
             type: 'Reference',
             firstName: onboardingData.referenceFirstName,
             lastName: onboardingData.referenceLastName,
@@ -412,9 +353,8 @@ const OnboardingFormPage: React.FC = () => {
             email: onboardingData.referenceEmail,
             relationship: onboardingData.referenceRelationship,
           },
-          // Emergency Contact
           {
-            id: '', // Will be generated by backend
+            id: '',
             type: 'Emergency',
             firstName: onboardingData.emergencyFirstName,
             lastName: onboardingData.emergencyLastName,
@@ -425,10 +365,9 @@ const OnboardingFormPage: React.FC = () => {
           },
         ],
         
-        // 嵌套结构: Address[] (Primary address at index 0)
         address: [
           {
-            id: '', // Will be generated by backend
+            id: '',
             addressLine1: onboardingData.addressLine1,
             addressLine2: onboardingData.addressLine2 || '',
             city: onboardingData.city,
@@ -437,11 +376,10 @@ const OnboardingFormPage: React.FC = () => {
           },
         ],
         
-        // 嵌套结构: VisaStatus[]
         visaStatus: onboardingData.isCitizenOrPR
           ? [
               {
-                id: '', // Will be generated by backend
+                id: '',
                 visaType: onboardingData.citizenshipType as VisaStatusType || 'Citizen',
                 activeFlag: 'Yes',
                 startDate: onboardingData.startDate,
@@ -451,7 +389,7 @@ const OnboardingFormPage: React.FC = () => {
             ]
           : [
               {
-                id: '', // Will be generated by backend
+                id: '',
                 visaType: onboardingData.visaType as VisaStatusType || 'Other',
                 activeFlag: 'Yes',
                 startDate: onboardingData.visaStartDate || onboardingData.startDate,
@@ -461,13 +399,9 @@ const OnboardingFormPage: React.FC = () => {
             ],
       };
 
-      console.log('✅ Submitting employee update payload:', employeePayload);
-
-      // Upload supporting documents BEFORE updating employee
       try {
         await uploadSupportingDocuments(applicationId);
       } catch (uploadError: any) {
-        console.error('❌ Failed to upload supporting documents:', uploadError);
         messageApi.error(uploadError?.message || 'Failed to upload supporting documents');
         return;
       }
@@ -490,7 +424,6 @@ const OnboardingFormPage: React.FC = () => {
       navigate('/onboarding/submit-result');
       
     } catch (error) {
-      console.error('❌ Form validation or submission failed:', error);
       messageApi.error('Please fill in all required fields');
     }
   };
@@ -579,7 +512,6 @@ const OnboardingFormPage: React.FC = () => {
             </Col>
           </Row>
 
-          {/* Section 3.c.ii - Avatar */}
           <Form.Item 
             label="Avatar" 
             tooltip="Default picture will be used if not uploaded"
@@ -600,7 +532,6 @@ const OnboardingFormPage: React.FC = () => {
             </Upload>
           </Form.Item>
 
-          {/* Section 3.c.iii - Current Address */}
           <Divider><strong>Current Address</strong></Divider>
           <Form.Item
             name="addressLine1"
@@ -642,7 +573,6 @@ const OnboardingFormPage: React.FC = () => {
             </Col>
           </Row>
 
-          {/* Section 3.c.iv - Phone Numbers */}
           <Divider><strong>Contact Information</strong></Divider>
           <Row gutter={16}>
             <Col span={12}>
@@ -670,7 +600,6 @@ const OnboardingFormPage: React.FC = () => {
             </Col>
           </Row>
 
-          {/* Section 3.c.v - Email (pre-filled, not editable) */}
           <Form.Item
             name="email"
             label="Email"
@@ -683,7 +612,6 @@ const OnboardingFormPage: React.FC = () => {
             <Input placeholder="Email" disabled />
           </Form.Item>
 
-          {/* Section 3.c.vi - SSN, DOB, Gender */}
           <Row gutter={16}>
             <Col span={8}>
               <Form.Item
@@ -726,7 +654,6 @@ const OnboardingFormPage: React.FC = () => {
             </Col>
           </Row>
 
-          {/* Section 3.c.vii - Citizenship/Work Authorization Flow */}
           <Divider><strong>Work Authorization</strong></Divider>
           <Form.Item
             name="isCitizenOrPR"
@@ -741,7 +668,6 @@ const OnboardingFormPage: React.FC = () => {
             </Radio.Group>
           </Form.Item>
 
-          {/* If Yes: Choose Citizen or Green Card */}
           {isCitizenOrPR === 'Yes' && (
             <Form.Item
               name="citizenshipType"
@@ -755,7 +681,6 @@ const OnboardingFormPage: React.FC = () => {
             </Form.Item>
           )}
 
-          {/* If No: Work Authorization Type */}
           {isCitizenOrPR === 'No' && (
             <>
               <Form.Item
@@ -775,7 +700,6 @@ const OnboardingFormPage: React.FC = () => {
                 </Select>
               </Form.Item>
 
-              {/* If Other: Show title input */}
               {workAuthType === 'Other' && (
                 <Form.Item
                   name="workAuthorizationTitle"
@@ -786,7 +710,6 @@ const OnboardingFormPage: React.FC = () => {
                 </Form.Item>
               )}
 
-              {/* Start and End Date */}
               <Row gutter={16}>
                 <Col span={12}>
                   <Form.Item
@@ -835,7 +758,6 @@ const OnboardingFormPage: React.FC = () => {
             </>
           )}
 
-          {/* Section 3.c.viii - Driver License Checkbox Flow */}
           <Divider><strong>Driver License</strong></Divider>
           <Form.Item
             name="hasDriverLicense"
@@ -850,7 +772,6 @@ const OnboardingFormPage: React.FC = () => {
             </Radio.Group>
           </Form.Item>
 
-          {/* If Yes: Show license fields */}
           {hasDriverLicense === 'Yes' && (
             <>
               <Row gutter={16}>
@@ -903,7 +824,6 @@ const OnboardingFormPage: React.FC = () => {
             </>
           )}
 
-          {/* Section 3.c.ix - Reference (only one person, includes Address) */}
           <Divider><strong>Reference Contact (Required)</strong></Divider>
           <Row gutter={16}>
             <Col span={8}>
@@ -978,7 +898,6 @@ const OnboardingFormPage: React.FC = () => {
             </Col>
           </Row>
 
-          {/* Section 3.c.x - Emergency Contacts (at least one, can add more) */}
           <Divider><strong>Emergency Contacts (At least one required)</strong></Divider>
           <Form.List
             name="emergencyContacts"
@@ -1099,7 +1018,6 @@ const OnboardingFormPage: React.FC = () => {
             )}
           </Form.List>
 
-          {/* Submit Button - 严格按 Section 3.d: 只有 Submit，没有 Save Draft */}
           <Divider />
           <Form.Item>
             <Button 

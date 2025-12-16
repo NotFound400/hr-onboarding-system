@@ -1,8 +1,3 @@
-/**
- * Onboarding Submit Result Page
- * Onboarding 提交成功结果页面
- */
-
 import { useNavigate } from 'react-router-dom';
 import { Result, Button } from 'antd';
 import { CheckCircleOutlined } from '@ant-design/icons';
@@ -11,31 +6,18 @@ import { useAppDispatch } from '../../../store/hooks';
 import { logout } from '../../../store/slices/authSlice';
 import { resetOnboarding } from '../../../store/slices/onboardingSlice';
 
-/**
- * OnboardingSubmitResultPage Component
- * 
- * 按 frontend_requirement.md 4.2 定义:
- * - 说明等待 HR 审核
- * - 提示：审核结果将通过邮件通知员工
- * - 提供"返回首页"按钮（调用 logout）
- */
+
 const OnboardingSubmitResultPage: React.FC = () => {
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
 
-  /**
-   * 处理返回首页（登出）
-   */
   const handleBackToHome = async () => {
     try {
-      // 重置 onboarding 状态
       dispatch(resetOnboarding());
       
-      // 登出并跳转到登录页
       await dispatch(logout()).unwrap();
       navigate('/login', { replace: true });
     } catch (error) {
-      // 即使登出失败也跳转
       navigate('/login', { replace: true });
     }
   };

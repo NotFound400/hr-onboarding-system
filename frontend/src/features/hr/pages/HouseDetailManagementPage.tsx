@@ -1,8 +1,3 @@
-/**
- * House Detail Management Page (HR)
- * 满足 raw_project_requirement.md §6.c/6.d：查看房屋详情、设施、报修记录与住户信息
- */
-
 import { useEffect, useState } from 'react';
 import dayjs from 'dayjs';
 import {

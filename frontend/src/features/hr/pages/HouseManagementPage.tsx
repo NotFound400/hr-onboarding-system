@@ -17,12 +17,6 @@ import { useAntdMessage } from '../../../hooks/useAntdMessage';
 
 const { Option } = Select;
 
-/**
- * HR 房屋管理页面
- * - 展示所有房屋列表
- * - 添加新房屋
- * - 删除房屋
- */
 export const HouseManagementPage: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [houseList, setHouseList] = useState<House[]>([]);
@@ -42,32 +36,23 @@ export const HouseManagementPage: React.FC = () => {
     fetchLandlords();
   }, []);
 
-  /**
-   * 获取房屋列表
-   */
   const fetchHouseList = async () => {
     try {
       setLoading(true);
       const data = await getHouseList();
-      // Filter out houses that have exceeded max occupancy
       const filteredData = data.filter((house) => {
         const current = house.numberOfEmployees ?? house.employeeList?.length ?? 0;
         const max = house.maxOccupant || 0;
-        // Keep houses that haven't exceeded max occupancy (current <= max)
         return max === 0 || current <= max;
       });
       setHouseList(filteredData);
     } catch (error) {
       messageApi.error('Failed to load house list');
-      console.error(error);
     } finally {
       setLoading(false);
     }
   };
 
-  /**
-   * 获取房东列表
-   */
   const fetchLandlords = async () => {
     try {
       setLandlordLoading(true);
@@ -75,15 +60,11 @@ export const HouseManagementPage: React.FC = () => {
       setLandlords(data);
     } catch (error) {
       messageApi.error('Failed to load landlord list');
-      console.error(error);
     } finally {
       setLandlordLoading(false);
     }
   };
 
-  /**
-   * 打开添加房屋弹窗
-   */
   const handleAddHouse = () => {
     if (landlords.length === 0) {
       messageApi.warning('Please add a landlord before creating a new house.');
@@ -93,17 +74,11 @@ export const HouseManagementPage: React.FC = () => {
     setIsModalOpen(true);
   };
 
-  /**
-   * 打开添加房东弹窗
-   */
   const handleAddLandlord = () => {
     landlordForm.resetFields();
     setIsLandlordModalOpen(true);
   };
 
-  /**
-   * 提交新房屋
-   */
   const handleSubmit = async () => {
     try {
       const values = await form.validateFields();
@@ -134,34 +109,25 @@ export const HouseManagementPage: React.FC = () => {
       messageApi.success('House added successfully');
       setIsModalOpen(false);
       form.resetFields();
-      fetchHouseList(); // 刷新列表
+      fetchHouseList();
     } catch (error: any) {
       if (error.errorFields) {
-        // 表单验证错误
         return;
       }
       messageApi.error('Failed to add house');
-      console.error(error);
     }
   };
 
-  /**
-   * 删除房屋
-   */
   const handleDelete = async (houseId: number) => {
     try {
       await deleteHouse(houseId);
       messageApi.success('House deleted successfully');
-      fetchHouseList(); // 刷新列表
+      fetchHouseList();
     } catch (error) {
       messageApi.error('Failed to delete house');
-      console.error(error);
     }
   };
 
-  /**
-   * 创建房东
-   */
   const handleSubmitLandlord = async () => {
     try {
       const values = await landlordForm.validateFields();
@@ -183,15 +149,11 @@ export const HouseManagementPage: React.FC = () => {
         return;
       }
       messageApi.error('Failed to add landlord');
-      console.error(error);
     } finally {
       setSubmittingLandlord(false);
     }
   };
 
-  /**
-   * 删除房东
-   */
   const handleDeleteLandlord = async (id: number) => {
     try {
       setDeletingLandlordId(id);
@@ -200,15 +162,11 @@ export const HouseManagementPage: React.FC = () => {
       fetchLandlords();
     } catch (error) {
       messageApi.error('Failed to delete landlord');
-      console.error(error);
     } finally {
       setDeletingLandlordId(null);
     }
   };
 
-  /**
-   * 表格列定义
-   */
   const columns: ColumnsType<House> = [
     {
       title: 'Address',
@@ -391,7 +349,6 @@ export const HouseManagementPage: React.FC = () => {
         />
       </Card>
 
-      {/* 添加房屋弹窗 */}
       <Modal
         title="Add New House"
         open={isModalOpen}

@@ -1,8 +1,3 @@
-/**
- * Facility Report Page (Employee)
- * 员工查看、提交房屋报修以及查看评论
- */
-
 import { useEffect, useState } from 'react';
 import {
   Card,
@@ -111,7 +106,6 @@ const FacilityReportPage: React.FC = () => {
   const fetchFacilities = async (targetHouseId: number) => {
     try {
       setFacilityLoading(true);
-      // Fetch facilities from API
       const facilitiesData = await getFacilitiesByHouseId(targetHouseId);
       setFacilities(facilitiesData);
     } catch (error: any) {

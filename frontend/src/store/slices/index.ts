@@ -1,7 +1,3 @@
-/**
- * Central Slice Exports
- * 统一导出所有 Redux Slices
- */
 
 export { default as authReducer } from './authSlice';
 export {

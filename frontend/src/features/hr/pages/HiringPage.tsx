@@ -1,12 +1,3 @@
-/**
- * Hiring Page
- * HR 招聘管理页面
- * 
- * Features:
- * - Token 生成器（生成注册 Token）
- * - Onboarding 申请列表（只读）
- */
-
 import { useState, useEffect } from 'react';
 import { Table, Card, Input, Button, Space, Form, Tag, Descriptions, Select, Alert } from 'antd';
 import { UserAddOutlined, CopyOutlined, ReloadOutlined } from '@ant-design/icons';
@@ -22,12 +13,10 @@ import type {
   ApplicationWithEmployeeInfo,
   ApplicationStatus,
   House,
+  Employee,
 } from '../../../types';
 import { useAntdMessage } from '../../../hooks/useAntdMessage';
 
-/**
- * HiringPage Component
- */
 const HiringPage: React.FC = () => {
   const [form] = Form.useForm();
   const [loading, setLoading] = useState(false);
@@ -40,7 +29,6 @@ const HiringPage: React.FC = () => {
   const [assignedHouseAddress, setAssignedHouseAddress] = useState('');
   const messageApi = useAntdMessage();
 
-  // 获取 Onboarding 申请列表
   useEffect(() => {
     fetchOnboardingApplications();
     fetchAvailableHouses();
@@ -50,8 +38,6 @@ const HiringPage: React.FC = () => {
     try {
       setLoading(true);
       const data = await getApplicationsWithEmployeesByStatus('Open');
-      console.log('[Hiring] Pending applications:', data);
-      console.log('[Hiring] Open applications:', data);
       setApplications(data);
     } catch (error: any) {
       messageApi.error(error.message || 'Failed to load onboarding applications');
@@ -72,9 +58,6 @@ const HiringPage: React.FC = () => {
     }
   };
 
-  /**
-   * 生成注册 Token
-   */
   const handleGenerateToken = async (values: { email: string; houseId: number }) => {
     try {
       setGenerating(true);
@@ -102,18 +85,17 @@ const HiringPage: React.FC = () => {
 
       messageApi.success(`Token generated successfully for ${values.email}`);
       
-      // Add new application entry to the list
       const currentTime = new Date().toISOString();
       const newApplication: ApplicationWithEmployeeInfo = {
-        id: Date.now(), // Temporary ID until backend creates the real application
-        employeeId: tokenInfo.employeeId || '',
+        id: Date.now(),
+        employeeId: '',
         createDate: currentTime,
         lastModificationDate: currentTime,
         status: 'Open',
         comment: '',
-        applicationType: 'ONBOARDING',
+        applicationType: 'Onboarding',
         employee: {
-          id: tokenInfo.employeeId || '',
+          id: '',
           email: values.email,
           firstName: '',
           lastName: '',
@@ -121,7 +103,6 @@ const HiringPage: React.FC = () => {
         } as Employee,
       };
       
-      // Add to the top of the list
       setApplications((prev) => [newApplication, ...prev]);
       
       fetchAvailableHouses();
@@ -133,9 +114,6 @@ const HiringPage: React.FC = () => {
     }
   };
 
-  /**
-   * 复制 Token 到剪贴板
-   */
   const handleCopyToken = () => {
     navigator.clipboard.writeText(generatedToken);
     messageApi.success('Token copied to clipboard');
@@ -155,9 +133,6 @@ const HiringPage: React.FC = () => {
     ? `${window.location.origin}/register?token=${generatedToken}`
     : '';
 
-  /**
-   * 获取状态标签颜色
-   */
   const getStatusColor = (status: ApplicationStatus) => {
     switch (status) {
       case 'Approved':
@@ -173,9 +148,6 @@ const HiringPage: React.FC = () => {
     }
   };
 
-  /**
-   * Onboarding 申请列表列定义
-   */
   const columns: ColumnsType<ApplicationWithEmployeeInfo> = [
     {
       title: 'Email',
@@ -217,7 +189,6 @@ const HiringPage: React.FC = () => {
 
   return (
     <PageContainer title="Hiring Management" loading={loading}>
-      {/* Token 生成器 */}
       <Card
         title="Registration Token Generator"
         extra={<UserAddOutlined style={{ fontSize: 20 }} />}
@@ -291,7 +262,6 @@ const HiringPage: React.FC = () => {
           />
         )}
 
-        {/* Token 显示区域 */}
         {generatedToken && (
           <Descriptions bordered column={1} size="small">
             <Descriptions.Item label="Token">
@@ -345,7 +315,6 @@ const HiringPage: React.FC = () => {
         )}
       </Card>
 
-      {/* Onboarding 申请列表 */}
       <Card
         title="Onboarding Applications"
         extra={

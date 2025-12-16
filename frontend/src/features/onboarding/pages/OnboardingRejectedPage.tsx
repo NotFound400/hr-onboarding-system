@@ -1,11 +1,3 @@
-/**
- * Onboarding Rejected Page
- * Section 3.e.iii: "The user should be able to log in and see what is wrong"
- * 
- * 当用户的 Onboarding 申请被 HR 拒绝时显示此页面
- * 展示拒绝原因和缺失文档信息
- */
-
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card, Alert, Descriptions, Button, Space, Tag, Empty } from 'antd';
@@ -25,9 +17,6 @@ const statusTagColors: Record<string, string> = {
   Open: 'blue',
 };
 
-/**
- * OnboardingRejectedPage Component
- */
 const OnboardingRejectedPage: React.FC = () => {
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
@@ -41,9 +30,6 @@ const OnboardingRejectedPage: React.FC = () => {
     fetchRejectedApplication();
   }, []);
 
-  /**
-   * 获取被拒绝的 Onboarding 申请
-   */
   const fetchRejectedApplication = async () => {
     if (!currentUser) return;
 
@@ -69,29 +55,20 @@ const OnboardingRejectedPage: React.FC = () => {
 
       setApplication(targetApplication || null);
     } catch (error) {
-      console.error('Failed to fetch rejected application:', error);
     } finally {
       setLoading(false);
     }
   };
 
-  /**
-   * 重新提交申请
-   */
   const handleBackToLogin = async () => {
     try {
       await dispatch(logout()).unwrap();
     } catch {
-      // ignore logout errors, still navigate
     } finally {
       navigate('/login', { replace: true });
     }
   };
 
-  /**
-   * 渲染拒绝原因
-   * Section 3.e.iii: Show rejection comments from HR
-   */
   const renderRejectionReasons = () => {
     if (!application) return null;
 
@@ -116,12 +93,7 @@ const OnboardingRejectedPage: React.FC = () => {
     );
   };
 
-  /**
-   * 渲染文档状态
-   * Note: Document details would be retrieved from ApplicationDetail type
-   */
   const renderDocumentStatus = () => {
-    // Type assertion if application has documents property (ApplicationDetail)
     const appDetail = application as any;
     
     if (!appDetail?.documents || appDetail.documents.length === 0) return null;
@@ -166,7 +138,6 @@ const OnboardingRejectedPage: React.FC = () => {
     <PageContainer title="Onboarding Application Status" loading={loading}>
       {application ? (
         <Space direction="vertical" size="large" style={{ width: '100%' }}>
-          {/* 拒绝警告 */}
           <Alert
             message="Your Onboarding Application Has Been Rejected"
             description="Please review the feedback below and resubmit your application with the necessary corrections."
@@ -175,7 +146,6 @@ const OnboardingRejectedPage: React.FC = () => {
             icon={<CloseCircleOutlined />}
           />
 
-          {/* 申请基本信息 */}
           <Card title="Application Information">
             <Descriptions column={2} bordered>
               <Descriptions.Item label="Application Type">
@@ -193,13 +163,10 @@ const OnboardingRejectedPage: React.FC = () => {
             </Descriptions>
           </Card>
 
-          {/* 拒绝原因 */}
           {renderRejectionReasons()}
 
-          {/* 文档问题 */}
           {renderDocumentStatus()}
 
-          {/* 操作按钮 */}
           <Card>
             <Button type="primary" size="large" onClick={handleBackToLogin}>
               Back to Login

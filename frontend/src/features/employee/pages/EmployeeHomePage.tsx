@@ -1,13 +1,3 @@
-/**
- * Employee Home Page
- * 员工端主页 - 欢迎页面和快捷入口
- * 
- * Features:
- * - 显示 "Welcome, [Name]"
- * - 快捷链接卡片
- * - 个人信息摘要
- */
-
 import { useState, useEffect } from 'react';
 import { Card, Row, Col, Typography, Space, Avatar, Button, Descriptions, Tag, Image } from 'antd';
 import { 
@@ -15,11 +5,6 @@ import {
   SafetyOutlined, 
   HomeOutlined, 
   FileTextOutlined,
-  RightOutlined,
-  PhoneOutlined,
-  MailOutlined,
-  CalendarOutlined,
-  IdcardOutlined,
 } from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
 import { PageContainer } from '../../../components/common/PageContainer';
@@ -31,9 +16,6 @@ import dayjs from 'dayjs';
 
 const { Title, Text, Paragraph } = Typography;
 
-/**
- * EmployeeHomePage Component
- */
 const EmployeeHomePage: React.FC = () => {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
@@ -75,30 +57,23 @@ const EmployeeHomePage: React.FC = () => {
             const url = URL.createObjectURL(blob);
             urls[doc.id] = url;
           } catch (err) {
-            console.error(`Failed to load document ${doc.id}:`, err);
           }
         }
         setDocumentUrls(urls);
       } catch (error) {
-        console.error('Failed to load documents:', error);
       }
     } catch (error) {
-      console.error('Failed to load employee info:', error);
     } finally {
       setLoading(false);
     }
   };
   
-  // Cleanup blob URLs on unmount
   useEffect(() => {
     return () => {
       Object.values(documentUrls).forEach((url) => URL.revokeObjectURL(url));
     };
   }, [documentUrls]);
 
-  /**
-   * 快捷链接配置
-   */
   const quickLinks = [
     {
       title: 'Personal Information',
@@ -134,7 +109,6 @@ const EmployeeHomePage: React.FC = () => {
 
   return (
     <PageContainer loading={loading}>
-      {/* 欢迎区域 */}
       <Card style={{ marginBottom: 24, background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)' }}>
         <Space size="large" align="center">
           <Avatar size={80} icon={<UserOutlined />} style={{ backgroundColor: '#fff', color: '#667eea' }} />
@@ -154,7 +128,6 @@ const EmployeeHomePage: React.FC = () => {
         </Space>
       </Card>
 
-      {/* 个人信息摘要 */}
       {employee && (
         <>
           <Card title="Personal Information" style={{ marginTop: 24 }}>

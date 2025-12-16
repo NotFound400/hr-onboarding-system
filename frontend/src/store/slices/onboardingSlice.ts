@@ -1,7 +1,3 @@
-/**
- * Onboarding Slice
- * 处理员工 Onboarding 流程和表单提交
- */
 
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import type { PayloadAction } from '@reduxjs/toolkit';
@@ -15,7 +11,6 @@ import type {
 import { updateEmployee } from '../../services/api';
 import { createApplication, submitApplication } from '../../services/api/applicationApi';
 
-// ==================== State Interface ====================
 
 interface OnboardingState {
   /** 当前步骤 (0-based index) */
@@ -36,7 +31,6 @@ interface OnboardingState {
   submitSuccess: boolean;
 }
 
-// ==================== Initial State ====================
 
 const initialState: OnboardingState = {
   currentStep: 0,
@@ -49,14 +43,7 @@ const initialState: OnboardingState = {
   submitSuccess: false,
 };
 
-// ==================== Async Thunks ====================
 
-/**
- * 提交 Onboarding 表单
- * 接收已转换完成的 CreateEmployeeRequest (嵌套结构)
- * 
- * 注意：数据转换逻辑已移至 OnboardingFormPage.handleSubmit
- */
 export const submitOnboardingForm = createAsyncThunk<
   Employee,
   { id: string; data: UpdateEmployeeRequest; applicationId: number },
@@ -100,44 +87,28 @@ export const initializeOnboardingApplication = createAsyncThunk<
   }
 );
 
-// ==================== Slice ====================
 
 const onboardingSlice = createSlice({
   name: 'onboarding',
   initialState,
   reducers: {
-    /**
-     * 设置当前步骤
-     */
     setCurrentStep: (state, action: PayloadAction<number>) => {
       state.currentStep = action.payload;
     },
-    /**
-     * 进入下一步
-     */
     nextStep: (state) => {
       state.currentStep += 1;
     },
-    /**
-     * 返回上一步
-     */
     prevStep: (state) => {
       if (state.currentStep > 0) {
         state.currentStep -= 1;
       }
     },
-    /**
-     * 保存表单数据 (用于多步骤表单暂存)
-     */
     saveFormData: (state, action: PayloadAction<Partial<OnboardingFormDTO>>) => {
       state.formData = {
         ...state.formData,
         ...action.payload,
       };
     },
-    /**
-     * 重置 Onboarding 状态
-     */
     resetOnboarding: (state) => {
       state.currentStep = 0;
       state.formData = null;
@@ -148,15 +119,9 @@ const onboardingSlice = createSlice({
       state.error = null;
       state.submitSuccess = false;
     },
-    /**
-     * 清除错误信息
-     */
     clearError: (state) => {
       state.error = null;
     },
-    /**
-     * 保存从登录流程获取的申请信息
-     */
     setApplicationContext: (
       state,
       action: PayloadAction<{ id: number | null; status: Application['status'] | null }>
@@ -196,7 +161,6 @@ const onboardingSlice = createSlice({
   },
 });
 
-// ==================== Selectors ====================
 
 export const selectCurrentStep = (state: { onboarding: OnboardingState }) => state.onboarding.currentStep;
 export const selectFormData = (state: { onboarding: OnboardingState }) => state.onboarding.formData;
@@ -210,7 +174,6 @@ export const selectOnboardingLoading = (state: { onboarding: OnboardingState }) 
 export const selectOnboardingError = (state: { onboarding: OnboardingState }) => state.onboarding.error;
 export const selectSubmitSuccess = (state: { onboarding: OnboardingState }) => state.onboarding.submitSuccess;
 
-// ==================== Exports ====================
 
 export const {
   setCurrentStep,

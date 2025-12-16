@@ -1,8 +1,3 @@
-/**
- * House Detail Page (Employee)
- * 展示房屋详细信息、房东信息以及设施列表
- */
-
 import { useEffect, useState } from 'react';
 import { Card, Descriptions, List, Space, Empty, Alert, Avatar, Tag } from 'antd';
 import { HomeOutlined, TeamOutlined, PhoneOutlined, UserOutlined } from '@ant-design/icons';

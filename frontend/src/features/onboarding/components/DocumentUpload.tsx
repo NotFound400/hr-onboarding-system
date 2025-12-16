@@ -1,8 +1,3 @@
-/**
- * Document Upload Component
- * 文档上传组件 - 支持预览和下载
- */
-
 import { useState } from 'react';
 import { Upload, Button, Modal } from 'antd';
 import { UploadOutlined, EyeOutlined, DownloadOutlined } from '@ant-design/icons';
@@ -22,15 +17,6 @@ interface DocumentUploadProps {
   maxCount?: number;
 }
 
-/**
- * DocumentUpload Component
- * 
- * 功能特性:
- * - 支持文件上传
- * - 支持预览 (PDF/图片使用 Modal + <object>)
- * - 支持下载
- * - 支持删除
- */
 const DocumentUpload: React.FC<DocumentUploadProps> = ({
   title,
   required = false,
@@ -43,11 +29,7 @@ const DocumentUpload: React.FC<DocumentUploadProps> = ({
   const [previewTitle, setPreviewTitle] = useState<string>('');
   const messageApi = useAntdMessage();
 
-  /**
-   * 处理文件上传
-   */
   const handleUpload: UploadProps['customRequest'] = ({ file, onSuccess }) => {
-    // Mock 上传逻辑
     setTimeout(() => {
       if (onSuccess) {
         onSuccess('ok');
@@ -56,22 +38,15 @@ const DocumentUpload: React.FC<DocumentUploadProps> = ({
     }, 1000);
   };
 
-  /**
-   * 处理文件变化
-   */
   const handleChange: UploadProps['onChange'] = ({ fileList: newFileList }) => {
     if (onChange) {
       onChange(newFileList);
     }
   };
 
-  /**
-   * 处理预览
-   */
   const handlePreview = async (file: UploadFile) => {
     let url = file.url || file.preview;
 
-    // 如果没有 URL，创建预览 URL
     if (!url && file.originFileObj) {
       url = URL.createObjectURL(file.originFileObj);
     }
@@ -83,9 +58,6 @@ const DocumentUpload: React.FC<DocumentUploadProps> = ({
     }
   };
 
-  /**
-   * 处理下载
-   */
   const handleDownload = (file: UploadFile) => {
     const url = file.url || file.preview;
     if (url) {
@@ -99,9 +71,6 @@ const DocumentUpload: React.FC<DocumentUploadProps> = ({
     }
   };
 
-  /**
-   * 自定义文件项渲染
-   */
   const itemRender: UploadProps['itemRender'] = (_originNode, file) => {
     return (
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
@@ -153,7 +122,6 @@ const DocumentUpload: React.FC<DocumentUploadProps> = ({
         )}
       </Upload>
 
-      {/* 预览 Modal */}
       <Modal
         open={previewVisible}
         title={previewTitle}

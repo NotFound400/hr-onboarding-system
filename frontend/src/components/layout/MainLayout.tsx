@@ -1,8 +1,3 @@
-/**
- * Main Layout Component
- * 主布局组件，包含动态导航菜单和用户信息显示
- */
-
 import { useState, useEffect } from 'react';
 import { Outlet, useNavigate, useLocation } from 'react-router-dom';
 import { Layout, Menu, Avatar, Dropdown, Typography, Space, Modal } from 'antd';
@@ -28,13 +23,6 @@ import { useAntdMessage } from '../../hooks/useAntdMessage';
 const { Header, Sider, Content } = Layout;
 const { Text } = Typography;
 
-/**
- * MainLayout Component
- * 
- * 根据 frontend_requirement.md 4.3/4.4 定义的菜单结构:
- * - HR 菜单: Home, Employees, Visa, Hiring, Housing
- * - Employee 菜单: Home, Personal Info, Visa Status, Housing
- */
 const MainLayout: React.FC = () => {
   const [collapsed, setCollapsed] = useState(false);
   const [employeeData, setEmployeeData] = useState<Employee | null>(null);
@@ -46,7 +34,6 @@ const MainLayout: React.FC = () => {
   const user = useAppSelector(selectUser);
   const role = useAppSelector(selectRole);
 
-  // Fetch employee data for non-citizen check (Section 5.b)
   useEffect(() => {
     const fetchEmployeeData = async () => {
       if (role === 'Employee' && user?.id) {
@@ -54,16 +41,12 @@ const MainLayout: React.FC = () => {
           const employee = await getEmployeeByUserId(String(user.id));
           setEmployeeData(employee);
         } catch (error) {
-          console.error('Failed to fetch employee data:', error);
         }
       }
     };
     fetchEmployeeData();
   }, [role, user?.id]);
 
-  /**
-   * HR 菜单配置
-   */
   const hrMenuItems: MenuProps['items'] = [
     {
       key: '/hr/home',
@@ -97,27 +80,19 @@ const MainLayout: React.FC = () => {
     },
   ];
 
-  /**
-   * Check if employee should see Visa menu
-   * Per Section 5.b: "only if the user is NOT a citizen or green card holder"
-   */
   const shouldShowVisaMenu = (): boolean => {
     if (!employeeData || !employeeData.visaStatus || employeeData.visaStatus.length === 0) {
-      return false; // Default: hide if no visa data
+      return false;
     }
     const activeVisa = employeeData.visaStatus.find(
       (v: VisaStatus) => v.activeFlag === 'Yes'
     );
     if (!activeVisa) return false;
     
-    // Hide for Citizen and Green Card holders
     return activeVisa.visaType !== VisaStatusType.CITIZEN && 
            activeVisa.visaType !== VisaStatusType.GREEN_CARD;
   };
 
-  /**
-   * Employee 菜单配置
-   */
   const employeeMenuItems: MenuProps['items'] = [
     {
       key: '/employee/home',
@@ -131,13 +106,11 @@ const MainLayout: React.FC = () => {
       label: 'Personal Info',
       onClick: () => navigate('/employee/personal-info'),
     },
-    // Conditional Visa Status menu (Section 5.b)
     ...(shouldShowVisaMenu() ? [{
       key: '/employee/visa',
       icon: <FileProtectOutlined />,
       label: 'Visa Status Management',
       onClick: () => navigate('/employee/visa'),
-      // Submenu with hover effect (Section 5.b: "show a link to OPT STEM Management")
       children: [
         {
           key: '/employee/visa/opt-stem',
@@ -146,7 +119,6 @@ const MainLayout: React.FC = () => {
         },
       ],
     }] : []),
-    // Flatten Housing navigation (no submenu)
     {
       key: '/employee/housing',
       icon: <BankOutlined />,
@@ -161,16 +133,9 @@ const MainLayout: React.FC = () => {
     },
   ];
 
-  /**
-   * 根据角色获取菜单
-   */
   const menuItems = role === 'HR' ? hrMenuItems : employeeMenuItems;
 
-  /**
-   * 获取当前选中的菜单项
-   */
   const getSelectedKey = () => {
-    // 匹配最长路径前缀
     const matchedItem = menuItems?.find((item) => {
       if (item && 'key' in item) {
         return location.pathname.startsWith(item.key as string);
@@ -180,9 +145,6 @@ const MainLayout: React.FC = () => {
     return matchedItem && 'key' in matchedItem ? [matchedItem.key as string] : [];
   };
 
-  /**
-   * 处理登出
-   */
   const handleLogout = () => {
     Modal.confirm({
       title: 'Confirm Logout',
@@ -201,9 +163,6 @@ const MainLayout: React.FC = () => {
     });
   };
 
-  /**
-   * 用户下拉菜单
-   */
   const userMenuItems: MenuProps['items'] = [
     {
       key: 'profile',

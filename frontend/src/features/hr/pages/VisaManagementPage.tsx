@@ -1,13 +1,3 @@
-/**
- * Visa Management Page
- * HR 签证管理页面
- * 
- * Features:
- * - 显示 OPT 和 VISA 类型的申请列表
- * - Approve / Reject 操作
- * - 审批后发送邮件通知
- */
-
 import { useState, useEffect } from 'react';
 import { Table, Tag, Typography } from 'antd';
 import type { ColumnsType } from 'antd/es/table';
@@ -19,9 +9,6 @@ import dayjs from 'dayjs';
 
 const { Text } = Typography;
 
-/**
- * VisaManagementPage Component
- */
 interface VisaTableRow {
   id: string;
   employeeName: string;
@@ -82,10 +69,6 @@ const VisaManagementPage: React.FC = () => {
     };
   };
 
-  /**
-   * Section HR.4 - Visa Status Management Table Columns
-   * Required fields: Name, Work Authorization, Expiration Date, Days Left, Active STEM OPT Application and Actions
-   */
   const columns: ColumnsType<VisaTableRow> = [
     {
       title: 'Name (Legal Full Name)',
@@ -175,7 +158,6 @@ const VisaManagementPage: React.FC = () => {
 
   return (
     <PageContainer title="Visa Management" loading={loading}>
-      {/* 签证申请列表表格 */}
       <Table
         columns={columns}
         dataSource={rows}

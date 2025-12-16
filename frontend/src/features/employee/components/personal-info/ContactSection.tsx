@@ -1,17 +1,7 @@
-/**
- * ContactSection - 联系方式板块组件
- * 
- * Section 6(b).iii: Contact (Email, Cell Phone)
- * 
- * 字段：
- * - Personal Email, Work Email
- * - Cell Phone, Work Phone
- */
-
 import React, { useEffect } from 'react';
 import { Form, Input, Row, Col, Descriptions } from 'antd';
 import type { FormInstance } from 'antd';
-import type { Employee } from '../../../../types';
+import type { Employee, Contact } from '../../../../types';
 import { ContactType } from '../../../../types/enums';
 
 interface ContactSectionProps {
@@ -20,13 +10,9 @@ interface ContactSectionProps {
   isEditing: boolean;
 }
 
-/**
- * ContactSection Component
- */
 const ContactSection: React.FC<ContactSectionProps> = ({ employee, form, isEditing }) => {
   useEffect(() => {
     if (isEditing && employee) {
-      // Personal contact from employee.contact array
       const personalContact = employee.contact?.find(c => c.type === ContactType.REFERENCE);
       
       form.setFieldsValue({
@@ -37,9 +23,6 @@ const ContactSection: React.FC<ContactSectionProps> = ({ employee, form, isEditi
     }
   }, [isEditing, employee, form]);
 
-  /**
-   * 渲染只读视图 (Dashboard Style: 紧凑布局)
-   */
   const renderReadView = () => {
     if (!employee) return null;
 
@@ -60,9 +43,6 @@ const ContactSection: React.FC<ContactSectionProps> = ({ employee, form, isEditi
     );
   };
 
-  /**
-   * 渲染编辑表单
-   */
   const renderEditForm = () => {
     return (
       <Form form={form} layout="vertical">
@@ -115,7 +95,6 @@ const ContactSection: React.FC<ContactSectionProps> = ({ employee, form, isEditi
  * 导出联系方式数据提取函数
  */
 export const extractContactData = (formValues: any, employee: Employee) => {
-  // Find existing personal contact to preserve other fields
   const existingPersonalContact = employee.contact?.find(c => c.type === ContactType.REFERENCE);
 
   const personalContact: Contact = {

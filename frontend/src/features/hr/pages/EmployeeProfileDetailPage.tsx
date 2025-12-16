@@ -19,19 +19,11 @@ import { getEmployeeById, getActiveApplications } from '../../../services/api';
 import type { Employee, Application, ApplicationDocument } from '../../../types';
 import { useAntdMessage } from '../../../hooks/useAntdMessage';
 
-// Type aliases for better readability
 type App = Application;
 type Document = ApplicationDocument & { filename?: string; uploadDate?: string; status?: string; comment?: string };
 
 const { TextArea } = Input;
 
-/**
- * HR 员工详情页面
- * 路由: /hr/employees/:id
- * - 展示员工完整 Profile
- * - 展示上传的文档列表（支持 HR 评论）
- * - 展示 Visa 状态
- */
 export const EmployeeProfileDetailPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
@@ -50,59 +42,40 @@ export const EmployeeProfileDetailPage: React.FC = () => {
     }
   }, [id]);
 
-  /**
-   * 获取员工详细信息
-   * Section HR.3.a.i - Must display <10/100> format based on user_id ordering
-   */
   const fetchEmployeeDetail = async (employeeId: string) => {
     try {
       setLoading(true);
       
-      // 获取所有员工 (for <10/100> navigation)
       const { getAllEmployees } = await import('../../../services/api');
       const allEmps = await getAllEmployees({ forceReal: true });
-      // Sort by userID per Section HR.3.a.ii requirement
       const sortedEmps = allEmps.sort((a, b) => (a.userID || 0) - (b.userID || 0));
       setAllEmployees(sortedEmps);
 
-      // 获取员工信息
       const empData = await getEmployeeById(employeeId);
       setEmployee(empData);
 
-      // 获取该员工的 Onboarding Application
       const applications = await getActiveApplications(employeeId);
       if (applications.length > 0) {
-        // 取最新的 application
         setApplication(applications[0]);
       }
     } catch (error) {
       messageApi.error('Failed to load employee details');
-      console.error(error);
     } finally {
       setLoading(false);
     }
   };
 
-  /**
-   * 打开评论弹窗
-   */
   const handleOpenComment = (doc: Document) => {
     setCurrentDocument(doc);
     setComment(doc.comment || '');
     setCommentModalVisible(true);
   };
 
-  /**
-   * 提交评论
-   */
   const handleSubmitComment = () => {
     if (!currentDocument) return;
 
-    // 在实际项目中，这里应该调用 API 更新文档评论
     messageApi.success('Comment saved successfully');
-    console.log('Document:', currentDocument.id, 'Comment:', comment);
 
-    // 更新本地状态
     if (application && application.documents) {
       const updatedDocs = application.documents.map((doc: Document) =>
         doc.id === currentDocument.id ? { ...doc, comment } : doc
@@ -115,18 +88,10 @@ export const EmployeeProfileDetailPage: React.FC = () => {
     setComment('');
   };
 
-  /**
-   * 下载文档
-   */
   const handleDownload = (doc: Document) => {
     messageApi.info(`Downloading: ${doc.filename}`);
-    // 实际项目中应该触发文件下载
-    console.log('Download document:', doc);
   };
 
-  /**
-   * 文档列表表格列定义
-   */
   const documentColumns: ColumnsType<Document> = [
     {
       title: 'Document Type',
@@ -228,7 +193,6 @@ export const EmployeeProfileDetailPage: React.FC = () => {
     );
   }
 
-  // Section HR.3.a.i - Calculate <current/total> display based on user_id ordering
   const currentIndex = allEmployees.findIndex(emp => emp.id === id);
   const totalEmployees = allEmployees.length;
   const displayIndex = currentIndex >= 0 ? currentIndex + 1 : 0;
@@ -255,7 +219,6 @@ export const EmployeeProfileDetailPage: React.FC = () => {
           Back to Employee List
         </Button>
 
-        {/* Section HR.3.a.i - <10/100> Navigation Display */}
         {totalEmployees > 0 && (
           <Space>
             <Button 
@@ -281,7 +244,6 @@ export const EmployeeProfileDetailPage: React.FC = () => {
         {employee.firstName} {employee.lastName} {employee.preferredName && `(${employee.preferredName})`}
       </h2>
 
-      {/* 基本信息 */}
       <Card title="Personal Information" style={{ marginBottom: 24 }}>
         <Descriptions column={2} bordered>
           <Descriptions.Item label="Employee ID">{employee.id}</Descriptions.Item>
@@ -299,7 +261,6 @@ export const EmployeeProfileDetailPage: React.FC = () => {
         </Descriptions>
       </Card>
 
-      {/* 地址信息 */}
       {employee.address && employee.address.length > 0 && (() => {
         const primaryAddress = employee.address.find(addr => addr.type === 'Primary') || employee.address[0];
         return (
@@ -319,13 +280,11 @@ export const EmployeeProfileDetailPage: React.FC = () => {
         );
       })()}
 
-      {/* 签证状态 */}
       <Card title="Visa Status" style={{ marginBottom: 24 }}>
         {(() => {
           const activeVisa = employee.visaStatus && employee.visaStatus.length > 0 
             ? employee.visaStatus.find(v => v.activeFlag === 'Yes') || employee.visaStatus[0]
             : null;
-          // Check if visa type suggests citizenship
           const isCitizen = !activeVisa || activeVisa.visaType === 'Other';
           
           return (
@@ -360,7 +319,6 @@ export const EmployeeProfileDetailPage: React.FC = () => {
 
       </Card>
 
-      {/* 文档列表 */}
       {application && application.documents && application.documents.length > 0 && (
         <Card title="Uploaded Documents" style={{ marginBottom: 24 }}>
           <Table
@@ -373,7 +331,6 @@ export const EmployeeProfileDetailPage: React.FC = () => {
         </Card>
       )}
 
-      {/* 紧急联系人 */}
       {employee.contact && employee.contact.length > 0 && (() => {
         const emergencyContact = employee.contact.find(c => c.type === 'Emergency');
         return emergencyContact && (
@@ -392,7 +349,6 @@ export const EmployeeProfileDetailPage: React.FC = () => {
         );
       })()}
 
-      {/* HR 评论弹窗 */}
       <Modal
         title={`Add Comment - ${currentDocument?.type || ''}`}
         open={commentModalVisible}

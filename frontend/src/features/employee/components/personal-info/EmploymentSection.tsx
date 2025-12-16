@@ -1,13 +1,3 @@
-/**
- * EmploymentSection - 雇佣信息板块组件
- * 
- * Section 6(b).v: Employment (Title, Start Date, End Date)
- * 
- * 字段：
- * - Title, Start Date, End Date
- * - Visa Status (Current Work Authorization)
- */
-
 import React, { useEffect } from 'react';
 import { Form, Input, DatePicker, Row, Col, Descriptions, Tag } from 'antd';
 import type { FormInstance } from 'antd';
@@ -21,9 +11,6 @@ interface EmploymentSectionProps {
   isEditing: boolean;
 }
 
-/**
- * EmploymentSection Component
- */
 const EmploymentSection: React.FC<EmploymentSectionProps> = ({
   employee,
   form,
@@ -32,22 +19,18 @@ const EmploymentSection: React.FC<EmploymentSectionProps> = ({
   useEffect(() => {
     if (isEditing && employee) {
       form.setFieldsValue({
-        title: employee.title || '',
+        title: (employee as any).title || '',
         startDate: employee.startDate ? dayjs(employee.startDate) : null,
         endDate: employee.endDate ? dayjs(employee.endDate) : null,
       });
     }
   }, [isEditing, employee, form]);
 
-  /**
-   * Get current visa status for display
-   */
   const getCurrentVisa = () => {
     if (!employee?.visaStatus || employee.visaStatus.length === 0) {
       return null;
     }
 
-    // Find the most recent visa
     const sortedVisas = [...employee.visaStatus].sort((a, b) => {
       const dateA = a.startDate || '';
       const dateB = b.startDate || '';
@@ -57,9 +40,6 @@ const EmploymentSection: React.FC<EmploymentSectionProps> = ({
     return sortedVisas[0];
   };
 
-  /**
-   * 渲染只读视图 (Dashboard Style: 紧凑布局)
-   */
   const renderReadView = () => {
     if (!employee) return null;
 
@@ -68,7 +48,7 @@ const EmploymentSection: React.FC<EmploymentSectionProps> = ({
     return (
       <Descriptions column={1} size="small" colon={false}>
         <Descriptions.Item label="Title">
-          <strong>{employee.title || 'N/A'}</strong>
+          <strong>{(employee as any).title || 'N/A'}</strong>
         </Descriptions.Item>
         <Descriptions.Item label="Start Date">
           {employee.startDate ? dayjs(employee.startDate).format('YYYY-MM-DD') : 'N/A'}
@@ -95,9 +75,6 @@ const EmploymentSection: React.FC<EmploymentSectionProps> = ({
     );
   };
 
-  /**
-   * 渲染编辑表单
-   */
   const renderEditForm = () => {
     const currentVisa = getCurrentVisa();
 
@@ -134,7 +111,6 @@ const EmploymentSection: React.FC<EmploymentSectionProps> = ({
           </Col>
         </Row>
 
-        {/* Visa Status is read-only in Employment section */}
         <Form.Item label="Current Visa Status">
           {currentVisa ? (
             <div>

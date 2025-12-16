@@ -21,10 +21,6 @@ import dayjs from 'dayjs';
 
 const { Title, Text } = Typography;
 
-/**
- * HR Home Page - Section HR.2
- * 必须包含: Application Tracking Table (HR Section 2.a.ii)
- */
 export const HRHomePage: React.FC = () => {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
@@ -46,10 +42,6 @@ export const HRHomePage: React.FC = () => {
     fetchApplications();
   }, [selectedStatus]);
 
-  /**
-   * Section HR.2.a.ii - Application Tracking Table
-   * "if any action needs to be taken to update an employee's visa status or onboarding process"
-   */
   const fetchApplications = async () => {
     try {
       setLoading(true);
@@ -124,7 +116,6 @@ export const HRHomePage: React.FC = () => {
         <Text type="secondary">Welcome to HR Onboarding System</Text>
       </div>
 
-      {/* 快捷操作 */}
       <Card title="Quick Actions" style={{ marginBottom: 24 }}>
         <Space size="middle" wrap>
           <Button
@@ -161,7 +152,6 @@ export const HRHomePage: React.FC = () => {
         </Space>
       </Card>
 
-      {/* Section HR.2.a.ii - Application Tracking Table (必需功能) */}
       <Card
         title={
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>

@@ -1,14 +1,3 @@
-/**
- * HR Visa Management Page
- * Path: /hr/visa
- * 
- * Requirements:
- * 1. Load approved OPT applications with employee and document data
- * 2. Display table with Name, Work Authorization, Expiration Date, Days Left, Next Step, Preview, Actions
- * 3. Implement Approve/Reject with automatic next step rotation
- * 4. Update both application and document when taking actions
- */
-
 import { useState, useEffect } from 'react';
 import { Table, Button, Space, Tag, Typography, Modal, Image } from 'antd';
 import { FileTextOutlined, CheckOutlined, CloseOutlined } from '@ant-design/icons';
@@ -26,16 +15,10 @@ import {
 import {
   type ApplicationWithEmployeeInfo,
   type ApplicationDocument,
-  ApplicationType,
-  ApplicationStatus,
 } from '../../../types';
 
 const { Text, Link } = Typography;
 
-/**
- * Visa document types used in the workflow
- * These are stored as applicationType to track current step
- */
 const VisaDocumentType = {
   OPT: 'OPT',
   I983: 'I983',
@@ -46,10 +29,6 @@ const VisaDocumentType = {
 } as const;
 type VisaDocumentType = typeof VisaDocumentType[keyof typeof VisaDocumentType];
 
-/**
- * Next step rotation sequence
- * Order: I983 → I20 → OPTREC → STEMEAD → Terminate
- */
 const VISA_STEP_SEQUENCE: VisaDocumentType[] = [
   VisaDocumentType.I983,
   VisaDocumentType.I20,
@@ -57,9 +36,6 @@ const VISA_STEP_SEQUENCE: VisaDocumentType[] = [
   VisaDocumentType.STEMEAD
 ];
 
-/**
- * Table row data structure
- */
 interface VisaTableRow {
   key: string;
   applicationId: number;
@@ -70,7 +46,7 @@ interface VisaTableRow {
   daysLeft: number | null;
   nextStep: VisaDocumentType | 'None';
   currentDocument: ApplicationDocument | null;
-  documents: ApplicationDocument[]; // All documents for this application
+  documents: ApplicationDocument[];
   application: ApplicationWithEmployeeInfo;
 }
 
@@ -84,29 +60,19 @@ const HRVisaManagementPage: React.FC = () => {
     loadVisaData();
   }, []);
 
-  /**
-   * Step 1-3: Load and aggregate data
-   * - Fetch approved applications with employee info
-   * - For each application, fetch its documents
-   * - Merge into table rows
-   */
   const loadVisaData = async () => {
     try {
       setLoading(true);
 
-      // Step 1: Fetch approved applications
       const applications = await getApplicationsWithEmployeesByStatus('Approved');
 
-      // Step 2 & 3: Fetch documents for last 10 applications only
       const rows: VisaTableRow[] = [];
       const last10Applications = applications.slice(0, 10);
       
       for (const app of last10Applications) {
         try {
-          // Fetch documents for this application
           const documents = await getDocumentsByApplicationId(app.id);
 
-          // Calculate expiration date from employee visa status
           const activeVisa = app.employee?.visaStatus?.find(
             visa => visa.activeFlag === 'Yes' || visa.activeFlag === 'No'
           );
@@ -115,7 +81,6 @@ const HRVisaManagementPage: React.FC = () => {
             ? dayjs(expirationDate).diff(dayjs(), 'day')
             : null;
 
-          // Determine next step - check if comment is a valid visa document type
           const isValidVisaType = (type: string): type is VisaDocumentType => 
             VISA_STEP_SEQUENCE.includes(type as VisaDocumentType);
           
@@ -137,34 +102,25 @@ const HRVisaManagementPage: React.FC = () => {
             application: app,
           });
         } catch (docError) {
-          console.error(`Failed to fetch documents for application ${app.id}:`, docError);
         }
       }
 
-      // After merge: normalize comment "OPT" or "pending" to "I983"
       rows.forEach(row => {
         if (row.application.comment === VisaDocumentType.OPT || 
             row.application.comment === 'pending' || 
             !row.application.comment) {
           row.application.comment = VisaDocumentType.I983;
-          // Update nextStep as well
           row.nextStep = VisaDocumentType.I983;
         }
       });
 
-      // Match currentDocument from each row's documents array using comment
       rows.forEach(row => {
         row.currentDocument = row.documents.find(
           doc => doc.type === row.application.comment
         ) || null;
       });
 
-      // Filter out rows without a current document
       const filteredRows = rows.filter(row => row.currentDocument !== null);
-
-      console.log('=== HR Visa Management Merged Data ===');
-      console.log('Merged table data:', filteredRows);
-      console.log('======================================');
 
       setTableData(filteredRows);
     } catch (error: any) {
@@ -174,10 +130,6 @@ const HRVisaManagementPage: React.FC = () => {
     }
   };
 
-  /**
-   * Calculate next applicationType in the sequence
-   * I983 → I20 → OPTREC → STEMEAD → Terminate
-   */
   const getNextApplicationType = (current: VisaDocumentType | 'None'): VisaDocumentType => {
     if (current === 'None') return VisaDocumentType.Terminate;
     
@@ -189,19 +141,13 @@ const HRVisaManagementPage: React.FC = () => {
     return VISA_STEP_SEQUENCE[currentIndex + 1];
   };
 
-  /**
-   * Handle Approve action
-   * - Calculate next_applicationType
-   * - Update application with next type and "pending" comment
-   * - Update document with "approved" description
-   */
   const handleApprove = async (record: VisaTableRow) => {
     if (!record.currentDocument) {
       messageApi.warning('No document found for this application');
       return;
     }
 
-    const currentDoc = record.currentDocument; // Store in const for type narrowing
+    const currentDoc = record.currentDocument;
 
     Modal.confirm({
       title: 'Approve Document',
@@ -215,12 +161,10 @@ const HRVisaManagementPage: React.FC = () => {
 
           const nextType = getNextApplicationType(record.nextStep);
 
-          // API 1: Update Application - update comment instead of applicationType
           await updateApplication(record.applicationId, {
-            comment: nextType as any, // Use comment field for workflow tracking
+            comment: nextType as any,
           });
 
-          // API 2: Update Document - need to re-fetch the file blob first
           const fileBlob = await downloadDocument(currentDoc.id);
           const file = new File([fileBlob], `${currentDoc.type}.pdf`, {
             type: fileBlob.type,
@@ -238,7 +182,6 @@ const HRVisaManagementPage: React.FC = () => {
 
           messageApi.success(`${record.nextStep} approved successfully. Email notification sent.`);
           
-          // Reload data
           await loadVisaData();
         } catch (error: any) {
           messageApi.error(error.message || 'Failed to approve document');
@@ -249,19 +192,13 @@ const HRVisaManagementPage: React.FC = () => {
     });
   };
 
-  /**
-   * Handle Reject action
-   * - Keep current_applicationType
-   * - Update application with "reject" comment
-   * - Update document with "reject" description
-   */
   const handleReject = async (record: VisaTableRow) => {
     if (!record.currentDocument) {
       messageApi.warning('No document found for this application');
       return;
     }
 
-    const currentDoc = record.currentDocument; // Store in const for type narrowing
+    const currentDoc = record.currentDocument;
 
     Modal.confirm({
       title: 'Reject Document',
@@ -273,10 +210,6 @@ const HRVisaManagementPage: React.FC = () => {
         try {
           setActionLoading(record.applicationId);
 
-          // Keep application comment at current step (no update needed)
-          // Employee will re-upload the document for the same step
-
-          // Update Document with 'reject' description
           const fileBlob = await downloadDocument(currentDoc.id);
           const file = new File([fileBlob], `${currentDoc.type}.pdf`, {
             type: fileBlob.type,
@@ -294,7 +227,6 @@ const HRVisaManagementPage: React.FC = () => {
 
           messageApi.success(`${record.nextStep} rejected. Email notification sent.`);
           
-          // Reload data
           await loadVisaData();
         } catch (error: any) {
           messageApi.error(error.message || 'Failed to reject document');
@@ -305,19 +237,12 @@ const HRVisaManagementPage: React.FC = () => {
     });
   };
 
-  /**
-   * Handle document preview
-   * Mimics ApplicationReviewDetailPage pattern: download blob and show in Modal with Image
-   */
   const handlePreview = async (document: ApplicationDocument) => {
     try {
-      // Download document as blob
       const blob = await downloadDocument(document.id);
       
-      // Create object URL from blob
       const documentUrl = URL.createObjectURL(blob);
       
-      // Show in Modal with Image component (same as ApplicationReviewDetailPage)
       Modal.info({
         title: `Document Preview: ${document.title || document.type}`,
         width: 800,
@@ -332,11 +257,9 @@ const HRVisaManagementPage: React.FC = () => {
           </div>
         ),
         onOk: () => {
-          // Cleanup URL when modal is closed
           URL.revokeObjectURL(documentUrl);
         },
         onCancel: () => {
-          // Cleanup URL when modal is closed
           URL.revokeObjectURL(documentUrl);
         },
       });
@@ -345,9 +268,7 @@ const HRVisaManagementPage: React.FC = () => {
     }
   };
 
-  /**
-   * Table columns configuration
-   */
+
   const columns: ColumnsType<VisaTableRow> = [
     {
       title: 'Name',

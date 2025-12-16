@@ -95,9 +95,9 @@ export interface Employee {
   /** 性别 (Male/Female/Other) */
   gender: string;
   /** 社会安全号 */
-  SSN: string;
+  ssn: string;
   /** 出生日期 (ISO 8601 格式) */
-  DOB: string;
+  dob: string;
   /** 入职日期 (ISO 8601 格式) */
   startDate: string;
   /** 离职日期 (ISO 8601 格式，可为 null) */
